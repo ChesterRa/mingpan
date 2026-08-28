@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write   # Trusted Publishing (OIDC)：npm 无 token 发布所需
 
 jobs:
   publish:
@@ -15,10 +16,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 20.x
+      # Trusted Publishing 要求 npm >= 11.5.1 / Node >= 22.14
+      - name: Use Node.js 24.x
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 24.x
           registry-url: https://registry.npmjs.org
           cache: npm
 
@@ -28,7 +30,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test
+        run: npm test
+
+      # OIDC 自动认证（无需任何 npm token；公共仓库自动附带 provenance 证明）
       - name: Publish
         run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
