@@ -97,6 +97,8 @@ declare module 'lunar-javascript' {
     getShengXiao(): string;
     getYearShengXiao(): string;
     getYearInGanZhi(): string;
+  getYearInGanZhiByLiChun(): string;
+  getYearInGanZhiExact(): string;
     getMonthInGanZhi(): string;
     getDayInGanZhi(): string;
     getTimeInGanZhi(): string;
@@ -109,6 +111,9 @@ declare module 'lunar-javascript' {
   export class EightChar {
     static fromLunar(lunar: Lunar): EightChar;
     getYear(): string;
+  getTaiYuan(): string;
+  getMingGong(): string;
+  getShenGong(): string;
     getMonth(): string;
     getDay(): string;
     getTime(): string;

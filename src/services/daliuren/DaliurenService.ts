@@ -13,14 +13,16 @@ import type {
   DaliurenInput,
   DaliurenResult,
   DaliurenServiceConfig,
+  DaliurenTimeInput,
   TianGan,
   DiZhi,
 } from './types';
+import { Solar } from 'lunar-javascript';
 import { TianDiPanCalculator } from './calculators/TianDiPanCalculator';
 import { SiKeCalculator } from './calculators/SiKeCalculator';
 import { SanChuanCalculator } from './calculators/SanChuanCalculator';
 import { ShenShaCalculator } from './calculators/ShenShaCalculator';
-import { DAY_NIGHT_MAP } from './data/constants';
+import { DAY_NIGHT_MAP, normalizeJieQiName } from './data/constants';
 
 export class DaliurenService {
   private config: DaliurenServiceConfig;
@@ -29,6 +31,42 @@ export class DaliurenService {
     this.config = config;
   }
   
+  /**
+   * 由公曆時間起課（推薦入口）
+   *
+   * 節氣、農曆月、日干支、時干支均由曆法自動推得，
+   * 避免調用方（如 LLM）手工推算干支而出錯。
+   * 輸入為北京時間（入口層已完成時區歸一化）。
+   *
+   * 干支口徑與六爻一致：採用 lunar-javascript EightChar 的日柱/時柱。
+   */
+  calculateFromTime(input: DaliurenTimeInput): DaliurenResult {
+    const solar = Solar.fromYmdHms(
+      input.year, input.month, input.day,
+      input.hour, input.minute ?? 0, 0
+    );
+    const lunar = solar.getLunar();
+    const eightChar = lunar.getEightChar();
+
+    // 最近一個節氣（含中氣，月將表按「中氣+下一節」配對，等效中氣換將）
+    const prevJieQi = lunar.getPrevJieQi();
+    const jieqi = normalizeJieQiName(prevJieQi ? prevJieQi.getName() : '冬至');
+
+    // 農曆月（閏月歸前月，僅用於展示）
+    let lunarMonth = lunar.getMonth();
+    if (lunarMonth < 0) {
+      lunarMonth = -lunarMonth;
+    }
+
+    return this.calculate({
+      jieqi,
+      lunarMonth,
+      dayGanZhi: eightChar.getDay(),
+      hourGanZhi: eightChar.getTime(),
+      guirenMethod: input.guirenMethod,
+    });
+  }
+
   /**
    * 計算大六壬盤
    */

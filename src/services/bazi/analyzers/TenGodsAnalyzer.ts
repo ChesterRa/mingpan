@@ -127,20 +127,20 @@ export class TenGodsAnalyzer {
     
     branches.forEach(({ position, pillar }) => {
       if (pillar.hiddenStems) {
+        // 全部藏干（本氣/中氣/餘氣）均推十神，供渲染層完整標注
         pillar.hiddenStems.forEach(hidden => {
-          if (hidden.isMain) {
-            const tenGod = this.getTenGod(dayMaster, hidden.stem);
-            const element = this.getStemElement(hidden.stem);
-            const strength = this.calculateStrength(position, tenGod) * hidden.power;
-            
-            results.push({
-              name: `${tenGod}(hidden)`,
-              element,
-              position,
-              strength,
-              interpretation: this.getInterpretation(tenGod, position)
-            });
-          }
+          const tenGod = this.getTenGod(dayMaster, hidden.stem);
+          const element = this.getStemElement(hidden.stem);
+          const strength = this.calculateStrength(position, tenGod) * hidden.power;
+
+          results.push({
+            name: `${tenGod}(hidden)`,
+            element,
+            position,
+            stem: hidden.stem,
+            strength,
+            interpretation: this.getInterpretation(tenGod, position)
+          });
         });
       }
     });

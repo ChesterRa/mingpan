@@ -104,6 +104,10 @@ export interface BaziCoreResult {
   fiveElements: FiveElementsAnalysis;
   voidBranches?: string[];
   twelveGrowthStages?: TwelveGrowthStage[];
+  /** 命宫（《三命通会》子平法：子起正月逆数至生月，生时落月宫顺数至卯，五虎遁起干） */
+  mingGong?: string;
+  /** 胎元（《渊海子平》：月干进一位、月支进三位） */
+  taiYuan?: string;
 }
 
 // Strength analysis (for components that need it)

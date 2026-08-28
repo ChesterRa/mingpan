@@ -86,6 +86,20 @@ export interface DaliurenInput {
   guirenMethod?: 0 | 1;
 }
 
+/**
+ * 公曆時間起課輸入（推薦）
+ * 節氣、農曆月、日時干支由曆法自動推得
+ */
+export interface DaliurenTimeInput {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute?: number;
+  /** 貴人起法：0=標準, 1=另一種 */
+  guirenMethod?: 0 | 1;
+}
+
 // ============================================
 // 天地盤
 // ============================================

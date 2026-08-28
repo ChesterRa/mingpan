@@ -40,19 +40,19 @@ export class Logger {
 
   debug(message: string, data?: unknown): void {
     if (this.shouldLog('debug')) {
-      console.debug(this.formatMessage('debug', message, data));
+      this.write('debug', this.formatMessage('debug', message, data));
     }
   }
 
   info(message: string, data?: unknown): void {
     if (this.shouldLog('info')) {
-      console.info(this.formatMessage('info', message, data));
+      this.write('info', this.formatMessage('info', message, data));
     }
   }
 
   warn(message: string, data?: unknown): void {
     if (this.shouldLog('warn')) {
-      console.warn(this.formatMessage('warn', message, data));
+      this.write('warn', this.formatMessage('warn', message, data));
     }
   }
 
@@ -61,8 +61,16 @@ export class Logger {
       const errorData = error instanceof Error
         ? { message: error.message, stack: error.stack, ...((data && typeof data === 'object') ? data : {}) }
         : { error, ...((data && typeof data === 'object') ? data : {}) };
-      console.error(this.formatMessage('error', message, errorData));
+      this.write('error', this.formatMessage('error', message, errorData));
     }
+  }
+
+  /**
+   * 所有日志一律寫 stderr：stdio MCP 服務器的 stdout
+   * 必須是純 JSON-RPC 流，任何混入都會破壞客戶端解析
+   */
+  private write(level: LogLevel, line: string): void {
+    process.stderr.write(line + '\n');
   }
 }
 

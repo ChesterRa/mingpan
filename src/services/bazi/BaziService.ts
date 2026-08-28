@@ -25,12 +25,9 @@ import {
 import { BaziCore } from '../../core/bazi';
 import { HEAVENLY_STEMS } from '../../core/constants/bazi';
 import { StrengthAnalyzer } from './analyzers/StrengthAnalyzer';
-import { HiddenStemsAnalyzer } from './analyzers/HiddenStemsAnalyzer';
 import { ClimateAnalyzer } from './analyzers/ClimateAnalyzer';
 import { LuckCycleCalculator } from './calculators/LuckCycleCalculator';
 import { TenGodsAnalyzer } from './analyzers/TenGodsAnalyzer';
-import { ShenShaAnalyzer } from './analyzers/ShenShaAnalyzer';
-import { TraditionalAnalyzer } from './analyzers/TraditionalAnalyzer';
 import { YongShenAnalyzer } from './analyzers/YongShenAnalyzer';
 import { PatternAnalyzer } from './analyzers/PatternAnalyzer';
 import { RelationsAnalyzer } from './analyzers/RelationsAnalyzer';
@@ -38,7 +35,6 @@ import { DaYunCalculator } from './calculators/DaYunCalculator';
 import { LiuNianCalculator } from './calculators/LiuNianCalculator';
 import { LiuYueCalculator } from './calculators/LiuYueCalculator';
 import { LiuRiCalculator } from './calculators/LiuRiCalculator';
-import { NaYinAnalyzer } from './analyzers/NaYinAnalyzer';
 import { Logger, LogMasker } from '../../shared/logger';
 
 // Create stem-element mapping
@@ -119,7 +115,6 @@ export class BaziService {
       // Merge options with defaults
       const options: BaziOptions = {
         includeEnhanced: true,
-        includeShenSha: true,
         includeTraditional: true,
         ...input.options
       };
@@ -143,21 +138,14 @@ export class BaziService {
       });
       
       // Step 2: Basic analysis (always included)
-      const naYinAnalysis = NaYinAnalyzer.analyze(coreResult.chart);
       const basic = {
         zodiac: coreResult.zodiac || '',
+        mingGong: coreResult.mingGong,
+        taiYuan: coreResult.taiYuan,
         dayMaster: coreResult.chart.day.stem,
         dayMasterElement: coreResult.dayMasterElement || '',
-        naYin: coreResult.naYin,
-        naYinAnalysis, // Add detailed NaYin analysis
         fiveElements: coreResult.fiveElements,
-        tenGods: TenGodsAnalyzer.analyze(coreResult.chart, coreResult.chart.day.stem),
-        shenSha: options.includeShenSha 
-          ? (() => {
-              const shenShaResult = ShenShaAnalyzer.analyze(coreResult.chart, input.gender || 'male');
-              return shenShaResult;
-            })()
-          : undefined
+        tenGods: TenGodsAnalyzer.analyze(coreResult.chart, coreResult.chart.day.stem)
       };
       
       // Step 3: Enhanced analysis (optional but needed for traditional)
@@ -168,14 +156,12 @@ export class BaziService {
       if (options.includeEnhanced || options.includeTraditional) {
         const [
           strengthAnalysis,
-          hiddenStems,
           twelveGrowthStages,
           voidBranches,
           climate,
           monthStrength
         ] = await Promise.all([
           StrengthAnalyzer.analyze(coreResult.chart, coreResult.birthInfo),
-          HiddenStemsAnalyzer.analyze(coreResult.chart),
           this.core.calculateTwelveGrowthStages(coreResult.chart),
           this.core.calculateVoidBranches(coreResult.chart.day),
           ClimateAnalyzer.analyze(coreResult.chart, coreResult.birthInfo),
@@ -227,7 +213,6 @@ export class BaziService {
         
         enhanced = {
           strengthAnalysis,
-          hiddenStems,
           twelveGrowthStages,
           voidBranches,
           branchRelations: advancedRelations,
@@ -240,27 +225,14 @@ export class BaziService {
       // Step 4: Traditional analysis with enhanced YongShen (optional)
       let traditional;
       if (options.includeTraditional && coreResult.dayMasterElement && enhanced) {
-        // Use basic traditional analyzer for GeJu
-        const basicTraditional = TraditionalAnalyzer.analyze(
-          coreResult.chart,
-          coreResult.fiveElements,
-          coreResult.dayMasterElement
-        );
-        
-        // Use enhanced YongShen analyzer
-        const yongShenAnalysis = YongShenAnalyzer.analyze(
-          coreResult.chart,
-          enhanced.strengthAnalysis,
-          patternAnalysis,
-          enhanced.climate
-        );
-        
-        // Keep pattern analysis and yongShen analysis separate as the component expects
-        
+        // 用神分析（流月/流日列表工具的内部输入）
         traditional = {
-          yongShen: yongShenAnalysis,
-          geJu: basicTraditional.geJu,
-          strength: basicTraditional.strength
+          yongShen: YongShenAnalyzer.analyze(
+            coreResult.chart,
+            enhanced.strengthAnalysis,
+            patternAnalysis,
+            enhanced.climate
+          ),
         };
       }
       
@@ -342,116 +314,6 @@ export class BaziService {
         }
       }
       
-      // Step 5b: Liu Yue (Monthly) calculations
-      let liuYue;
-      let currentLiuYue;
-      if (options.includeLiuYue && options.liuYueOptions) {
-        const liuYueYear = options.liuYueOptions.year || currentYear;
-        // Use the getLiuYue method we created
-        const liuYueResults = await this.getLiuYue(input, liuYueYear);
-        liuYue = liuYueResults.map(ly => ({
-          year: liuYueYear,
-          month: ly.month,
-          stem: ly.stem,
-          branch: ly.branch,
-          tenGod: '', // To be calculated if needed
-          element: STEM_ELEMENTS[ly.stem],
-          season: '', // To be calculated based on month
-          analysis: {
-            overall: ly.fortune as any,
-            career: { rating: ly.rating / 10, trend: '稳定' as const, description: '' },
-            wealth: { rating: ly.rating / 10, trend: '稳定' as const, description: '' },
-            relationships: { rating: ly.rating / 10, trend: '稳定' as const, description: '' },
-            health: {
-              stressLevel: (ly.rating < 40 ? 'high' : ly.rating < 70 ? 'moderate' : 'low') as 'low' | 'moderate' | 'high',
-              vulnerableAreas: ly.healthFocus,
-              preventiveMeasures: ly.recommendations,
-              energyLevel: ly.rating / 10
-            },
-            luckyDays: ly.luckyDays,
-            unluckyDays: [],
-            activities: [],
-            elementBalance: {
-              dominant: STEM_ELEMENTS[ly.stem],
-              trend: '稳定' as const,
-              impact: ''
-            },
-            monthlyTheme: ly.mainInfluences[0] || ''
-          }
-        }));
-        
-        // Find current month if calculating for current year
-        if (liuYueYear === currentYear) {
-          const currentMonth = new Date().getMonth() + 1;
-          currentLiuYue = liuYue.find(m => m.month === currentMonth);
-        }
-      }
-      
-      // Step 5c: Liu Ri (Daily) calculations
-      let liuRi: LiuRi[] | undefined;
-      let todayLiuRi: LiuRi | undefined;
-      if (options.includeLiuRi && options.liuRiOptions) {
-        const liuRiYear = options.liuRiOptions.year || currentYear;
-        const liuRiMonth = options.liuRiOptions.month || new Date().getMonth() + 1;
-        
-        if (options.liuRiOptions.singleDate) {
-          // Calculate for single date only - we'll implement this later
-          todayLiuRi = undefined;
-        } else {
-          // Calculate for entire month
-          const liuRiResults = await this.getLiuRi(input, liuRiYear, liuRiMonth);
-          liuRi = liuRiResults.map(lr => ({
-            date: lr.date,
-            stem: lr.stem,
-            branch: lr.branch,
-            tenGod: '', // To be calculated if needed
-            element: STEM_ELEMENTS[lr.stem],
-            analysis: {
-              rating: lr.rating,
-              quality: lr.fortune as any,
-              activities: lr.activities.favorable.map(a => ({
-                activity: a,
-                suitability: '宜' as const,
-                reason: ''
-              })),
-              hourlyAnalysis: lr.hourlyFortunes.map((hf, idx) => ({
-                hour: idx,
-                stem: '',
-                branch: hf.branch,
-                quality: hf.rating >= 70 ? '优秀' : hf.rating >= 50 ? '良好' : hf.rating >= 30 ? '中性' : '较差' as any,
-                activities: [hf.activity]
-              })),
-              almanacInfo: {
-                suitable: lr.activities.favorable,
-                avoid: lr.activities.avoid,
-                auspiciousHours: lr.luckyHours,
-                inauspiciousHours: []
-              },
-              quickTips: lr.opportunities,
-              elementalFlow: {
-                dominant: STEM_ELEMENTS[lr.stem],
-                interaction: '中性' as const,
-                advice: ''
-              },
-              biorhythm: {
-                physical: lr.rating / 10,
-                emotional: lr.rating / 10,
-                intellectual: lr.rating / 10,
-                overall: lr.rating / 10
-              }
-            }
-          }));
-          
-          // Find today if calculating for current month
-          const today = new Date();
-          if (liuRiYear === today.getFullYear() && liuRiMonth === today.getMonth() + 1) {
-            todayLiuRi = liuRi.find(d => 
-              d.date.getDate() === today.getDate()
-            );
-          }
-        }
-      }
-      
       // Step 6: Assemble result
       const result: BaziResult = {
         chart: coreResult.chart,
@@ -469,11 +331,7 @@ export class BaziService {
           daYun,
           currentDaYun,
           liuNian,
-          currentLiuNian,
-          liuYue,
-          currentLiuYue,
-          liuRi,
-          todayLiuRi
+          currentLiuNian
         },
         meta: {
           calculatedAt: new Date(),
@@ -495,7 +353,6 @@ export class BaziService {
       this.logger.info('八字计算完成', {
         duration: Date.now() - startTime,
         complexity: {
-          shenShaCount: finalResult.basic?.shenSha?.length || 0,
           tenGodsCount: finalResult.basic?.tenGods?.length || 0
         }
       });
@@ -536,7 +393,6 @@ export class BaziService {
       options: {
         ...input.options,
         includeEnhanced: features.includes('enhanced'),
-        includeShenSha: features.includes('shenSha'),
         includeTraditional: features.includes('traditional')
       }
     });
@@ -564,107 +420,9 @@ export class BaziService {
     return result;
   }
   
-  /**
-   * Get Da Yun for specific age range
-   */
-  async getDaYun(
-    chart: BaziChart,
-    birthYear: number,
-    gender: 'male' | 'female',
-    startAge: number,
-    endAge: number
-  ): Promise<DaYun[]> {
-    const birthInfo = await this.core.getBirthInfo(birthYear, 1, 1, 0); // Simplified
-    return DaYunCalculator.calculate(
-      chart,
-      birthInfo,
-      gender,
-      { startYear: birthYear + startAge, endYear: birthYear + endAge }
-    );
-  }
-  
-  /**
-   * Get Liu Nian for specific years
-   */
-  async getLiuNian(
-    chart: BaziChart,
-    birthYear: number,
-    targetYears: number[]
-  ): Promise<LiuNian[]> {
-    const startYear = Math.min(...targetYears);
-    const endYear = Math.max(...targetYears);
-    const allLiuNian = LiuNianCalculator.calculate(chart, birthYear, startYear, endYear);
-    return allLiuNian.filter(ln => targetYears.includes(ln.year));
-  }
-  
-  /**
-   * Get Liu Yue (monthly fortune) for a specific year
-   */
-  async getLiuYue(
-    input: BaziInput,
-    year: number
-  ): Promise<LiuYueInfo[]> {
-    const result = await this.calculate({
-      ...input,
-      options: {
-        ...input.options,
-        includeTraditional: true // Need yongShen analysis
-      }
-    });
-    
-    const yearStemBranch = this.getYearStemBranch(year);
-    const calculator = new LiuYueCalculator();
-    
-    return calculator.calculateLiuYue(
-      yearStemBranch.stem,
-      yearStemBranch.branch,
-      result.basic.dayMasterElement as FiveElement,
-      result.traditional?.yongShen.yongShen as FiveElement[] || [],
-      {
-        year: input.year,
-        month: input.month,
-        day: input.day,
-        hour: input.hour,
-        minute: input.minute
-      },
-      year
-    );
-  }
-  
-  /**
-   * Get Liu Ri (daily fortune) for a specific month
-   */
-  async getLiuRi(
-    input: BaziInput,
-    year: number,
-    month: number
-  ): Promise<LiuRiInfo[]> {
-    const result = await this.calculate({
-      ...input,
-      options: {
-        ...input.options,
-        includeTraditional: true // Need yongShen analysis
-      }
-    });
-    
-    const yearStemBranch = this.getYearStemBranch(year);
-    const monthStemBranch = this.getMonthStemBranch(year, month);
-    const calculator = new LiuRiCalculator();
-    
-    return calculator.calculateLiuRi(
-      monthStemBranch.stem,
-      monthStemBranch.branch,
-      yearStemBranch.stem,
-      yearStemBranch.branch,
-      result.basic.dayMasterElement as FiveElement,
-      result.traditional?.yongShen.yongShen as FiveElement[] || [],
-      year,
-      month
-    );
-  }
-  
-  // TODO: Implement getTodayFortune and getMonthlyOverview using new calculators
-  // These methods are temporarily disabled during refactoring
+  // 註：便捷封裝（getDaYun/getLiuNian/getLiuYue/getLiuRi 及未實現的今日運勢樁）
+  // 為 baziwei 血統遺留、零調用方，已於 0.1.4 移除；MCP 工具直接使用各 Calculator。
+
   
   /**
    * Clear cache

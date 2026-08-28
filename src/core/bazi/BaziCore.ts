@@ -109,13 +109,17 @@ export class BaziCore {
     };
     
     // Step 4: Calculate four pillars with solar term consideration
+    // 注意：一律使用（可能的真太阳时）校正后的 birthDate 分量，
+    // 与 Step 3 的节气月柱同源。此前误传 input.* 原始分量，
+    // 导致 longitude 校正只影响年/月柱而日/时柱不校正（v0.1.0 起的缺陷）。
     const chart = this.calculateHoroscope(
-      input.year,
-      input.month,
-      input.day,
-      input.hour,
+      birthDate.getFullYear(),
+      birthDate.getMonth() + 1,
+      birthDate.getDate(),
+      birthDate.getHours(),
       solarTerm,
-      isCurrentMonthSolarTerm
+      isCurrentMonthSolarTerm,
+      lunar
     );
     
     // Step 5: Get lunar date (already calculated above)
@@ -130,6 +134,18 @@ export class BaziCore {
       dayName: lunar.getDayInChinese()
     };
     
+    // Step 5.5: 命宫/胎元（古典法：命宫依《三命通会》子平起法，胎元依《渊海子平》；
+    // 实现取 lunar-javascript，已与其测试向量及典籍手工推演逐例核对）
+    let mingGong: string | undefined;
+    let taiYuan: string | undefined;
+    try {
+      const eightCharForGong = lunar.getEightChar();
+      mingGong = eightCharForGong.getMingGong();
+      taiYuan = eightCharForGong.getTaiYuan();
+    } catch {
+      // 历法边界异常时容忍缺省
+    }
+
     // Step 6: Calculate derived information
     const dayMasterElement = this.getStemElement(chart.day.stem);
     const zodiac = this.getZodiac(chart.year.branch);
@@ -150,6 +166,8 @@ export class BaziCore {
         adjacentSolarTermTime
       },
       zodiac,
+      mingGong,
+      taiYuan,
       dayMasterElement,
       naYin,
       fiveElements,
@@ -167,10 +185,11 @@ export class BaziCore {
     day: number,
     hour: number,
     solarTerm: string,
-    isCurrentMonthSolarTerm: boolean
+    isCurrentMonthSolarTerm: boolean,
+    lunar: ReturnType<typeof Solar.prototype.getLunar>
   ): BaziChart {
     // Calculate year pillar
-    const { yearGan, yearZhi } = this.calculateYearPillar(year, month, isCurrentMonthSolarTerm);
+    const { yearGan, yearZhi } = this.calculateYearPillar(lunar);
     
     // Calculate month pillar
     const { monthGan, monthZhi } = this.calculateMonthPillar(yearGan, month, solarTerm, isCurrentMonthSolarTerm);
@@ -199,19 +218,20 @@ export class BaziCore {
   }
   
   /**
-   * Calculate year pillar using lunar-javascript
+   * Calculate year pillar
+   *
+   * 干支年以立春交接时刻为界（非农历正月初一）。
+   * 此前实现用「每月15日」近似日期查 getYearInGanZhi()（春节界），
+   * 导致立春至春节期间（每年2月上中旬最长约两周）年柱错排。
+   * 参照：lunar-javascript getYearInGanZhiExact（立春精确到时刻）、
+   * 八字主流口径。
    */
-  private calculateYearPillar(year: number, month: number, isCurrentMonthSolarTerm: boolean): {
+  private calculateYearPillar(lunar: ReturnType<typeof Solar.prototype.getLunar>): {
     yearGan: string;
     yearZhi: string;
   } {
-    // Get year GanZhi from lunar-javascript
-    const solar = Solar.fromYmd(year, month, 15); // Use middle of month
-    const lunar = solar.getLunar();
-    
-    // Get year GanZhi
-    const yearGanZhi = lunar.getYearInGanZhi();
-    
+    const yearGanZhi = lunar.getYearInGanZhiExact();
+
     return {
       yearGan: yearGanZhi.substring(0, 1),
       yearZhi: yearGanZhi.substring(1, 2)
@@ -342,7 +362,14 @@ export class BaziCore {
       '戊': '壬', '癸': '壬'
     };
     
-    const startGan = fiveRatsDict[dayGan];
+    // 晚子时（23 點）：日柱仍為當天，時柱按次日干起五鼠遁
+    // （與 lunar-javascript EightChar 默認 sect 2 及項目內其它工具一致）
+    let anchorGan = dayGan;
+    if (hour === 23) {
+      const idx = HEAVENLY_STEMS.findIndex(s => s.name === dayGan);
+      anchorGan = HEAVENLY_STEMS[(idx + 1) % 10].name;
+    }
+    const startGan = fiveRatsDict[anchorGan];
     const startGanIndex = HEAVENLY_STEMS.findIndex(s => s.name === startGan);
     const zhiIndex = Math.ceil(hour / 2) % 12;
     const ganIndex = (startGanIndex + zhiIndex) % 10;

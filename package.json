@@ -1,7 +1,7 @@
 {
   "name": "mingpan",
-  "version": "0.1.3",
-  "description": "MCP service for accurate Bazi and Ziwei chart calculations",
+  "version": "0.1.4",
+  "description": "MCP service for Chinese metaphysics chart calculations: BaZi, ZiWei Dou Shu, LiuYao, MeiHua YiShu, DaLiuRen, and QiMen DunJia",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -30,18 +30,24 @@
     "mcp",
     "bazi",
     "ziwei",
+    "liuyao",
+    "meihua",
+    "daliuren",
+    "qimen",
+    "qimen-dunjia",
     "fortune-telling",
     "chinese-astrology",
+    "i-ching",
+    "divination",
     "model-context-protocol"
   ],
-  "author": "",
+  "author": "ChesterRa",
   "license": "Apache-2.0",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "iztro": "^2.5.0",
-    "lunar-javascript": "^1.7.3",
-    "zod": "^3.23.0",
-    "zod-to-json-schema": "^3.25.0"
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "iztro": "^2.6.0",
+    "lunar-javascript": "^1.7.7",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
@@ -49,6 +55,6 @@
     "vitest": "^1.6.1"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   }
 }

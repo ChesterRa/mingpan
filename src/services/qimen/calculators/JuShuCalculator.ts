@@ -7,9 +7,9 @@ import type { DiZhi, GongWei, JuShu, TianGan, YinYangDun, YuanType, ZhiRunMethod
 import {
   JIEQI_JU_MAP,
   JIA_ZI_60,
-  getXunShou,
   getYuanIndex,
 } from '../data/constants';
+import { DI_ZHI_YUAN_MAP } from './PanTypeCalculator';
 
 export interface JuShuResult {
   /** 阴阳遁 */
@@ -69,31 +69,24 @@ export class JuShuCalculator {
 
   /**
    * 拆补法计算上中下元
-   * 根据日干支确定符头，从而确定上中下元
+   * 根据日干支的符头（五日一元，元首为甲日或己日）确定上中下元
    *
    * 原理：
-   * - 每个节气 15 天分为三元，每元 5 天
-   * - 上元：符头为甲子、甲午（甲子旬或甲午旬的开头）
-   * - 中元：符头为甲戌、甲辰
-   * - 下元：符头为甲申、甲寅
+   * - 六十甲子按五日一组，各组首日（甲/己日）为符头
+   * - 符头地支为四仲（子午卯酉）者为上元：甲子、甲午、己卯、己酉
+   * - 符头地支为四孟（寅申巳亥）者为中元：甲寅、甲申、己巳、己亥
+   * - 符头地支为四季（辰戌丑未）者为下元：甲辰、甲戌、己丑、己未
+   * - 节气内十五天被三元「拆开补齐」，故称拆补法
+   *
+   * 参照：kentang2017/kinqimen findyuen_dict（MIT）、《神奇之门》
    */
   private static calculateYuanChaibu(dayGanZhi: string): YuanType {
-    const xunShou = getXunShou(dayGanZhi);
-
-    // 根据旬首判断上中下元
-    switch (xunShou) {
-      case '甲子':
-      case '甲午':
-        return '上元';
-      case '甲戌':
-      case '甲辰':
-        return '中元';
-      case '甲申':
-      case '甲寅':
-        return '下元';
-      default:
-        return '上元';
+    const idx = JIA_ZI_60.indexOf(dayGanZhi);
+    if (idx === -1) {
+      throw new Error(`无效的日干支: ${dayGanZhi}`);
     }
+    const fuTou = JIA_ZI_60[idx - (idx % 5)];
+    return DI_ZHI_YUAN_MAP[fuTou.charAt(1) as DiZhi];
   }
 
   /**

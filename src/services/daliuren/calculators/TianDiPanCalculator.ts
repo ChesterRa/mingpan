@@ -15,6 +15,7 @@ import {
   DI_ZHI,
   TIAN_JIANG,
   JIEQI_YUE_JIANG,
+  normalizeJieQiName,
   YUE_JIANG_MAP,
   GUIREN_START,
   DAY_NIGHT_MAP,
@@ -64,11 +65,10 @@ export class TianDiPanCalculator {
    * 根據節氣獲取月將
    */
   private static getYueJiang(jieqi: string): DiZhi {
-    const yueJiang = JIEQI_YUE_JIANG[jieqi];
+    // 歸一化節氣名（相容簡/繁體輸入，lunar-javascript 返回簡體）
+    const yueJiang = JIEQI_YUE_JIANG[normalizeJieQiName(jieqi)];
     if (!yueJiang) {
-      // 默認返回子（神後）
-      console.warn(`未知節氣: ${jieqi}，使用默認月將`);
-      return '子';
+      throw new Error(`未知節氣: ${jieqi}（需為二十四節氣之一）`);
     }
     return yueJiang;
   }

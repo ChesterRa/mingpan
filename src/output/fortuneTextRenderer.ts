@@ -9,13 +9,6 @@ export type FortuneTextOptions = {
   includeLocation?: boolean;
 };
 
-export type BaziTimeLabels = {
-  dayun?: string;
-  liunian?: string;
-  liuyue?: string;
-  liuri?: string;
-};
-
 export type ZiweiTimeContext = {
   decade?: { palaceName?: string; startAge?: number; endAge?: number; branch?: string; index?: number; palaceIndex?: number };
   yearly?: { year?: number; stem?: string; branch?: string; palaceName?: string; palaceIndex?: number };
@@ -137,19 +130,26 @@ export function renderFortuneText(
   lines.push('—— 由 BaziWei 專業計算生成');
   return lines.join('\n');
 }
+/**
+ * 八字基礎排盤文本
+ *
+ * 產品定位：只輸出確定且權威且 AI 不易獲知的量——
+ * 由節氣/曆法推得的四柱干支、旬空、公農曆對照。
+ * 十神、藏干、五行、格局、用神、神煞等分析層無權威口徑，由 AI 依盤自行解讀。
+ */
 export function renderBaziText(
   params: { 
     bazi: BaziResult; 
     subjectName?: string; 
     gender?: 'male' | 'female';
     birthDate?: Date;
-    timeLabels?: BaziTimeLabels;
+    trueSolarTime?: Date;
   },
   options: FortuneTextOptions = { detail: 'standard', includePersonal: false, includeLocation: false }
 ): string {
-  const { bazi, subjectName, gender, birthDate, timeLabels } = params;
+  const { bazi, subjectName, gender, birthDate, trueSolarTime } = params;
   const genderText = gender === 'male' ? '男' : gender === 'female' ? '女' : '未知';
-  const dt = birthDate || bazi?.birthInfo?.solar;
+  const dt = birthDate || (bazi as any)?.birthInfo?.solar;
   const fmt = (d?: Date) => {
     if (!d) return '';
     const pad = (n: number) => String(n).padStart(2, '0');
@@ -157,6 +157,9 @@ export function renderBaziText(
   };
 
   const lines: string[] = [];
+  const chart: any = (bazi as any).chart || {};
+  const basic: any = (bazi as any).basic || {};
+
   lines.push('=== 命主資料 ===');
   if (options.includePersonal && subjectName) {
     lines.push(`姓名：${subjectName}`);
@@ -164,25 +167,71 @@ export function renderBaziText(
   lines.push(`性別：${genderText}`);
   if (dt) {
     lines.push(`公曆：${fmt(dt)}`);
-    const lunarBirthday = formatLunarBirthday(dt);
-    if (lunarBirthday) {
-      lines.push(`農曆：${lunarBirthday}`);
+    if (trueSolarTime) {
+      lines.push(`真太陽時：${fmt(trueSolarTime)}（按經度校正，四柱以此排盤）`);
     }
+    const lunarBirthday = formatLunarBirthday(trueSolarTime || dt);
+    if (lunarBirthday) lines.push(`農曆：${lunarBirthday}`);
   }
-  lines.push('');
 
-  lines.push('=== 八字命盤 ===');
-  const yc: any = bazi.chart?.year;
-  const mc: any = bazi.chart?.month;
-  const dc: any = bazi.chart?.day;
-  const hc: any = bazi.chart?.hour;
-  lines.push(`年柱：${yc?.stem || ''}${yc?.branch || ''} 月柱：${mc?.stem || ''}${mc?.branch || ''} 日柱：${dc?.stem || ''}${dc?.branch || ''} 時柱：${hc?.stem || ''}${hc?.branch || ''}`.trim());
-  if (bazi.basic?.dayMaster) lines.push(`日主：${bazi.basic.dayMaster}`);
-  if (timeLabels?.dayun) lines.push(`目標大運：${timeLabels.dayun}`);
-  if (timeLabels?.liunian) lines.push(`目標流年：${timeLabels.liunian}`);
-  if (timeLabels?.liuyue) lines.push(`目標流月：${timeLabels.liuyue}`);
-  if (timeLabels?.liuri) lines.push(`目標流日：${timeLabels.liuri}`);
-  lines.push('');
+  if (chart.year && chart.month && chart.day && chart.hour) {
+    lines.push('');
+    lines.push('=== 八字命盤 ===');
+    const p2n = (p: any) => p.naYin ? `（${p.naYin}）` : '';
+    lines.push(
+      `年柱：${chart.year.stem}${chart.year.branch}${p2n(chart.year)}` +
+      `  月柱：${chart.month.stem}${chart.month.branch}${p2n(chart.month)}` +
+      `  日柱：${chart.day.stem}${chart.day.branch}${p2n(chart.day)}` +
+      `  時柱：${chart.hour.stem}${chart.hour.branch}${p2n(chart.hour)}`
+    );
+    const dayVoid = (chart.day?.voidBranches || []).join('');
+    if (dayVoid) lines.push(`日柱旬空：${dayVoid}`);
+    const gong: string[] = [];
+    if (basic.mingGong) gong.push(`命宮：${basic.mingGong}`);
+    if (basic.taiYuan) gong.push(`胎元：${basic.taiYuan}`);
+    if (gong.length) lines.push(gong.join('　'));
+
+    // 天干十神（對日主，查表即得的確定性關係）
+    const tenGods: any[] = (bazi as any).basic?.tenGods || [];
+    const stemTG = tenGods.filter((t: any) => !String(t.name).includes('hidden'));
+    if (stemTG.length === 3) {
+      const shortPos = (p: string) => p.replace('柱', '');
+      lines.push(`天干十神：${stemTG.map((t: any) => `${shortPos(t.position)}干${t.element || ''}=${t.name}`).join('　')}`);
+    }
+
+    // 藏干十神（合併標注：每支藏干逐個標十神，※為本氣；均為確定性查表）
+    const POS = ['年', '月', '日', '時'];
+    const pillars = [chart.year, chart.month, chart.day, chart.hour];
+    const hiddenTGMap = new Map<string, Map<string, string>>();
+    for (const tg of ((bazi as any).basic?.tenGods || [])) {
+      if (String(tg.name).includes('hidden)')) {
+        const pos = String(tg.position).replace('柱', '');
+        if (!hiddenTGMap.has(pos)) hiddenTGMap.set(pos, new Map());
+        if (tg.stem) hiddenTGMap.get(pos)!.set(tg.stem, String(tg.name).replace('(hidden)', ''));
+      }
+    }
+    const hiddenLine = pillars
+      .map((p: any, i: number) => {
+        const labels = (p?.hiddenStems || []).map((h: any) => {
+          const tgName = hiddenTGMap.get(POS[i])?.get(h.stem);
+          return h.isMain ? `${h.stem}${tgName ?? ''}※` : `${h.stem}${tgName ?? ''}`;
+        }).join(' ');
+        return labels ? `${POS[i]}${p.branch}[${labels}]` : '';
+      })
+      .filter(Boolean)
+      .join('　');
+    if (hiddenLine) lines.push(`藏干十神（※本氣）：${hiddenLine}`);
+
+    // 十二長生（自坐：各柱天干對自身地支的長生階段，確定性查表）
+    const growthLine = pillars
+      .map((p: any, i: number) => (p?.selfSitting ? `${POS[i]}${p.selfSitting}` : ''))
+      .filter(Boolean)
+      .join('　');
+    if (growthLine) lines.push(`十二長生（自坐）：${growthLine}`);
+
+
+  }
+
   return lines.join('\n');
 }
 
@@ -260,6 +309,14 @@ export function renderZiweiText(
     lines.push(`本命命宮 ${hb}：${starsText}`.trim());
   }
   lines.push(`本命身宮：${bodyPalace?.name || '命宮'}`);
+
+  // 五行局/命主/身主（確定性查表：命宮干支納音定局、命宮支定命主、年支定身主）
+  const ziweiBasic: any = (ziwei as any).basicInfo || {};
+  const furniture: string[] = [];
+  if (ziweiBasic.fiveElement) furniture.push(`五行局：${ziweiBasic.fiveElement}`);
+  if (ziweiBasic.soul) furniture.push(`命主：${ziweiBasic.soul}`);
+  if (ziweiBasic.body) furniture.push(`身主：${ziweiBasic.body}`);
+  if (furniture.length) lines.push(furniture.join('　'));
 
   if (timeContext?.decade && (timeContext.decade.palaceName || (timeContext.decade.startAge && timeContext.decade.endAge))) {
     const ageStr = (timeContext.decade.startAge && timeContext.decade.endAge)

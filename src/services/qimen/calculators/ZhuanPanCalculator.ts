@@ -3,12 +3,16 @@
  * Rotating style Qimen calculator (following《神奇之门》)
  *
  * 转盘式核心规则：
- * 1. 三奇六仪按物理方向旋转（非洛书飞布）
- * 2. 阳遁顺转（物理顺时针）：1→8→3→4→9→2→7→6
- * 3. 阴遁逆转（物理逆时针）：1→6→7→2→9→4→3→8
- * 4. 八门、九星同样按物理方向转动
- * 5. 中宫寄坤二
- * 6. 天禽星随天芮星（寄坤二宫）
+ * 1. 天盘、九星、八门是三个「物理转盘」，盘内元素相对顺序恒定不变
+ * 2. 转盘环序（物理顺时针，从坎一宫起）：坎→艮→震→巽→离→坤→兑→乾
+ *    - 九星环序：蓬任冲辅英芮柱心（禽寄芮，随坤二宫）
+ *    - 八门环序：休生伤杜景死惊开
+ * 3. 天盘干与九星同转：值符星携旬首六仪转到时干（遁干）所在的地盘宫
+ * 4. 值使门随时辰飞宫：从值符原始宫起，按旬内时辰序数，
+ *    阳遁顺数宫位数字（1→2→…→9→1）、阴遁逆数
+ * 5. 中五宫寄坤二宫；天禽随天芮
+ *
+ * 参照：《神奇之门》（张志春）、kentang2017/kinqimen pan_sky/pan_star/pan_door（MIT）
  */
 
 import type { GongWei, TianGan, DiZhi, BaMen, JiuXing, YinYangDun } from '../types';
@@ -17,16 +21,13 @@ import {
   BA_MEN_ORDER,
   BA_MEN_GONG,
   JIU_XING_GONG,
-  DI_ZHI,
+  JIA_ZI_60,
   getXunShou,
   getLiuYiGan,
   rotate,
   getRotationSteps,
   ZHONG_GONG_JI_ZHUAN,
-  getPhysicalClockwiseIndex,
-  getPhysicalClockwiseGong,
-  getPhysicalCounterClockwiseIndex,
-  getPhysicalCounterClockwiseGong,
+  PHYSICAL_CLOCKWISE_ORDER,
 } from '../data/constants';
 
 // ============= 类型定义 =============
@@ -50,6 +51,12 @@ export interface ZhuanPanJiuXingResult {
   zhiFuLuoGong: GongWei;
 }
 
+/**
+ * 转盘九星环序（物理顺时针，天禽寄天芮不在环上）
+ * 与 PHYSICAL_CLOCKWISE_ORDER=[坎1,艮8,震3,巽4,离9,坤2,兑7,乾6] 一一对应
+ */
+const JIU_XING_RING: JiuXing[] = ['蓬', '任', '冲', '辅', '英', '芮', '柱', '心'];
+
 // ============= 转盘式计算器 =============
 
 /**
@@ -58,17 +65,31 @@ export interface ZhuanPanJiuXingResult {
  */
 export class ZhuanPanCalculator {
   /**
+   * 获取参考干（时干/日干/月干/年干）遁干后的地盘落宫
+   * 甲遁于旬首六仪之下；落中五宫者寄坤二
+   */
+  static getShiGanLuoGong(
+    diPanGanGong: Record<TianGan, GongWei>,
+    ganZhi: string
+  ): GongWei {
+    const gan = ganZhi.charAt(0) as TianGan;
+    const dunGan = this.getDunGan(gan, ganZhi);
+    const gong = diPanGanGong[dunGan];
+    return gong === 5 ? ZHONG_GONG_JI_ZHUAN : gong;
+  }
+
+  /**
    * 计算转盘式天盘布局
    * @param diPanGanGong 地盘干->宫位映射
    * @param ganZhi 时干支（时盘）、日干支（日盘）、月干支（月盘）或年干支（年盘）
    * @param yinYangDun 阴阳遁
    * @returns 天盘各宫的干
    *
-   * 原理（转盘式）：
-   * 1. 找到时干（或日干/月干/年干）在地盘的落宫
-   * 2. 计算该宫到值符星原始宫的旋转步数
-   * 3. 将整个地盘旋转相应步数
-   * 4. 阳遁顺时针旋转，阴遁逆时针旋转
+   * 原理（转盘式刚体旋转）：
+   * 1. 旬首六仪（值符所携之干）在地盘的原始宫
+   * 2. 参考干（时干等，甲用旬首仪）在地盘的落宫
+   * 3. 将整个地盘沿转盘环旋转，使旬首仪从原始宫转到参考干落宫
+   * 4. 中五宫之干寄坤二宫随盘转动；天盘中宫显示坤二宫之干
    */
   static calculateTianPan(
     diPanGanGong: Record<TianGan, GongWei>,
@@ -76,90 +97,119 @@ export class ZhuanPanCalculator {
     yinYangDun: YinYangDun
   ): ZhuanPanTianPanResult {
     const isYang = yinYangDun === '阳遁';
-    const gan = ganZhi.charAt(0) as TianGan;
 
-    // 时干对应的遁甲干
-    const dunGan = this.getDunGan(gan, ganZhi);
+    const xunShou = getXunShou(ganZhi);
+    const fuGan = getLiuYiGan(xunShou);
 
-    // 找到遁甲干在地盘的落宫
-    let startGong = diPanGanGong[dunGan];
-    if (startGong === 5) {
-      startGong = ZHONG_GONG_JI_ZHUAN;
+    const shiGong = this.getShiGanLuoGong(diPanGanGong, ganZhi);
+
+    let fuGong = diPanGanGong[fuGan];
+    if (fuGong === 5) {
+      fuGong = ZHONG_GONG_JI_ZHUAN; // 中五寄坤二
     }
 
-    // 转盘式：整体旋转
-    // 计算需要旋转的步数：从遁甲干原始宫位到当前地盘落宫的步数
+    const steps = getRotationSteps(fuGong, shiGong, isYang);
+
     const gongGan: Record<GongWei, TianGan> = {} as Record<GongWei, TianGan>;
     const ganGong: Record<TianGan, GongWei> = {} as Record<TianGan, GongWei>;
 
-    // 转盘式布局：从起始宫开始，按物理方向旋转布入三奇六仪
-    for (let i = 0; i < 9; i++) {
-      const currentGan = SAN_QI_LIU_YI[i];
-      const gong = this.getGongByRotation(startGong, i, isYang);
-      gongGan[gong] = currentGan;
-      ganGong[currentGan] = gong;
+    // 地盘坤二宫本干与中五宫寄干（若中五有干，二者同落一宫）
+    const kunGan = SAN_QI_LIU_YI.find(g => diPanGanGong[g] === 2);
+    const zhongGan = SAN_QI_LIU_YI.find(g => diPanGanGong[g] === 5);
+
+    for (const gan of SAN_QI_LIU_YI) {
+      const src = diPanGanGong[gan];
+      const srcActual = src === 5 ? ZHONG_GONG_JI_ZHUAN : src;
+      const dst = rotate(srcActual, steps, isYang);
+      ganGong[gan] = dst;
+      gongGan[dst] = gan;
     }
+
+    // 中五寄干与坤二本干同宫时，坤二本干优先显示
+    if (zhongGan !== undefined && kunGan !== undefined) {
+      const kunDst = ganGong[kunGan];
+      gongGan[kunDst] = kunGan;
+    }
+
+    // 天盘中五宫寄坤二，显示坤二宫天盘干
+    gongGan[5] = gongGan[ZHONG_GONG_JI_ZHUAN];
 
     return { gongGan, ganGong };
   }
 
   /**
    * 计算转盘式八门布局
-   * @param zhiFuGong 值符星落宫（旬首遁干在地盘的宫位）
-   * @param hourZhi 时支
+   * @param zhiFuGong 值符星原始宫位（旬首遁干在地盘的宫位，值使门原始宫与其相同）
+   * @param refGanZhi 参考干支（时盘为时干支，余类推）
    * @param yinYangDun 阴阳遁
    * @returns 八门布局
    *
    * 原理（转盘式）：
-   * 1. 确定值使门（值符星原始宫位对应的门）
-   * 2. 值使门从值符星落宫起，按时辰数旋转
-   * 3. 阳遁顺时针，阴遁逆时针
-   * 4. 其他七门依次排列（按物理方向旋转）
+   * 1. 值使门 = 值符星原始宫位对应的门（中五宫寄坤二取死门）
+   * 2. 值使门落宫：从值符原始宫起，按参考干支的旬内序数（甲为0），
+   *    阳遁顺数宫位数字、阴遁逆数；落中五宫寄坤二
+   * 3. 其余七门按八门环序（休生伤杜景死惊开）随盘刚体旋转
    */
   static calculateBaMen(
     zhiFuGong: GongWei,
-    hourZhi: DiZhi,
+    refGanZhi: string,
     yinYangDun: YinYangDun
   ): ZhuanPanBaMenResult {
     const isYang = yinYangDun === '阳遁';
 
-    // 1. 确定值使门（值符星原始宫位对应的门）
+    // 1. 确定值使门（值符原始宫对应的门）
     const zhiShiMen = this.getMenByGong(zhiFuGong);
     const zhiShiGong = BA_MEN_GONG[zhiShiMen];
 
-    // 2. 计算时辰数（子时为1）
-    const hourNum = DI_ZHI.indexOf(hourZhi) + 1;
+    // 2. 旬内序数：甲为0，乙为1，……癸为9（时干支/日干支在其旬内的位置）
+    const idx = JIA_ZI_60.indexOf(refGanZhi);
+    if (idx === -1) {
+      throw new Error(`无效的干支: ${refGanZhi}`);
+    }
+    const steps = idx % 10;
 
-    // 3. 计算值使门落宫（转盘式旋转）
-    const zhiShiLuoGong = rotate(zhiFuGong, hourNum - 1, isYang);
+    // 3. 值使门落宫（宫位数字顺逆数，落中五寄坤二）
+    const anchor = zhiShiGong === 5 ? ZHONG_GONG_JI_ZHUAN : zhiShiGong;
+    let luoGong = (((anchor - 1 + (isYang ? steps : -steps)) % 9) + 9) % 9 + 1;
+    if (luoGong === 5) {
+      luoGong = ZHONG_GONG_JI_ZHUAN;
+    }
 
-    // 4. 计算所有八门的落宫（转盘式）
-    const gongMen = this.calculateAllMenZhuanPan(zhiShiMen, zhiShiLuoGong, isYang);
+    // 4. 八门刚体旋转：值使门从原始宫转到落宫
+    const ringSteps = getRotationSteps(anchor, luoGong as GongWei, isYang);
+    const gongMen: Record<GongWei, BaMen> = {} as Record<GongWei, BaMen>;
+    for (let i = 0; i < 8; i++) {
+      const men = BA_MEN_ORDER[i];
+      const home = PHYSICAL_CLOCKWISE_ORDER[i]; // 八门原始宫与环序一一对应
+      gongMen[rotate(home, ringSteps, isYang)] = men;
+    }
+
+    // 中宫寄坤二，使用坤二的门
+    gongMen[5] = gongMen[ZHONG_GONG_JI_ZHUAN];
 
     return {
       gongMen,
       zhiShiMen,
       zhiShiGong,
-      zhiShiLuoGong,
+      zhiShiLuoGong: luoGong as GongWei,
     };
   }
 
   /**
    * 计算转盘式九星布局
-   * @param xunShouGong 旬首遁干在地盘的宫位
-   * @param hourZhi 时支
+   * @param xunShouGong 旬首遁干在地盘的宫位（值符星原始宫）
+   * @param shiGanLuoGong 参考干（时干等，甲用旬首仪）的地盘落宫
    * @param yinYangDun 阴阳遁
    * @returns 九星布局
    *
    * 原理（转盘式）：
-   * 1. 确定值符星（旬首落宫对应的星）
-   * 2. 值符星从地盘旬首落宫起，按时辰数旋转
-   * 3. 阳遁顺时针，阴遁逆时针
-   * 4. 天禽星（中五宫）随天芮星，或寄坤二
+   * 1. 值符星 = 旬首遁干原始宫对应的星（中五宫为天禽，寄坤二随天芮）
+   * 2. 值符星随时干：转盘旋转使值符星从原始宫转到参考干落宫
+   * 3. 其余诸星按九星环序（蓬任冲辅英芮柱心）随盘刚体旋转
    */
   static calculateJiuXing(
     xunShouGong: GongWei,
-    hourZhi: DiZhi,
+    shiGanLuoGong: GongWei,
     yinYangDun: YinYangDun
   ): ZhuanPanJiuXingResult {
     const isYang = yinYangDun === '阳遁';
@@ -168,20 +218,25 @@ export class ZhuanPanCalculator {
     const zhiFuXing = this.getXingByGong(xunShouGong);
     const zhiFuGong = JIU_XING_GONG[zhiFuXing];
 
-    // 2. 计算时辰数（子时为1）
-    const hourNum = DI_ZHI.indexOf(hourZhi) + 1;
+    // 天禽寄坤二，随天芮所在环位转动
+    const homeSlot = xunShouGong === 5 ? ZHONG_GONG_JI_ZHUAN : xunShouGong;
 
-    // 3. 计算值符星落宫（转盘式旋转）
-    const zhiFuLuoGong = rotate(xunShouGong, hourNum - 1, isYang);
+    // 2. 刚体旋转：值符星原始环位转到参考干落宫
+    const steps = getRotationSteps(homeSlot, shiGanLuoGong, isYang);
+    const gongXing: Record<GongWei, JiuXing> = {} as Record<GongWei, JiuXing>;
+    for (let i = 0; i < 8; i++) {
+      const home = PHYSICAL_CLOCKWISE_ORDER[i];
+      gongXing[rotate(home, steps, isYang)] = JIU_XING_RING[i];
+    }
 
-    // 4. 计算所有九星的落宫（转盘式）
-    const gongXing = this.calculateAllXingZhuanPan(zhiFuXing, zhiFuLuoGong, isYang);
+    // 天禽随天芮寄坤二，中宫显示天禽
+    gongXing[5] = '禽';
 
     return {
       gongXing,
       zhiFuXing,
       zhiFuGong,
-      zhiFuLuoGong,
+      zhiFuLuoGong: shiGanLuoGong,
     };
   }
 
@@ -199,34 +254,6 @@ export class ZhuanPanCalculator {
     // 甲时，需要找到旬首对应的六仪
     const xunShou = getXunShou(ganZhi);
     return getLiuYiGan(xunShou);
-  }
-
-  /**
-   * 根据起始宫位和步数计算目标宫位（转盘式9宫旋转）
-   * 包含中宫处理
-   */
-  private static getGongByRotation(startGong: GongWei, steps: number, isYang: boolean): GongWei {
-    // 中宫寄坤二
-    if (startGong === 5) {
-      startGong = ZHONG_GONG_JI_ZHUAN;
-    }
-
-    // 对于9宫布局（含中宫），需要特殊处理
-    // 前4步走外圈前半，第5步到中宫，后4步走外圈后半
-    if (steps === 4) {
-      return 5; // 第5个位置是中宫
-    }
-
-    // 调整步数：跳过中宫的计算
-    const adjustedSteps = steps > 4 ? steps - 1 : steps;
-
-    if (isYang) {
-      const startIdx = getPhysicalClockwiseIndex(startGong);
-      return getPhysicalClockwiseGong(startIdx + adjustedSteps);
-    } else {
-      const startIdx = getPhysicalCounterClockwiseIndex(startGong);
-      return getPhysicalCounterClockwiseGong(startIdx + adjustedSteps);
-    }
   }
 
   /**
@@ -260,79 +287,6 @@ export class ZhuanPanCalculator {
     }
 
     return '芮'; // 默认天芮
-  }
-
-  /**
-   * 计算所有八门的落宫（转盘式）
-   * 整体按物理方向旋转
-   */
-  private static calculateAllMenZhuanPan(
-    zhiShiMen: BaMen,
-    zhiShiLuoGong: GongWei,
-    isYang: boolean
-  ): Record<GongWei, BaMen> {
-    const gongMen: Record<GongWei, BaMen> = {} as Record<GongWei, BaMen>;
-
-    // 找到值使门在八门顺序中的索引
-    const zhiShiIdx = BA_MEN_ORDER.indexOf(zhiShiMen);
-
-    // 获取值使门落宫索引
-    let actualLuoGong = zhiShiLuoGong === 5 ? ZHONG_GONG_JI_ZHUAN : zhiShiLuoGong;
-
-    // 转盘式：依次排列八门，按物理方向旋转
-    for (let i = 0; i < 8; i++) {
-      const menIdx = (zhiShiIdx + i) % 8;
-      const men = BA_MEN_ORDER[menIdx];
-
-      // 转盘式旋转
-      const gong = rotate(actualLuoGong, i, isYang);
-      gongMen[gong] = men;
-    }
-
-    // 中宫寄坤二，使用坤二的门
-    gongMen[5] = gongMen[ZHONG_GONG_JI_ZHUAN];
-
-    return gongMen;
-  }
-
-  /**
-   * 计算所有九星的落宫（转盘式）
-   * 整体按物理方向旋转，天禽星随天芮星
-   */
-  private static calculateAllXingZhuanPan(
-    zhiFuXing: JiuXing,
-    zhiFuLuoGong: GongWei,
-    isYang: boolean
-  ): Record<GongWei, JiuXing> {
-    const gongXing: Record<GongWei, JiuXing> = {} as Record<GongWei, JiuXing>;
-
-    // 九星顺序（不含天禽，因为天禽随天芮）
-    const xingOrderWithoutQin: JiuXing[] = ['蓬', '芮', '冲', '辅', '心', '柱', '任', '英'];
-
-    // 找到值符星在顺序中的索引
-    let zhiFuIdx = xingOrderWithoutQin.indexOf(zhiFuXing);
-    if (zhiFuIdx === -1) {
-      // 如果值符星是天禽，则以天芮为准
-      zhiFuIdx = xingOrderWithoutQin.indexOf('芮');
-    }
-
-    // 获取值符星落宫
-    let actualLuoGong = zhiFuLuoGong === 5 ? ZHONG_GONG_JI_ZHUAN : zhiFuLuoGong;
-
-    // 转盘式：依次排列八星，按物理方向旋转
-    for (let i = 0; i < 8; i++) {
-      const xingIdx = (zhiFuIdx + i) % 8;
-      const xing = xingOrderWithoutQin[xingIdx];
-
-      // 转盘式旋转
-      const gong = rotate(actualLuoGong, i, isYang);
-      gongXing[gong] = xing;
-    }
-
-    // 天禽星寄中宫，实际显示时随天芮
-    gongXing[5] = '禽';
-
-    return gongXing;
   }
 
   /**

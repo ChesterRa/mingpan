@@ -1,17 +1,14 @@
 /**
- * 八门计算器
- * 计算八门在九宫中的分布
+ * 八门计算器（飞盘式）
+ * 计算八门在九宫中的飞布
  */
 
-import type { BaMen, DiZhi, GongWei, TianGan, YinYangDun } from '../types';
+import type { BaMen, GongWei, YinYangDun } from '../types';
 import {
   BA_MEN_GONG,
   BA_MEN_ORDER,
-  LUOSHU_ORDER,
+  JIA_ZI_60,
   ZHONG_GONG_JI,
-  DI_ZHI,
-  getLuoShuIndex,
-  getLuoShuGong,
 } from '../data/constants';
 
 export interface BaMenResult {
@@ -26,49 +23,71 @@ export interface BaMenResult {
 }
 
 /**
- * 八门计算器
+ * 八门计算器（飞盘式）
  * 负责计算八门的飞布
  */
 export class BaMenCalculator {
   /**
-   * 计算八门布局
-   * @param zhiFuGong 值符星落宫（旬首遁干在地盘的宫位）
-   * @param hourZhi 时支
+   * 计算飞盘式八门布局
+   * @param zhiFuGong 值符星原始宫位（旬首遁干在地盘的宫位，值使门原始宫与其相同）
+   * @param refGanZhi 参考干支（时盘为时干支，余类推）
    * @param yinYangDun 阴阳遁
    * @returns 八门布局
    *
-   * 原理：
-   * 1. 确定值使门：值符星原始宫位对应的门就是值使门
-   * 2. 值使门随时干飞布，从值符星落宫起，按时辰数飞布
-   * 3. 阳遁顺飞，阴遁逆飞
-   * 4. 其他七门依次排列
+   * 原理（飞盘式）：
+   * 1. 值使门 = 值符星原始宫对应的门（中五宫寄坤二取死门）
+   * 2. 值使门落宫：从值符原始宫起，按参考干支的旬内序数（甲为0），
+   *    阳遁顺数宫位数字（1→2→…→9→1）、阴遁逆数；落中五宫寄坤二
+   * 3. 其余七门按八门原始序（休生伤杜景死惊开）自值使门起，
+   *    按宫位数字顺序飞布（跳过中五宫），阳遁顺飞、阴遁逆飞
    */
   static calculate(
     zhiFuGong: GongWei,
-    hourZhi: DiZhi,
+    refGanZhi: string,
     yinYangDun: YinYangDun
   ): BaMenResult {
     const isYang = yinYangDun === '阳遁';
 
-    // 1. 确定值使门（值符星原始宫位对应的门）
+    // 1. 确定值使门（值符原始宫对应的门）
     const zhiShiMen = this.getMenByGong(zhiFuGong);
     const zhiShiGong = BA_MEN_GONG[zhiShiMen];
 
-    // 2. 计算时辰数（子时为1）
-    const hourNum = DI_ZHI.indexOf(hourZhi) + 1;
+    // 2. 旬内序数：甲为0，乙为1，……癸为9
+    const idx = JIA_ZI_60.indexOf(refGanZhi);
+    if (idx === -1) {
+      throw new Error(`无效的干支: ${refGanZhi}`);
+    }
+    const steps = idx % 10;
 
-    // 3. 计算值使门落宫
-    // 值使门从值符星落宫起，按时辰数飞布
-    const zhiShiLuoGong = this.flyMen(zhiFuGong, hourNum - 1, isYang);
+    // 3. 值使门落宫（宫位数字顺逆数，落中五寄坤二）
+    const anchor = zhiShiGong === 5 ? ZHONG_GONG_JI : zhiShiGong;
+    let luoGong = (((anchor - 1 + (isYang ? steps : -steps)) % 9) + 9) % 9 + 1;
+    if (luoGong === 5) {
+      luoGong = ZHONG_GONG_JI;
+    }
 
-    // 4. 计算所有八门的落宫
-    const gongMen = this.calculateAllMen(zhiShiMen, zhiShiLuoGong, isYang);
+    // 4. 飞布序列：自值使门起，按八门原始序循环；飞宫序列跳过中五
+    const zhiShiIdx = BA_MEN_ORDER.indexOf(zhiShiMen);
+    const flyOrder = BA_MEN_ORDER.slice(zhiShiIdx).concat(BA_MEN_ORDER.slice(0, zhiShiIdx));
+    const FLY_PALACES: GongWei[] = [1, 2, 3, 4, 6, 7, 8, 9];
+
+    const startIdx = FLY_PALACES.indexOf(luoGong as GongWei);
+    const gongMen: Record<GongWei, BaMen> = {} as Record<GongWei, BaMen>;
+    for (let i = 0; i < 8; i++) {
+      const gongIdx = isYang
+        ? (startIdx + i) % 8
+        : ((startIdx - i) % 8 + 8) % 8;
+      gongMen[FLY_PALACES[gongIdx]] = flyOrder[i];
+    }
+
+    // 中宫寄坤二，使用坤二的门
+    gongMen[5] = gongMen[ZHONG_GONG_JI];
 
     return {
       gongMen,
       zhiShiMen,
       zhiShiGong,
-      zhiShiLuoGong,
+      zhiShiLuoGong: luoGong as GongWei,
     };
   }
 
@@ -86,60 +105,6 @@ export class BaMenCalculator {
     }
 
     return '死'; // 坤二宫默认死门
-  }
-
-  /**
-   * 飞门：从某宫开始飞布指定步数
-   */
-  private static flyMen(startGong: GongWei, steps: number, isYang: boolean): GongWei {
-    let actualStart = startGong;
-    if (actualStart === 5) {
-      actualStart = ZHONG_GONG_JI;
-    }
-
-    const startIdx = getLuoShuIndex(actualStart);
-
-    const targetIdx = isYang
-      ? (startIdx + steps) % 8
-      : ((startIdx - steps) % 8 + 8) % 8;
-
-    return getLuoShuGong(targetIdx);
-  }
-
-  /**
-   * 计算所有八门的落宫
-   * 从值使门落宫开始，按洛书顺序排列其他七门
-   */
-  private static calculateAllMen(
-    zhiShiMen: BaMen,
-    zhiShiLuoGong: GongWei,
-    isYang: boolean
-  ): Record<GongWei, BaMen> {
-    const gongMen: Record<GongWei, BaMen> = {} as Record<GongWei, BaMen>;
-
-    // 找到值使门在八门顺序中的索引
-    const zhiShiIdx = BA_MEN_ORDER.indexOf(zhiShiMen);
-
-    // 获取值使门落宫在洛书中的索引
-    let startIdx = getLuoShuIndex(zhiShiLuoGong === 5 ? ZHONG_GONG_JI : zhiShiLuoGong);
-
-    // 依次排列八门
-    for (let i = 0; i < 8; i++) {
-      const menIdx = (zhiShiIdx + i) % 8;
-      const men = BA_MEN_ORDER[menIdx];
-
-      const gongIdx = isYang
-        ? (startIdx + i) % 8
-        : ((startIdx - i) % 8 + 8) % 8;
-
-      const gong = getLuoShuGong(gongIdx);
-      gongMen[gong] = men;
-    }
-
-    // 中宫寄坤二，使用坤二的门
-    gongMen[5] = gongMen[ZHONG_GONG_JI];
-
-    return gongMen;
   }
 
   /**

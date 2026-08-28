@@ -1,17 +1,12 @@
 /**
- * 九星计算器
- * 计算九星在九宫中的分布
+ * 九星计算器（飞盘式）
+ * 计算九星在九宫中的飞布
  */
 
-import type { DiZhi, GongWei, JiuXing, TianGan, YinYangDun } from '../types';
+import type { GongWei, JiuXing, YinYangDun } from '../types';
 import {
   JIU_XING_GONG,
   JIU_XING_ORDER,
-  LUOSHU_ORDER,
-  ZHONG_GONG_JI,
-  DI_ZHI,
-  getLuoShuIndex,
-  getLuoShuGong,
 } from '../data/constants';
 
 export interface JiuXingResult {
@@ -26,26 +21,26 @@ export interface JiuXingResult {
 }
 
 /**
- * 九星计算器
+ * 九星计算器（飞盘式）
  * 负责计算九星的飞布
  */
 export class JiuXingCalculator {
   /**
-   * 计算九星布局
-   * @param xunShouGong 旬首遁干在地盘的宫位
-   * @param hourZhi 时支
+   * 计算飞盘式九星布局
+   * @param xunShouGong 旬首遁干在地盘的宫位（值符星原始宫）
+   * @param shiGanLuoGong 参考干（时干等，甲用旬首仪）的地盘落宫
    * @param yinYangDun 阴阳遁
    * @returns 九星布局
    *
-   * 原理：
-   * 1. 确定值符星：旬首遁干落宫对应的星就是值符星
-   * 2. 值符星随时干飞布，从地盘旬首落宫起，按时辰数飞布
-   * 3. 阳遁顺飞，阴遁逆飞
-   * 4. 天禽星（中五宫）随天芮星，或寄坤二
+   * 原理（飞盘式）：
+   * 1. 值符星 = 旬首遁干原始宫对应的星（中五宫为天禽）
+   * 2. 值符星随时干：飞到参考干落宫
+   * 3. 其余诸星按九星原始序（蓬芮冲辅禽心柱任英，即原始宫数字序）
+   *    自值符星起，按宫位数字顺序飞布，阳遁顺飞、阴遁逆飞
    */
   static calculate(
     xunShouGong: GongWei,
-    hourZhi: DiZhi,
+    shiGanLuoGong: GongWei,
     yinYangDun: YinYangDun
   ): JiuXingResult {
     const isYang = yinYangDun === '阳遁';
@@ -54,21 +49,23 @@ export class JiuXingCalculator {
     const zhiFuXing = this.getXingByGong(xunShouGong);
     const zhiFuGong = JIU_XING_GONG[zhiFuXing];
 
-    // 2. 计算时辰数（子时为1）
-    const hourNum = DI_ZHI.indexOf(hourZhi) + 1;
+    // 2. 飞布序列：自值符星起，按九星原始序循环
+    const zhiFuIdx = JIU_XING_ORDER.indexOf(zhiFuXing);
+    const flyOrder = JIU_XING_ORDER.slice(zhiFuIdx).concat(JIU_XING_ORDER.slice(0, zhiFuIdx));
 
-    // 3. 计算值符星落宫
-    // 值符星随时干，从旬首落宫起飞布
-    const zhiFuLuoGong = this.flyXing(xunShouGong, hourNum - 1, isYang);
-
-    // 4. 计算所有九星的落宫
-    const gongXing = this.calculateAllXing(zhiFuXing, zhiFuLuoGong, isYang);
+    // 3. 从参考干落宫起飞布（阳顺阴逆，宫位数字序）
+    const gongXing: Record<GongWei, JiuXing> = {} as Record<GongWei, JiuXing>;
+    for (let i = 0; i < 9; i++) {
+      const offset = isYang ? i : -i;
+      const gong = (((shiGanLuoGong - 1 + offset) % 9) + 9) % 9 + 1;
+      gongXing[gong as GongWei] = flyOrder[i];
+    }
 
     return {
       gongXing,
       zhiFuXing,
       zhiFuGong,
-      zhiFuLuoGong,
+      zhiFuLuoGong: shiGanLuoGong,
     };
   }
 
@@ -91,74 +88,9 @@ export class JiuXingCalculator {
   }
 
   /**
-   * 飞星：从某宫开始飞布指定步数
-   */
-  private static flyXing(startGong: GongWei, steps: number, isYang: boolean): GongWei {
-    let actualStart = startGong;
-    if (actualStart === 5) {
-      actualStart = ZHONG_GONG_JI; // 中宫寄坤二
-    }
-
-    const startIdx = getLuoShuIndex(actualStart);
-
-    const targetIdx = isYang
-      ? (startIdx + steps) % 8
-      : ((startIdx - steps) % 8 + 8) % 8;
-
-    return getLuoShuGong(targetIdx);
-  }
-
-  /**
-   * 计算所有九星的落宫
-   * 从值符星落宫开始，按洛书顺序排列其他八星
-   * 天禽星随天芮星
-   */
-  private static calculateAllXing(
-    zhiFuXing: JiuXing,
-    zhiFuLuoGong: GongWei,
-    isYang: boolean
-  ): Record<GongWei, JiuXing> {
-    const gongXing: Record<GongWei, JiuXing> = {} as Record<GongWei, JiuXing>;
-
-    // 九星顺序（不含天禽，因为天禽随天芮）
-    const xingOrderWithoutQin: JiuXing[] = ['蓬', '芮', '冲', '辅', '心', '柱', '任', '英'];
-
-    // 找到值符星在顺序中的索引
-    let zhiFuIdx = xingOrderWithoutQin.indexOf(zhiFuXing);
-    if (zhiFuIdx === -1) {
-      // 如果值符星是天禽，则以天芮为准
-      zhiFuIdx = xingOrderWithoutQin.indexOf('芮');
-    }
-
-    // 获取值符星落宫在洛书中的索引
-    let startIdx = getLuoShuIndex(zhiFuLuoGong === 5 ? ZHONG_GONG_JI : zhiFuLuoGong);
-
-    // 依次排列八星（不含天禽）
-    for (let i = 0; i < 8; i++) {
-      const xingIdx = (zhiFuIdx + i) % 8;
-      const xing = xingOrderWithoutQin[xingIdx];
-
-      const gongIdx = isYang
-        ? (startIdx + i) % 8
-        : ((startIdx - i) % 8 + 8) % 8;
-
-      const gong = getLuoShuGong(gongIdx);
-      gongXing[gong] = xing;
-    }
-
-    // 天禽星寄中宫，实际显示时随天芮
-    gongXing[5] = '禽';
-
-    return gongXing;
-  }
-
-  /**
    * 根据宫位找星
    */
   static findXingByGong(gongXing: Record<GongWei, JiuXing>, gong: GongWei): JiuXing {
-    if (gong === 5) {
-      return '禽';
-    }
     return gongXing[gong];
   }
 }

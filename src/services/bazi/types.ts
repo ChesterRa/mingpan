@@ -25,22 +25,10 @@ export interface BaziInput {
 export interface BaziOptions {
   includeEnhanced?: boolean;  // Include taro-bazi enhanced features
   includeShenSha?: boolean;   // Include Shen Sha analysis
-  includeTraditional?: boolean; // Include traditional analysis (Yong Shen, Ge Ju)
+  includeTraditional?: boolean; // 计算用神分析（流月/流日列表工具的内部输入）
   timeRange?: {              // For Da Yun and Liu Nian calculations
     startYear?: number;
     endYear?: number;
-  };
-  includeLiuYue?: boolean;    // Include monthly fortune (流月)
-  liuYueOptions?: {
-    year: number;             // Year for monthly calculations
-    includeAllMonths?: boolean; // Calculate all 12 months or just current
-  };
-  includeLiuRi?: boolean;     // Include daily fortune (流日)
-  liuRiOptions?: {
-    year: number;
-    month: number;            // Month for daily calculations
-    includeHourly?: boolean;  // Include hourly analysis for each day
-    singleDate?: Date;        // Calculate for single date only
   };
   language?: Language;
 }
@@ -107,17 +95,11 @@ export interface TenGodInfo {
   element: string;
   position: '年柱' | '月柱' | '日柱' | '時柱';
   strength: number;
+  /** 藏干十神对应的藏干（天干十神无此字段） */
+  stem?: string;
   interpretation?: string;
 }
 
-export interface ShenShaInfo {
-  name: string;
-  type: '吉星' | '凶星' | '中性';
-  position: string;
-  description?: string;
-}
-
-// Enhanced Analysis Types (from taro-bazi)
 export interface QuantitativeStrengthAnalysis {
   dayMasterStrength: DayMasterStrength;
   totalScore: number;
@@ -251,14 +233,6 @@ export interface FengShuiSuggestions {
   avoidPlacements: string[]; // Translation keys
 }
 
-export interface GeJuAnalysis {
-  pattern: string;        // 格局
-  type: string;
-  quality: '优秀' | '良好' | '一般' | '较差';
-  description: string;
-}
-
-// Time-based Analysis Types
 export interface DaYun {
   index: number;
   startAge: number;
@@ -468,26 +442,22 @@ export interface BaziResult {
   // Basic Analysis
   basic: {
     zodiac: string;
+    mingGong?: string;
+    taiYuan?: string;
     dayMaster: string;
     dayMasterElement: string;
-    naYin: NaYinInfo;
-    naYinAnalysis?: any; // Detailed NaYin analysis from NaYinAnalyzer
     fiveElements: FiveElementsAnalysis;
     tenGods: TenGodInfo[];
-    shenSha?: ShenShaInfo[];
   };
   
   // Traditional Analysis
   traditional?: {
     yongShen: YongShenAnalysis;
-    geJu: GeJuAnalysis;
-    strength: DayMasterStrength;
   };
   
   // Enhanced Analysis (taro-bazi features)
   enhanced?: {
     strengthAnalysis: QuantitativeStrengthAnalysis;
-    hiddenStems: HiddenStemsAnalysis;
     twelveGrowthStages: TwelveGrowthStage[];
     voidBranches: string[];
     branchRelations: any; // Using RelationsResult from analyzer
@@ -501,11 +471,7 @@ export interface BaziResult {
     daYun: DaYun[];
     currentDaYun?: DaYun;
     liuNian?: LiuNian[];
-    currentLiuNian?: LiuNian;
-    liuYue?: LiuYue[];        // Monthly fortune
-    currentLiuYue?: LiuYue;   // Current month
-    liuRi?: LiuRi[];          // Daily fortune
-    todayLiuRi?: LiuRi;       // Today's fortune
+    currentLiuNian?: LiuNian;        // Monthly fortune   // Current month          // Daily fortune       // Today's fortune
   };
   
   // Metadata
@@ -529,20 +495,6 @@ export interface LunarDate {
   dayName?: string;
 }
 
-export interface NaYinInfo {
-  name: string;
-  element: string;
-  meaning: string;
-}
-
-export interface HiddenStemsAnalysis {
-  total: number;
-  byElement: Record<string, number>;
-  mainQi: string[];
-  residualQi: string[];
-}
-
-// Service Configuration
 export interface BaziServiceConfig {
   defaultLanguage?: Language;
   enableCaching?: boolean;
@@ -618,168 +570,3 @@ export interface FiveElementsCount {
  * Simplified BaZi analysis for components
  * This is a flattened version of BaziResult for easier component usage
  */
-export interface BaziAnalysis {
-  // Core data
-  chart: BaziChart;
-  birthInfo: BirthInfo;
-  
-  // Basic info
-  zodiac: string;
-  dayMaster: string;
-  dayMasterElement: string;
-  
-  // Analysis data
-  fiveElements: FiveElementsCount;
-  tenGods: TenGodRelation[];
-  shenSha: ShenShaInfo[];
-  strength?: '身弱' | '正格' | '身旺';
-  
-  // Time-based
-  daYun: DaYun[];
-  lunarInfo: LunarDate;
-  
-  // Traditional analysis
-  yongShenAnalysis?: YongShenAnalysis;
-  geJuAnalysis?: GeJuAnalysis;
-  
-  // Enhanced analysis
-  elementStrengths?: any;
-  elementBalance?: any;
-  advancedAnalysis?: any;
-  strengthAnalysis?: any;
-  
-  // Current fortune
-  daYunAnalysis?: SimpleDaYunAnalysis;
-  currentLiuNian?: LiuNianAnalysis;
-}
-
-/**
- * Ten god relation for components
- */
-export interface TenGodRelation {
-  god: string;
-  element: string;
-  strength: number;
-  position: string;
-  stem: string;
-}
-
-/**
- * Simple Da Yun analysis
- */
-export interface SimpleDaYunAnalysis {
-  period: string;
-  stem: string;
-  branch: string;
-  ganRelation: string;
-  influence: string;
-  description: string;
-}
-
-/**
- * Converter functions to transform between service types and component types
- */
-export class BaziTypeConverter {
-  /**
-   * Convert BirthInfo to BaziInput
-   */
-  static toBaziInput(birthInfo: BirthInfo): BaziInput {
-    return {
-      year: birthInfo.year,
-      month: birthInfo.month,
-      day: birthInfo.day,
-      hour: birthInfo.hour,
-      minute: birthInfo.minute,
-      gender: birthInfo.gender as Gender,
-      longitude: birthInfo.longitude,
-      options: {
-        includeEnhanced: true,
-        includeShenSha: true,
-        includeTraditional: true
-      }
-    };
-  }
-
-  /**
-   * Convert BaziResult to BaziAnalysis
-   */
-  static toBaziAnalysis(result: BaziResult, birthInfo: BirthInfo): BaziAnalysis {
-    return {
-      chart: result.chart,
-      birthInfo,
-      zodiac: result.basic.zodiac,
-      dayMaster: result.basic.dayMaster,
-      dayMasterElement: result.basic.dayMasterElement,
-      fiveElements: {
-        木: result.basic.fiveElements.木,
-        火: result.basic.fiveElements.火,
-        土: result.basic.fiveElements.土,
-        金: result.basic.fiveElements.金,
-        水: result.basic.fiveElements.水
-      },
-      tenGods: result.basic.tenGods.map(tg => ({
-        god: tg.name,
-        element: tg.element,
-        position: tg.position as string,
-        strength: tg.strength,
-        stem: ''
-      })),
-      shenSha: result.basic.shenSha || [],
-      strength: this.mapStrength(result.traditional?.strength),
-      daYun: result.timeBased.daYun,
-      lunarInfo: result.birthInfo.lunar,
-      yongShenAnalysis: result.traditional?.yongShen,
-      geJuAnalysis: result.traditional?.geJu,
-      elementStrengths: result.enhanced?.strengthAnalysis,
-      elementBalance: result.basic.fiveElements.balance,
-      advancedAnalysis: {
-        hiddenStems: result.enhanced?.hiddenStems,
-        twelveGrowthStages: result.enhanced?.twelveGrowthStages,
-        voidBranches: result.enhanced?.voidBranches,
-        branchRelations: result.enhanced?.branchRelations,
-        climate: result.enhanced?.climate,
-        monthStrength: result.enhanced?.monthStrength
-      },
-      strengthAnalysis: result.enhanced?.strengthAnalysis
-    };
-  }
-
-  /**
-   * Map strength values
-   */
-  private static mapStrength(strength?: DayMasterStrength): '身弱' | '正格' | '身旺' | undefined {
-    if (!strength) return undefined;
-    
-    const mapping: Record<DayMasterStrength, '身弱' | '正格' | '身旺'> = {
-      '衰极': '身弱',
-      '身弱': '身弱',
-      '偏弱': '身弱',
-      '中和': '正格',
-      '偏强': '身旺',
-      '身旺': '身旺',
-      '旺极': '身旺'
-    };
-    
-    return mapping[strength];
-  }
-
-  /**
-   * Convert simple pillar to full pillar
-   */
-  static toFullPillar(pillar: BaziPillar): Pillar {
-    return {
-      stem: pillar.stem,
-      branch: pillar.branch
-    };
-  }
-
-  /**
-   * Convert full pillar to simple pillar
-   */
-  static toSimplePillar(pillar: Pillar): BaziPillar {
-    return {
-      stem: pillar.stem,
-      branch: pillar.branch
-    };
-  }
-}

@@ -23,8 +23,6 @@ import type {
   ShiLei,
   ShenShaInfo,
   YongShenInfo,
-  ZeRiInput,
-  ZeRiResult,
 } from './types';
 import { JuShuCalculator } from './calculators/JuShuCalculator';
 import { JiuGongCalculator } from './calculators/JiuGongCalculator';
@@ -37,7 +35,6 @@ import { BaShenCalculator } from './calculators/BaShenCalculator';
 import { GeJuCalculator } from './calculators/GeJuCalculator';
 import { YongShenCalculator } from './calculators/YongShenCalculator';
 import { ShenShaCalculator } from './calculators/ShenShaCalculator';
-import { ZeRiCalculator } from './calculators/ZeRiCalculator';
 import {
   GONG_NAMES,
   GONG_WUXING,
@@ -186,6 +183,12 @@ export class QimenService {
     );
 
     // 5.2 根据盘式选择算法
+    // 参考干（甲用旬首仪）在地盘的落宫，为转盘/飞盘九星共用
+    const shiGanLuoGong = ZhuanPanCalculator.getShiGanLuoGong(
+      diPanResult.ganGong,
+      refGanZhi
+    );
+
     if (panStyle === '转盘') {
       // 转盘式：使用 ZhuanPanCalculator
       tianPanResult = ZhuanPanCalculator.calculateTianPan(
@@ -195,25 +198,29 @@ export class QimenService {
       );
       jiuXingResult = ZhuanPanCalculator.calculateJiuXing(
         xunShouInfo.zhiFuGong,
-        refZhi,
+        shiGanLuoGong,
         yinYangDun
       );
       baMenResult = ZhuanPanCalculator.calculateBaMen(
         xunShouInfo.zhiFuGong,
-        refZhi,
+        refGanZhi,
         yinYangDun
       );
     } else {
-      // 飞盘式：使用原有的飞布算法
-      tianPanResult = initialTianPan;
+      // 飞盘式：按宫位数字飞布
+      tianPanResult = SanQiLiuYiCalculator.calculate(
+        diPanResult.ganGong,
+        refGanZhi,
+        yinYangDun
+      );
       jiuXingResult = JiuXingCalculator.calculate(
         xunShouInfo.zhiFuGong,
-        refZhi,
+        shiGanLuoGong,
         yinYangDun
       );
       baMenResult = BaMenCalculator.calculate(
         xunShouInfo.zhiFuGong,
-        refZhi,
+        refGanZhi,
         yinYangDun
       );
     }
@@ -510,7 +517,7 @@ export class QimenService {
     return gong === 5 ? ZHONG_GONG_JI : gong;
   }
 
-  // ============= Phase 3: 用神系统 + 神煞 + 择日 =============
+  // ============= 用神系统 + 神煞 =============
 
   /**
    * 计算神煞信息
@@ -566,42 +573,4 @@ export class QimenService {
     return result;
   }
 
-  /**
-   * 择日功能
-   *
-   * 根据事类在指定日期范围内筛选吉时。
-   *
-   * @param zeRiInput 择日输入
-   * @returns 择日结果列表
-   */
-  findAuspiciousDates(zeRiInput: ZeRiInput): ZeRiResult[] {
-    // 注入排盘函数到 ZeRiCalculator
-    ZeRiCalculator.setCalculateFn((calcInput) => {
-      return this.calculate({
-        year: calcInput.year,
-        month: calcInput.month,
-        day: calcInput.day,
-        hour: calcInput.hour,
-        panType: (calcInput.panType as PanType) || '时盘',
-        panStyle: zeRiInput.panStyle || '转盘',
-        zhiRunMethod: (calcInput.zhiRunMethod as ZhiRunMethod) || 'chaibu',
-      });
-    });
-
-    return ZeRiCalculator.findAuspiciousTimes(zeRiInput);
-  }
-
-  /**
-   * 清除择日缓存
-   */
-  clearZeRiCache(): void {
-    ZeRiCalculator.clearCache();
-  }
-
-  /**
-   * 获取择日缓存大小
-   */
-  getZeRiCacheSize(): number {
-    return ZeRiCalculator.getCacheSize();
-  }
 }

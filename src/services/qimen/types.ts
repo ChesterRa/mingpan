@@ -369,94 +369,9 @@ export interface ShenShaInfo {
   description: string;
 }
 
-// ============= 择日系统类型 =============
-
-/** 择日评级 */
-export type ZeRiGrade = '优' | '良' | '中' | '差';
-
-/** 方位名称 */
-export type Direction =
-  | '北'
-  | '东北'
-  | '东'
-  | '东南'
-  | '南'
-  | '西南'
-  | '西'
-  | '西北'
-  | '中';
-
-/** 择日输入接口 */
-export interface ZeRiInput {
-  /** 起始日期 */
-  startDate: Date;
-  /** 结束日期 */
-  endDate: Date;
-  /** 事类 */
-  shiLei: ShiLei;
-  /** 返回数量限制（默认10） */
-  limit?: number;
-  /** 最小评分阈值 (0-100) */
-  minScore?: number;
-  /** 是否输出方位 */
-  includeDirection?: boolean;
-  /** 是否排除节气交接日 */
-  excludeJieQiDay?: boolean;
-  /** 是否排除岁破日 */
-  excludeSuiPo?: boolean;
-  /** 是否排除月破日 */
-  excludeYuePo?: boolean;
-  /** 盘类型 */
-  panType?: PanType;
-  /** 盘式 */
-  panStyle?: PanStyle;
-  /** 置闰方法 */
-  zhiRunMethod?: ZhiRunMethod;
-}
-
-/** 择日评分 */
-export interface ZeRiScore {
-  /** 总分 (0-100) */
-  totalScore: number;
-  /** 格局得分 */
-  geJuScore: number;
-  /** 用神得分 */
-  yongShenScore: number;
-  /** 神煞得分 */
-  shenShaScore: number;
-  /** 推荐理由 */
-  recommendation: string;
-}
-
-/** 方位信息 */
-export interface DirectionInfo {
-  /** 三吉门方位 */
-  sanJiMen: Array<{ men: BaMen; gong: GongWei; direction: Direction }>;
-  /** 用神方位 */
-  yongShen: Array<{ name: string; gong: GongWei; direction: Direction }>;
-}
-
-/** 择日结果 */
-export interface ZeRiResult {
-  /** 推荐时间 */
-  datetime: Date;
-  /** 评分详情 */
-  score: ZeRiScore;
-  /** 评级 */
-  grade: ZeRiGrade;
-  /** 有利因素 */
-  highlights: string[];
-  /** 注意事项 */
-  warnings: string[];
-  /** 方位信息 */
-  direction?: DirectionInfo;
-  /** 完整奇门盘 */
-  qimenResult: QimenResult;
-}
-
-// ============= 错误类型 =============
-
-/** 奇门遁甲计算错误 */
+/**
+ * 奇门计算错误
+ */
 export class QimenCalculationError extends Error {
   constructor(
     message: string,

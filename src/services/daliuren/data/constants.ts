@@ -150,6 +150,23 @@ export const JIEQI_YUE_JIANG: Record<string, DiZhi> = {
   '大寒': '子', '立春': '子',
 };
 
+/**
+ * 節氣名簡體 → 繁體別名（本表以繁體為鍵）
+ * lunar-javascript 返回簡體節氣名（如「惊蛰」），需歸一化後查表
+ */
+export const JIEQI_ALIAS: Record<string, string> = {
+  '惊蛰': '驚蟄',
+  '谷雨': '穀雨',
+  '小满': '小滿',
+  '芒种': '芒種',
+  '处暑': '處暑',
+};
+
+/** 歸一化節氣名（簡體/繁體輸入均可） */
+export function normalizeJieQiName(name: string): string {
+  return JIEQI_ALIAS[name] ?? name;
+}
+
 // ============================================
 // 貴人起點
 // ============================================

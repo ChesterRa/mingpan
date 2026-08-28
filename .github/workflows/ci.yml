@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [22.x, 24.x]
 
     steps:
       - uses: actions/checkout@v4
@@ -30,5 +30,11 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Test
-        run: npm test
+      # 可复现性承诺：同一输入在任意宿主时区下输出必须一致
+      - name: Test (TZ matrix)
+        run: |
+          for tz in Asia/Shanghai UTC America/New_York; do
+            echo "::group::Tests with TZ=$tz"
+            TZ=$tz npm test || exit 1
+            echo "::endgroup::"
+          done

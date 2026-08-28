@@ -18,8 +18,6 @@ export { TenGodsAnalyzer, TEN_GOD_ATTRIBUTES } from './analyzers/TenGodsAnalyzer
 export { YongShenAnalyzer } from './analyzers/YongShenAnalyzer';
 export { PatternAnalyzer } from './analyzers/PatternAnalyzer';
 export { RelationsAnalyzer } from './analyzers/RelationsAnalyzer';
-export { ShenShaAnalyzer } from './analyzers/ShenShaAnalyzer';
-export { NaYinAnalyzer } from './analyzers/NaYinAnalyzer';
 
 // Export calculators for advanced usage
 export { DaYunCalculator } from './calculators/DaYunCalculator';

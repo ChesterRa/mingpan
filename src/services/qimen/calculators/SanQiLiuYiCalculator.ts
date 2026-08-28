@@ -1,14 +1,12 @@
 /**
  * 三奇六仪计算器
- * 计算天盘布局（时干/日干带动的天盘飞布）
+ * 计算飞盘式天盘布局
  */
 
 import type { GongWei, TianGan, YinYangDun } from '../types';
 import {
   SAN_QI_LIU_YI,
   ZHONG_GONG_JI,
-  getLuoShuIndex9,
-  getLuoShuGong9,
   getXunShou,
   getLiuYiGan,
 } from '../data/constants';
@@ -22,53 +20,54 @@ export interface TianPanResult {
 
 /**
  * 三奇六仪计算器
- * 负责计算天盘布局
+ * 负责计算飞盘式天盘布局
  */
 export class SanQiLiuYiCalculator {
   /**
-   * 计算天盘布局
+   * 计算飞盘式天盘布局
    * @param diPanGanGong 地盘干->宫位映射
-   * @param hourGanZhi 时干支（时盘）或日干支（日盘）
+   * @param refGanZhi 参考干支（时盘为时干支，余类推）
    * @param yinYangDun 阴阳遁
    * @returns 天盘各宫的干
    *
-   * 原理：
-   * 1. 找到时干（或日干）在地盘的落宫
-   * 2. 以该宫为起点，将三奇六仪按洛书顺序飞布
-   * 3. 阳遁顺飞，阴遁逆飞
-   *
-   * 例如：
-   * - 阳遁一局，时干为庚
-   * - 庚在地盘震三宫
-   * - 则天盘从震三宫开始顺布：戊-震3, 己-巽4, 庚-离9...
+   * 原理（飞盘式）：
+   * 1. 值符随时干：旬首六仪飞到参考干（甲用旬首仪）所在的地盘宫
+   * 2. 其余八干按 戊己庚辛壬癸丁丙乙 的循环顺序（自旬首仪起），
+   *    按宫位数字顺序（1→2→…→9→1）飞布，阳遁顺飞、阴遁逆飞
+   * 3. 落入中五宫之干寄坤二宫（查询时换算，显示时仍在中宫）
    */
   static calculate(
     diPanGanGong: Record<TianGan, GongWei>,
-    hourGanZhi: string,
+    refGanZhi: string,
     yinYangDun: YinYangDun
   ): TianPanResult {
     const isYang = yinYangDun === '阳遁';
-    const hourGan = hourGanZhi.charAt(0) as TianGan;
+    const refGan = refGanZhi.charAt(0) as TianGan;
 
-    // 时干对应的遁甲干
-    // 如果时干是甲，需要找到该甲的旬首，然后找到对应的六仪
-    const dunGan = this.getDunGan(hourGan, hourGanZhi);
+    // 参考干对应的遁甲干（甲遁于旬首六仪之下）
+    const refDunGan = this.getDunGan(refGan, refGanZhi);
 
-    // 找到遁甲干在地盘的落宫
-    let startGong = diPanGanGong[dunGan];
+    // 起点宫 = 参考干（遁干）在地盘的落宫（中五寄坤二）
+    let startGong = diPanGanGong[refDunGan];
     if (startGong === 5) {
-      startGong = ZHONG_GONG_JI; // 中宫寄坤二
+      startGong = ZHONG_GONG_JI;
     }
+
+    // 飞布序列：自旬首仪起，按戊己庚辛壬癸丁丙乙循环
+    const xunShou = getXunShou(refGanZhi);
+    const fuGan = getLiuYiGan(xunShou);
+    const fuIdx = SAN_QI_LIU_YI.indexOf(fuGan);
+    const flyOrder = SAN_QI_LIU_YI.slice(fuIdx).concat(SAN_QI_LIU_YI.slice(0, fuIdx));
 
     const gongGan: Record<GongWei, TianGan> = {} as Record<GongWei, TianGan>;
     const ganGong: Record<TianGan, GongWei> = {} as Record<TianGan, GongWei>;
 
-    // 从起始宫开始，依次布入三奇六仪（9干飞布9宫）
     for (let i = 0; i < 9; i++) {
-      const gan = SAN_QI_LIU_YI[i];
-      const gong = this.getGongByStep(startGong, i, isYang);
-      gongGan[gong] = gan;
-      ganGong[gan] = gong;
+      const gan = flyOrder[i];
+      const offset = isYang ? i : -i;
+      const gong = (((startGong - 1 + offset) % 9) + 9) % 9 + 1;
+      gongGan[gong as GongWei] = gan;
+      ganGong[gan] = gong as GongWei;
     }
 
     return { gongGan, ganGong };
@@ -76,31 +75,15 @@ export class SanQiLiuYiCalculator {
 
   /**
    * 获取遁甲干
-   * 甲遁于六仪之下，需要根据时干支确定
+   * 甲遁于六仪之下，需要根据干支确定
    */
-  private static getDunGan(hourGan: TianGan, hourGanZhi: string): TianGan {
-    if (hourGan !== '甲') {
-      // 非甲时，直接返回时干
-      return hourGan;
+  private static getDunGan(refGan: TianGan, refGanZhi: string): TianGan {
+    if (refGan !== '甲') {
+      return refGan;
     }
 
-    // 甲时，需要找到旬首对应的六仪
-    const xunShou = getXunShou(hourGanZhi);
+    const xunShou = getXunShou(refGanZhi);
     return getLiuYiGan(xunShou);
-  }
-
-  /**
-   * 根据起始宫位和步数计算目标宫位（9宫飞布）
-   * 洛书9宫顺序：1(坎) -> 8(艮) -> 3(震) -> 4(巽) -> 5(中) -> 9(离) -> 2(坤) -> 7(兑) -> 6(乾)
-   */
-  private static getGongByStep(startGong: GongWei, steps: number, isYang: boolean): GongWei {
-    const startIdx = getLuoShuIndex9(startGong);
-
-    const targetIdx = isYang
-      ? (startIdx + steps) % 9
-      : ((startIdx - steps) % 9 + 9) % 9;
-
-    return getLuoShuGong9(targetIdx);
   }
 
   /**

@@ -108,17 +108,18 @@ export class TiyongCalculator {
     yongWuXing: WuXing,
     relation: TiYongRelation
   ): string {
+    // 只輸出確定性的生剋關係，吉凶判斷屬解讀層（AI 職責）
     switch (relation) {
       case '生':
-        return `${yongWuXing}生${tiWuXing}，用生體，主吉。`;
+        return `${yongWuXing}生${tiWuXing}，用生體`;
       case '洩':
-        return `${tiWuXing}生${yongWuXing}，體生用，主洩耗。`;
+        return `${tiWuXing}生${yongWuXing}，體生用`;
       case '剋':
-        return `${yongWuXing}剋${tiWuXing}，用剋體，主凶。`;
+        return `${yongWuXing}剋${tiWuXing}，用剋體`;
       case '耗':
-        return `${tiWuXing}剋${yongWuXing}，體剋用，主小吉。`;
+        return `${tiWuXing}剋${yongWuXing}，體剋用`;
       case '比和':
-        return `${tiWuXing}與${yongWuXing}比和，主平穩。`;
+        return `${tiWuXing}與${yongWuXing}比和`;
     }
   }
 }

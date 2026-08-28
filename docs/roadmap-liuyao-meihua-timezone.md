@@ -322,7 +322,7 @@ src/services/meihua/
 | M2 | 六爻 v1（manual + 排盤層全功能 + 對照用例） | 2 週 | ✅ 完成 |
 | M2.1 | 六爻 v1.1（伏神/飛神 + 進退神 + 旺衰） | 0.5 週 | ✅ 完成 |
 | M3 | 梅花 v1（time/number + 體用/五行 + 對照用例） | 1-2 週 | ✅ 完成 |
-| M4 | 多時區支持 PoC（新增 timezone 參數 + date-fns-tz） | 1 週 | 待開始 |
+| M4 | 多時區支持（timezone 參數） | 1 週 | ✅ 完成 |
 | M5 | 大六壬 v1（天地盤 + 四課 + 三傳 + 十二天將） | 1 週 | ✅ 完成 |
 
 ### M1 完成內容（2025-12-19）
@@ -453,3 +453,13 @@ src/services/meihua/
 
 > 本文檔的目標是讓後續迭代「口徑可追溯、實現可落地、回歸可驗證」。
 > 如果要變更算法口徑，請務必先更新本文檔再改代碼。
+
+### M4 完成內容（2026-08-28，v0.1.4）
+
+- `src/utils/timeNormalization.ts` 擴展：
+  - 新增 `timezone` 參數（IANA 時區名），基於 `Intl.DateTimeFormat` 迭代換算，**零新增依賴**（未採用原規劃的 date-fns-tz/temporal）
+  - 內部規範表示為北京時間（UTC+8 平太陽時）；輸出側採固定 +8 算術
+  - 輸入側使用 IANA 偏移（自動處理歷史夏令時，含 1986-1991 中國夏令時：民用時自動回撥一小時，與主流排盤口徑一致）
+  - `isLunar` 輸入忽略 timezone（曆法日期無時區語義）
+- `test/timezone.test.ts`：15 個用例（跨日換算、半小時時區、DST 邊界、往返一致性、農曆忽略時區、非法時區報錯）
+- 同批完成的相關工作見 `docs/qimen-correctness-notes.md`（奇門口徑修正）、大六壬時間起課（`DaliurenService.calculateFromTime`）、index.ts 按領域拆分並遷移至 MCP SDK 高級 API（registerTool）、zod v4（SDK 1.30 + zod 3.25 組合會觸發 TS2589 類型實例化爆炸，zod v4 解決）。
