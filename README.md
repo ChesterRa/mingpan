@@ -1,5 +1,7 @@
 # 命盘 MCP Server
 
+**简体中文（主文档）** | [English](README.en.md) | [日本語](README.ja.md)
+
 [![Version](https://img.shields.io/badge/version-0.1.4-blue.svg)](https://github.com/ChesterRa/mingpan)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 

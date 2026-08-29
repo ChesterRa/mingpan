@@ -39,7 +39,10 @@
     "chinese-astrology",
     "i-ching",
     "divination",
-    "model-context-protocol"
+    "model-context-protocol",
+    "八字",
+    "紫微斗数",
+    "奇门遁甲"
   ],
   "author": "ChesterRa",
   "license": "Apache-2.0",
