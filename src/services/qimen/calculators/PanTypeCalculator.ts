@@ -82,46 +82,40 @@ const YIN_DUN_JIEQI = [
 
 /**
  * 年盘阴阳遁判断
- * 冬至当天为阳遁起始，夏至当天为阴遁起始
- * @param currentJieQi 当前节气
- * @returns 阴阳遁
+ *
+ * 口径（2026-08-30 依典籍修正）：《遁甲演义》《奇门遁甲統宗》年奇门起例——
+ * 年家奇门只用阴遁，无阳遁（上元阴一、中元阴四、下元阴七）。
+ * 此前按节气判阴阳遁，与传统口径不符。
  */
-export function getYearPanYinYangDun(currentJieQi: string): YinYangDun {
-  if (YANG_DUN_JIEQI.includes(currentJieQi)) {
-    return '阳遁';
-  }
-  if (YIN_DUN_JIEQI.includes(currentJieQi)) {
-    return '阴遁';
-  }
-  // 默认返回阳遁（不应该发生）
-  return '阳遁';
+export function getYearPanYinYangDun(_currentJieQi: string): YinYangDun {
+  return '阴遁';
 }
 
 /**
  * 年盘三元判断
- * 根据年支确定三元
- * @param yearZhi 年支
- * @returns 三元
+ *
+ * 口径（2026-08-30 依典籍修正）：以一百八十年为一大周期，六十年一元——
+ * 上元甲子 1864-1923、中元甲子 1924-1983、下元甲子 1984-2043，循环往复。
+ * 此前按年支定元，与传统口径不符。
+ * @param year 公历年
  */
-export function getYearPanYuan(yearZhi: DiZhi): YuanType {
-  return DI_ZHI_YUAN_MAP[yearZhi];
+export function getYearPanYuanByYear(year: number): YuanType {
+  const offset = ((year - 1864) % 180 + 180) % 180;
+  if (offset < 60) return '上元';
+  if (offset < 120) return '中元';
+  return '下元';
 }
 
 /**
- * 年盘局数计算
- * 公式：(年干支在六十甲子中的序数 % 9) + 1
- * 注意：序数从0开始，所以甲子=0, 乙丑=1, ...
- * @param yearGanZhi 年干支（如 "甲辰"）
- * @returns 局数 (1-9)
+ * 年盘局数
+ *
+ * 口径（2026-08-30 依典籍修正）：上元六十年阴遁一局、中元阴遁四局、下元阴遁七局
+ * （《遁甲演义》「三元年遁」）。此前用 (年干支序数 % 9) + 1 的自造公式，无典籍出处。
+ * @param year 公历年
  */
-export function getYearPanJuShu(yearGanZhi: string): JuShu {
-  const index = JIA_ZI_60.indexOf(yearGanZhi);
-  if (index === -1) {
-    throw new Error(`无效的年干支: ${yearGanZhi}`);
-  }
-  // 公式: (index % 9) + 1，确保结果在 1-9 之间
-  const ju = (index % 9) + 1;
-  return ju as JuShu;
+export function getYearPanJuShuByYear(year: number): JuShu {
+  const yuan = getYearPanYuanByYear(year);
+  return (yuan === '上元' ? 1 : yuan === '中元' ? 4 : 7) as JuShu;
 }
 
 // ============= 月盘计算 =============
@@ -209,6 +203,8 @@ export function isValidGanZhi(ganZhi: string): boolean {
 export interface YearPanParams {
   yearGanZhi: string;
   currentJieQi: string;
+  /** 公历年（三元按 180 年周期定位） */
+  year?: number;
 }
 
 export interface MonthPanParams {
@@ -232,18 +228,19 @@ export class PanTypeCalculator {
    * @returns 阴阳遁、三元、局数
    */
   static calculateYearPan(params: YearPanParams): PanTypeResult {
-    const { yearGanZhi, currentJieQi } = params;
+    const { yearGanZhi, currentJieQi, year } = params;
 
     if (!isValidGanZhi(yearGanZhi)) {
       throw new Error(`无效的年干支: ${yearGanZhi}`);
     }
-
-    const yearZhi = extractZhi(yearGanZhi);
+    if (year === undefined) {
+      throw new Error('年盘计算需要公历年份（用于一百八十年三元定位）');
+    }
 
     return {
       yinYangDun: getYearPanYinYangDun(currentJieQi),
-      yuan: getYearPanYuan(yearZhi),
-      juShu: getYearPanJuShu(yearGanZhi),
+      yuan: getYearPanYuanByYear(year),
+      juShu: getYearPanJuShuByYear(year),
     };
   }
 

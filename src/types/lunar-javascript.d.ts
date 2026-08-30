@@ -64,6 +64,10 @@ declare module 'lunar-javascript' {
     getQi(): string;
     getPrevJie(): JieQi | null;
     getNextJie(): JieQi | null;
+    getJieQiTable(): Record<string, any>;
+    getYearInChinese(): string;
+    getMonthInGanZhi(): string;
+    getYearShengXiao(): string;
     getPrevQi(): JieQi | null;
     getNextQi(): JieQi | null;
     getPrevJieQi(): JieQi | null;
@@ -114,6 +118,7 @@ declare module 'lunar-javascript' {
   getTaiYuan(): string;
   getMingGong(): string;
   getShenGong(): string;
+  setSect(sect: number): void;
     getMonth(): string;
     getDay(): string;
     getTime(): string;

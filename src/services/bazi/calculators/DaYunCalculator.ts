@@ -21,7 +21,7 @@ export class DaYunCalculator {
     
     // Use LuckCycleCalculator for precise calculations
     const birthDate = birthInfo.solar instanceof Date ? birthInfo.solar : new Date(birthInfo.solar);
-    const birthYear = birthDate.getFullYear();
+    const birthYear = birthDate.getUTCFullYear();
     
     
     const daYunPeriods = LuckCycleCalculator.calLuckyList(

@@ -21,12 +21,12 @@ export class TrueSolarTime {
   static adjust(date: Date, longitude: number): Date {
     // Convert to Julian Day for astronomical calculations
     const jd = gregorianToJulianDay(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate(),
-      date.getHours(),
-      date.getMinutes(),
-      date.getSeconds()
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds()
     );
     
     // Calculate precise equation of time
@@ -92,7 +92,7 @@ export class TrueSolarTime {
    * Get the day of year (1-365/366)
    */
   private static getDayOfYear(date: Date): number {
-    const start = new Date(date.getFullYear(), 0, 0);
+    const start = new Date(Date.UTC(date.getUTCFullYear(), 0, 0));
     const diff = date.getTime() - start.getTime();
     const dayOfYear = Math.floor(diff / (1000 * 60 * 60 * 24));
     return dayOfYear;
@@ -108,9 +108,9 @@ export class TrueSolarTime {
   static calculateSunrise(date: Date, latitude: number, longitude: number): Date {
     // Convert to Julian Day at noon
     const jdNoon = gregorianToJulianDay(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate(),
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate(),
       12, 0, 0
     );
     
@@ -135,7 +135,7 @@ export class TrueSolarTime {
     }
     if (cosH < -1) {
       // Polar day - sun doesn't set
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0);
+      return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 0, 0, 0));
     }
     
     const hourAngleRad = Math.acos(cosH);
@@ -169,9 +169,9 @@ export class TrueSolarTime {
   static calculateSunset(date: Date, latitude: number, longitude: number): Date {
     // Similar to sunrise but add the hour angle instead of subtracting
     const jdNoon = gregorianToJulianDay(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate(),
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate(),
       12, 0, 0
     );
     
@@ -191,7 +191,7 @@ export class TrueSolarTime {
     }
     if (cosH < -1) {
       // Polar day
-      return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59);
+      return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), 23, 59, 59));
     }
     
     const hourAngleRad = Math.acos(cosH);
@@ -224,7 +224,7 @@ export class TrueSolarTime {
     
     // Handle polar day/night cases
     if (isNaN(sunrise.getTime())) return false; // Polar night
-    if (sunrise.getHours() === 0 && sunset.getHours() === 23) return true; // Polar day
+    if (sunrise.getUTCHours() === 0 && sunset.getUTCHours() === 23) return true; // Polar day
     
     return date >= sunrise && date <= sunset;
   }
@@ -249,12 +249,12 @@ export class TrueSolarTime {
     azimuth: number;   // degrees from north
   } {
     const jd = gregorianToJulianDay(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate(),
-      date.getHours(),
-      date.getMinutes(),
-      date.getSeconds()
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate(),
+      date.getUTCHours(),
+      date.getUTCMinutes(),
+      date.getUTCSeconds()
     );
     
     // Get solar coordinates

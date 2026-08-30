@@ -21,20 +21,22 @@ export function calculateNominalAge(birthYear: number, targetYear?: number): num
  * Calculate Western age (實歲)
  *
  * @param birthDate - Birth date in ISO format (YYYY-MM-DD)
- * @param targetDate - Target date (defaults to today)
+ * @param targetDate - Target date (defaults to today, Beijing wall)
  * @returns Western age
  */
 export function calculateWesternAge(birthDate: string, targetDate?: string): number {
-  const birth = new Date(birthDate);
-  const target = targetDate ? new Date(targetDate) : new Date();
+  // 字符串分量直接比较，彻底绕开 Date 的时区解释
+  const [bY, bM, bD] = birthDate.split('-').map(Number);
+  const now = new Date(Date.now() + 8 * 3600 * 1000);
+  const t = targetDate
+    ? targetDate.split('-').map(Number)
+    : [now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate()];
 
-  let age = target.getFullYear() - birth.getFullYear();
-  const monthDiff = target.getMonth() - birth.getMonth();
-
-  if (monthDiff < 0 || (monthDiff === 0 && target.getDate() < birth.getDate())) {
+  let age = t[0] - bY;
+  const monthDiff = t[1] - bM;
+  if (monthDiff < 0 || (monthDiff === 0 && t[2] < bD)) {
     age--;
   }
-
   return age;
 }
 

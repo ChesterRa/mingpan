@@ -163,6 +163,7 @@ export class LiuyaoService {
     const solar = Solar.fromYmdHms(year, month, day, hour, 0, 0);
     const lunar = solar.getLunar();
     const eightChar = lunar.getEightChar();
+      eightChar.setSect(1); // 子初换日，全项目统一口径
 
     const yearGanZhi = eightChar.getYear();
     const monthGanZhi = eightChar.getMonth();

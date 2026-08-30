@@ -87,7 +87,7 @@ export class LunarCalendarService {
       const lunar = Lunar.fromYmd(year, month, day);
       const solar = lunar.getSolar();
 
-      return new Date(solar.getYear(), solar.getMonth() - 1, solar.getDay());
+      return new Date(Date.UTC(solar.getYear(), solar.getMonth() - 1, solar.getDay()));
     } catch (error) {
       console.error('公历转换错误:', error);
       throw new Error('公历转换失败');

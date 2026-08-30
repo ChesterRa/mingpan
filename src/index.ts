@@ -17,16 +17,10 @@
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 
-import { BEIJING_TZ } from "./utils/timeNormalization";
 import { Logger } from "./shared/logger";
 import { createMingpanServer, SERVER_VERSION } from "./server";
 
 const logger = new Logger("mingpan");
-
-// Force deterministic timezone behavior (Beijing Time) across environments.
-// This ensures Date-based code paths in services behave consistently
-// regardless of the host machine's timezone setting.
-process.env.TZ = BEIJING_TZ;
 
 async function main() {
   const server = createMingpanServer();

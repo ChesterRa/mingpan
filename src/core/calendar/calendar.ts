@@ -60,12 +60,12 @@ export class PreciseCalendar {
    */
   static calculatePreciseBazi(
     date: Date,
-    hour: number = date.getHours(),
-    minute: number = date.getMinutes()
+    hour: number = date.getUTCHours(),
+    minute: number = date.getUTCMinutes()
   ): PreciseBaziChart {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + 1;
+    const day = date.getUTCDate();
     
     // 计算儒略日
     const jd = gregorianToJulianDay(year, month, day, hour, minute);
@@ -78,9 +78,9 @@ export class PreciseCalendar {
     } catch (error) {
       // 如果无法获取节气月份，使用备用方法
       solarMonth = {
-        monthIndex: date.getMonth(),
+        monthIndex: date.getUTCMonth(),
         monthName: ['正月', '二月', '三月', '四月', '五月', '六月',
-                   '七月', '八月', '九月', '十月', '十一月', '十二月'][date.getMonth()],
+                   '七月', '八月', '九月', '十月', '十一月', '十二月'][date.getUTCMonth()],
         startTerm: '未知',
         endTerm: '未知'
       };
@@ -126,7 +126,7 @@ export class PreciseCalendar {
     date: Date,
     solarTermInfo: any
   ): PreciseBaziPillar {
-    let year = date.getFullYear();
+    let year = date.getUTCFullYear();
     
     // 获取该年立春时间
     const solarTerms = calculateSolarTerms(year);
@@ -158,9 +158,9 @@ export class PreciseCalendar {
     solarTermInfo: any
   ): PreciseBaziPillar {
     // 获取当前月份的节气信息来确定农历月
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // JavaScript月份从0开始
-    const day = date.getDate();
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + 1; // JavaScript月份从0开始
+    const day = date.getUTCDate();
     
     // 计算当前月的节气月份（以节气为准）
     let lunarMonth: number;
@@ -320,7 +320,7 @@ export class PreciseCalendar {
     }
     
     // 检查是否在年份边界
-    const year = date.getFullYear();
+    const year = date.getUTCFullYear();
     const lichun = calculateSolarTerms(year)[2];
     const daysDiff = Math.abs((date.getTime() - lichun.getTime()) / (1000 * 60 * 60 * 24));
     

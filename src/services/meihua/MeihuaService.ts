@@ -22,6 +22,7 @@ import { BianguaCalculator } from './calculators/BianguaCalculator';
 import { TiyongCalculator } from './calculators/TiyongCalculator';
 import { getBaGuaByNumber, getGua64Name } from './data/bagua';
 import { normalizeBirthDateTime } from '../../utils/timeNormalization';
+import { nowBeijingParts } from '../../utils/wallTime';
 
 export class MeihuaService {
   private config: MeihuaServiceConfig;
@@ -218,9 +219,9 @@ export class MeihuaService {
       qiGuaData.movingYao
     );
 
-    // 當前時間作為記錄
-    const now = new Date();
-    const solar = Solar.fromDate(now);
+    // 當前時間作為記錄（北京牆鐘分量，與宿主時區無關）
+    const nowParts = nowBeijingParts();
+    const solar = Solar.fromYmd(nowParts.year, nowParts.month, nowParts.day);
     const lunar = solar.getLunar();
 
     return {

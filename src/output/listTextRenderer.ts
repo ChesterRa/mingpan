@@ -25,9 +25,9 @@ import { MutagenCore } from '../core/ziwei/MutagenCore';
  * 格式化日期為 YYYY-MM-DD
  */
 function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
+  const year = date.getUTCFullYear();
+  const month = (date.getUTCMonth() + 1).toString().padStart(2, '0');
+  const day = date.getUTCDate().toString().padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -36,8 +36,8 @@ function formatDate(date: Date): string {
  */
 function formatDateTime(date: Date): string {
   const dateStr = formatDate(date);
-  const hour = date.getHours().toString().padStart(2, '0');
-  const minute = date.getMinutes().toString().padStart(2, '0');
+  const hour = date.getUTCHours().toString().padStart(2, '0');
+  const minute = date.getUTCMinutes().toString().padStart(2, '0');
   return `${dateStr} ${hour}:${minute}`;
 }
 
@@ -477,9 +477,9 @@ export function renderBaziLiuYueList(
   }
 
   const lastMonth = liuYueList[liuYueList.length - 1];
-  if (lastMonth && lastMonth.endDate.getFullYear() > options.gregorianYear) {
+  if (lastMonth && lastMonth.endDate.getUTCFullYear() > options.gregorianYear) {
     lines.push('');
-    lines.push(`注：${lastMonth.stem}${lastMonth.branch}月雖然公曆日期在${lastMonth.endDate.getFullYear()}年，但仍屬於${options.ganzhiYear}干支年。`);
+    lines.push(`注：${lastMonth.stem}${lastMonth.branch}月雖然公曆日期在${lastMonth.endDate.getUTCFullYear()}年，但仍屬於${options.ganzhiYear}干支年。`);
   }
 
   return lines.join('\n');

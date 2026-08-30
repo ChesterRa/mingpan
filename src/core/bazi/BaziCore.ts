@@ -59,13 +59,15 @@ export class BaziCore {
    * Calculates the four pillars based on birth information
    */
   async calculate(input: BaziCoreInput): Promise<BaziCoreResult> {
-    // Step 1: Create date object
+    // Step 1: 构造北京墙钟载体（Date.UTC 构造 + getUTC* 读取，与宿主时区无关）
     let birthDate = new Date(
-      input.year,
-      input.month - 1,
-      input.day,
-      input.hour,
-      input.minute || 0
+      Date.UTC(
+        input.year,
+        input.month - 1,
+        input.day,
+        input.hour,
+        input.minute || 0
+      )
     );
     
     // Step 2: Apply true solar time if longitude provided
@@ -86,12 +88,12 @@ export class BaziCore {
     
     // Step 3: Calculate solar terms using lunar-javascript
     const solar = Solar.fromYmdHms(
-      birthDate.getFullYear(),
-      birthDate.getMonth() + 1,
-      birthDate.getDate(),
-      birthDate.getHours(),
-      birthDate.getMinutes(),
-      birthDate.getSeconds()
+      birthDate.getUTCFullYear(),
+      birthDate.getUTCMonth() + 1,
+      birthDate.getUTCDate(),
+      birthDate.getUTCHours(),
+      birthDate.getUTCMinutes(),
+      birthDate.getUTCSeconds()
     );
     const lunar = solar.getLunar();
     // Get the previous Jie to determine the current month
@@ -113,10 +115,10 @@ export class BaziCore {
     // 与 Step 3 的节气月柱同源。此前误传 input.* 原始分量，
     // 导致 longitude 校正只影响年/月柱而日/时柱不校正（v0.1.0 起的缺陷）。
     const chart = this.calculateHoroscope(
-      birthDate.getFullYear(),
-      birthDate.getMonth() + 1,
-      birthDate.getDate(),
-      birthDate.getHours(),
+      birthDate.getUTCFullYear(),
+      birthDate.getUTCMonth() + 1,
+      birthDate.getUTCDate(),
+      birthDate.getUTCHours(),
       solarTerm,
       isCurrentMonthSolarTerm,
       lunar
@@ -330,7 +332,12 @@ export class BaziCore {
     dayZhi: string;
   } {
     // Use lunar-javascript for accurate day pillar calculation
-    const solar = Solar.fromYmd(year, month, day);
+    // 口径（2026-08-30 裁定，与用户共识）：子初换日——23:00 起即属次日，
+    // 日柱与时柱同换。不采用「早晚子时」区分（该说系明末清初钟表传入后的
+    // 后期修正，古籍无据，民国袁树珊《命理探源》始正式化）。
+    const solar = hour === 23
+      ? Solar.fromYmd(year, month, day).next(1)
+      : Solar.fromYmd(year, month, day);
     const lunar = solar.getLunar();
     
     // Get day GanZhi directly from lunar-javascript
@@ -362,14 +369,9 @@ export class BaziCore {
       '戊': '壬', '癸': '壬'
     };
     
-    // 晚子时（23 點）：日柱仍為當天，時柱按次日干起五鼠遁
-    // （與 lunar-javascript EightChar 默認 sect 2 及項目內其它工具一致）
-    let anchorGan = dayGan;
-    if (hour === 23) {
-      const idx = HEAVENLY_STEMS.findIndex(s => s.name === dayGan);
-      anchorGan = HEAVENLY_STEMS[(idx + 1) % 10].name;
-    }
-    const startGan = fiveRatsDict[anchorGan];
+    // 子初换日后，23 点出生的 dayGan 已是次日干，五鼠遁自然得出次日子时，
+    // 无需任何早/晚子时特判
+    const startGan = fiveRatsDict[dayGan];
     const startGanIndex = HEAVENLY_STEMS.findIndex(s => s.name === startGan);
     const zhiIndex = Math.ceil(hour / 2) % 12;
     const ganIndex = (startGanIndex + zhiIndex) % 10;
@@ -782,7 +784,7 @@ export class BaziCore {
     const rawMonth = lunar.getMonth();
     
     return {
-      solar: new Date(year, month - 1, day, hour),
+      solar: new Date(Date.UTC(year, month - 1, day, hour)),
       lunar: {
         year: lunar.getYear(),
         month: Math.abs(rawMonth),

@@ -460,12 +460,12 @@ export class StrengthAnalyzer {
           // Core格式：包含solar Date对象
           const date = (birthInfo as any).solar;
           solar = Solar.fromYmdHms(
-            date.getFullYear(),
-            date.getMonth() + 1,
-            date.getDate(),
-            date.getHours(),
-            date.getMinutes(),
-            date.getSeconds()
+            date.getUTCFullYear(),
+            date.getUTCMonth() + 1,
+            date.getUTCDate(),
+            date.getUTCHours(),
+            date.getUTCMinutes(),
+            date.getUTCSeconds()
           );
         } else if (birthInfo.year && birthInfo.month && birthInfo.day) {
           // Service格式：包含具体日期字段

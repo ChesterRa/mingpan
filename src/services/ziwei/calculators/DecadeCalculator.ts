@@ -16,6 +16,7 @@ import {
 import { IztroAdapter } from '../../../core/ziwei/IztroAdapter';
 import { MutagenCore } from '../../../core/ziwei/MutagenCore';
 import { calculateNominalAge } from '../../../utils/ageCalculator';
+import { nowBeijingParts } from '../../../utils/wallTime';
 
 export class DecadeCalculator {
   /**
@@ -144,7 +145,7 @@ export class DecadeCalculator {
    */
   static getCurrentAge(birthYear: number, targetYear?: number): number {
     // 使用目标年份或当前年份计算虚岁
-    const actualTargetYear = targetYear || new Date().getFullYear();
+    const actualTargetYear = targetYear || nowBeijingParts().year;
     return actualTargetYear - birthYear + 1;  // 虚岁 = 目标年份 - 出生年份 + 1
   }
   

@@ -23,6 +23,7 @@ import { HourlyCalculator } from './calculators/HourlyCalculator';
 import { HoroscopeStarsCalculator } from './calculators/HoroscopeStarsCalculator';
 import { PalaceTransformer } from './transformers/PalaceTransformer';
 import { Logger, LogMasker } from '../../shared/logger';
+import { nowBeijingParts } from '../../utils/wallTime';
 
 export class ZiweiService {
   private adapter: IztroAdapter;
@@ -103,7 +104,7 @@ export class ZiweiService {
       );
       
       // 获取当前大限 - 使用目标年份或当前年份
-      const targetYear = this.config.targetYear || new Date().getFullYear();
+      const targetYear = this.config.targetYear || nowBeijingParts().year;
       const targetAge = DecadeCalculator.getCurrentAge(input.year, targetYear);
       const currentDecade = DecadeCalculator.getCurrentDecade(targetAge, decades);
       
@@ -132,7 +133,7 @@ export class ZiweiService {
       }
       
       // 提取并应用流曜 - 使用目标年份构建日期
-      const targetYearForHoroscope = this.config.targetYear || new Date().getFullYear();
+      const targetYearForHoroscope = this.config.targetYear || nowBeijingParts().year;
       const targetDate = `${targetYearForHoroscope}-01-01`;  // 使用目标年份的第一天
       const horoscope = this.adapter.getHoroscope(targetDate);
       const yearlyStars = HoroscopeStarsCalculator.extractYearlyStars(horoscope);
@@ -217,7 +218,7 @@ export class ZiweiService {
     
     // 修正流年信息
     if (horoscope?.yearly) {
-      const targetYear = new Date(date).getFullYear();
+      const targetYear = new Date(date).getUTCFullYear();
       horoscope.yearly = YearlyCalculator.fixYearlyInfo(horoscope.yearly, targetYear);
     }
     

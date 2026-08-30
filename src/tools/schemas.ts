@@ -111,6 +111,7 @@ export function normalizeBirthInfo<T extends NormalizableBirthInfo>(input: T): N
 // ============================================
 
 import { Logger } from '../shared/logger';
+import { nowBeijingParts } from '../utils/wallTime';
 
 const logger = new Logger('mingpan');
 
@@ -164,7 +165,7 @@ export function parseGanzhiYear(input: string | number): { year: number; ganzhi:
     const { stem, branch } = getYearStemBranch(input);
     return { year: input, ganzhi: stem + branch };
   }
-  const currentYear = new Date().getFullYear();
+  const currentYear = nowBeijingParts().year;
   for (let y = currentYear - 60; y <= currentYear + 60; y++) {
     const { stem, branch } = getYearStemBranch(y);
     if (stem + branch === input) {

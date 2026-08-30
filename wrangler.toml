@@ -1,0 +1,7 @@
+name = "mingpan-mcp"
+main = "src/worker.ts"
+compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 免费档：10 万请求/天，对排盘计算量级绰绰有余（单次 30-250ms CPU）
+# 部署：npx wrangler deploy（需 CLOUDFLARE_API_TOKEN 或 wrangler login）

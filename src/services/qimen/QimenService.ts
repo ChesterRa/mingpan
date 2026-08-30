@@ -129,6 +129,7 @@ export class QimenService {
       const yearPanResult = PanTypeCalculator.calculateYearPan({
         yearGanZhi: siZhu.yearGanZhi,
         currentJieQi: jieQi,
+        year: input.year,
       });
       yinYangDun = yearPanResult.yinYangDun;
       juShu = yearPanResult.juShu;
@@ -143,7 +144,7 @@ export class QimenService {
       yuan = monthPanResult.yuan;
     } else {
       // 时盘/日盘：使用 JuShuCalculator 计算
-      const currentDate = new Date(input.year, input.month - 1, input.day);
+      const currentDate = new Date(Date.UTC(input.year, input.month - 1, input.day));
       const juShuResult = JuShuCalculator.calculate(
         jieQi,
         siZhu.dayGanZhi,
@@ -351,8 +352,9 @@ export class QimenService {
     );
     const lunarWithTime = solarWithTime.getLunar();
 
-    // 使用 EightChar 获取精确四柱
+    // 使用 EightChar 获取精确四柱（sect1：子初换日，全项目统一口径）
     const eightChar = lunarWithTime.getEightChar();
+    eightChar.setSect(1);
     const yearGanZhi = eightChar.getYear();
     const monthGanZhi = eightChar.getMonth();
     const dayGanZhi = eightChar.getDay();

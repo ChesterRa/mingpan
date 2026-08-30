@@ -161,7 +161,7 @@ export class LiuRiCalculator {
     // Calculate all days within this solar term month
     const currentDate = new Date(startDate);
     // Normalize end date to start of day to ensure we don't include the day the next solar term starts
-    const endDateStartOfDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+    const endDateStartOfDay = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()));
     
     while (currentDate.getTime() < endDateStartOfDay.getTime()) {
       const iterDate = new Date(currentDate);
@@ -221,9 +221,9 @@ export class LiuRiCalculator {
   private calculateDayStemBranch(date: Date): { dayStem: Stem; dayBranch: Branch } {
     // Use lunar-javascript for accurate day pillar calculation
     const solar = Solar.fromYmd(
-      date.getFullYear(),
-      date.getMonth() + 1,
-      date.getDate()
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate()
     );
     const lunar = solar.getLunar();
     

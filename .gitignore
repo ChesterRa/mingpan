@@ -40,3 +40,6 @@ test/
 openspec
 AGENTS.md
 CLAUDE.md
+
+# 文档目录（默认全部不入库；需要公开的文档手动 git add -f）
+docs/

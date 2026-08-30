@@ -81,7 +81,7 @@ export function registerBaziTools(server: McpServer): void {
       longitude: normalized.longitude,
     });
 
-    const birthDate = new Date(normalized.year, normalized.month - 1, normalized.day, normalized.hour, normalized.minute);
+    const birthDate = new Date(Date.UTC(normalized.year, normalized.month - 1, normalized.day, normalized.hour, normalized.minute));
     const trueSolarTime = (result.birthInfo as any)?.trueSolarTime instanceof Date
       ? (result.birthInfo as any).trueSolarTime
       : undefined;

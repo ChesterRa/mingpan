@@ -217,10 +217,10 @@ export class LiuYueCalculator {
     
     // Fallback to approximate dates if solar terms not found
     if (!startDate) {
-      startDate = new Date(year, monthIndex + 1, 1);
+      startDate = new Date(Date.UTC(year, monthIndex + 1, 1));
     }
     if (!endDate) {
-      endDate = new Date(year, monthIndex + 2, 0);
+      endDate = new Date(Date.UTC(year, monthIndex + 2, 0));
     }
     
     return { startDate, endDate, solarTermInfo };

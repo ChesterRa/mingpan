@@ -47,6 +47,7 @@ export class DaliurenService {
     );
     const lunar = solar.getLunar();
     const eightChar = lunar.getEightChar();
+    eightChar.setSect(1); // 子初换日，全项目统一口径
 
     // 最近一個節氣（含中氣，月將表按「中氣+下一節」配對，等效中氣換將）
     const prevJieQi = lunar.getPrevJieQi();
@@ -63,7 +64,6 @@ export class DaliurenService {
       lunarMonth,
       dayGanZhi: eightChar.getDay(),
       hourGanZhi: eightChar.getTime(),
-      guirenMethod: input.guirenMethod,
     });
   }
 

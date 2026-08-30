@@ -39,7 +39,7 @@ function getLunarDayName(day: number): string {
 
 function formatLunarBirthday(birthDate: Date): string {
   try {
-    const solar = Solar.fromYmd(birthDate.getFullYear(), birthDate.getMonth() + 1, birthDate.getDate());
+    const solar = Solar.fromYmd(birthDate.getUTCFullYear(), birthDate.getUTCMonth() + 1, birthDate.getUTCDate());
     const lunar = solar.getLunar();
     
     const yearGanzhi = lunar.getYearInGanZhi();
@@ -50,7 +50,7 @@ function formatLunarBirthday(birthDate: Date): string {
     const monthName = LUNAR_MONTH_NAMES[Math.abs(lunarMonth)] || `${Math.abs(lunarMonth)}月`;
     const leapPrefix = isLeapMonth ? '閏' : '';
     const dayName = getLunarDayName(lunarDay);
-    const shichen = HOUR_TO_SHICHEN[birthDate.getHours()] || '未知時';
+    const shichen = HOUR_TO_SHICHEN[birthDate.getUTCHours()] || '未知時';
     
     return `${yearGanzhi}年${leapPrefix}${monthName}${dayName}${shichen}`;
   } catch (e) {
@@ -150,10 +150,11 @@ export function renderBaziText(
   const { bazi, subjectName, gender, birthDate, trueSolarTime } = params;
   const genderText = gender === 'male' ? '男' : gender === 'female' ? '女' : '未知';
   const dt = birthDate || (bazi as any)?.birthInfo?.solar;
+  // 入参为北京墙钟载体（Date.UTC 构造），一律 getUTC* 读取
   const fmt = (d?: Date) => {
     if (!d) return '';
     const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
   };
 
   const lines: string[] = [];
@@ -248,10 +249,11 @@ export function renderZiweiText(
 ): string {
   const { ziwei, subjectName, gender, birthDate, timeContext, mutagen } = params;
   const genderText = gender === 'male' ? '男' : gender === 'female' ? '女' : '未知';
+  // 入参为北京墙钟载体（Date.UTC 构造），一律 getUTC* 读取
   const fmt = (d?: Date) => {
     if (!d) return '';
     const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
   };
   const palaces: any[] = (ziwei as any).palaces || [];
   // 更嚴格的命宮識別：優先中文「命宮/命宫」，再回退到英文Life

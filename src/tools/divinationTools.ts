@@ -186,11 +186,9 @@ export function registerDivinationTools(server: McpServer): void {
       lunarMonth: z.number().int().min(1).max(12).optional().describe('【專家模式】農曆月份（1-12）'),
       dayGanZhi: z.string().optional().describe('【專家模式】日干支（如：甲子、乙丑）'),
       hourGanZhi: z.string().optional().describe('【專家模式】時干支（如：甲子、乙丑）'),
-      guirenMethod: z.union([z.literal(0), z.literal(1)]).optional().default(0).describe('貴人起法：0=標準, 1=另一種'),
     },
   }, async (args) => textResult('daliuren_basic', async () => {
     const daliurenService = new DaliurenService();
-    const guirenMethod = args.guirenMethod;
 
     // 推薦路徑：由時間自動推節氣/月將/干支
     const hasTime = args.year !== undefined && args.month !== undefined && args.day !== undefined && args.hour !== undefined;
@@ -211,8 +209,7 @@ export function registerDivinationTools(server: McpServer): void {
         day: normalized.day,
         hour: normalized.hour,
         minute: normalized.minute,
-        guirenMethod,
-      });
+        });
       return timezoneNote(sourceTimezone) + renderDaliurenText(result);
     }
 
@@ -223,8 +220,7 @@ export function registerDivinationTools(server: McpServer): void {
         lunarMonth: args.lunarMonth,
         dayGanZhi: args.dayGanZhi,
         hourGanZhi: args.hourGanZhi,
-        guirenMethod,
-      });
+        });
       return renderDaliurenText(result);
     }
 

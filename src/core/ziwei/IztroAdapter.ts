@@ -4,6 +4,7 @@
  */
 
 import { astro } from 'iztro';
+import { Solar } from 'lunar-javascript';
 
 import { 
   ZiweiInput, 
@@ -29,7 +30,12 @@ export class IztroAdapter {
   init(input: ZiweiInput): void {
     try {
       // 格式化日期
-      const dateStr = `${input.year}-${input.month.toString().padStart(2, '0')}-${input.day.toString().padStart(2, '0')}`;
+      // 口径（2026-08-30 裁定）：子初换日——23:00 起即属次日（与八字/六爻/大六壬/奇门统一，
+    // 不采用明末清初以后的「早晚子时」区分说）
+    const birthSolar = input.hour === 23
+      ? Solar.fromYmd(input.year, input.month, input.day).next(1)
+      : Solar.fromYmd(input.year, input.month, input.day);
+    const dateStr = `${birthSolar.getYear()}-${birthSolar.getMonth().toString().padStart(2, '0')}-${birthSolar.getDay().toString().padStart(2, '0')}`;
       const hourIndex = HOUR_TO_INDEX[input.hour] || 0;
       
       // 保存基本信息
@@ -306,9 +312,10 @@ export class IztroAdapter {
    * 获取星座
    */
   private getConstellation(): string {
-    const date = new Date(this.birthDate);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+    // 直接从 'YYYY-MM-DD' 字符串取分量，绕开 Date 的时区解释
+    const parts = String(this.birthDate).split('-').map(Number);
+    const month = parts[1];
+    const day = parts[2];
     
     const constellations = [
       { name: '水瓶座', start: [1, 20], end: [2, 18] },

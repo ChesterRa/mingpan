@@ -82,8 +82,6 @@ export interface DaliurenInput {
   /** 時干支 */
   hourGanZhi: string;
   
-  /** 貴人起法：0=標準, 1=另一種 */
-  guirenMethod?: 0 | 1;
 }
 
 /**
@@ -96,8 +94,6 @@ export interface DaliurenTimeInput {
   day: number;
   hour: number;
   minute?: number;
-  /** 貴人起法：0=標準, 1=另一種 */
-  guirenMethod?: 0 | 1;
 }
 
 // ============================================

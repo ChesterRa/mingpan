@@ -10,10 +10,8 @@ import {
   EARTHLY_BRANCHES,
   STEM_YIN_YANG
 } from '../../../core/constants/bazi';
-import { 
-  getSolarTermsForYear,
-  gregorianToJulianDay
-} from '../../../core/calendar/astronomicalCalendar';
+import { gregorianToJulianDay } from '../../../core/calendar/astronomicalCalendar';
+import { Solar } from 'lunar-javascript';
 import { calculateNominalAge } from '../../../utils/ageCalculator';
 
 export interface LuckSequence {
@@ -166,42 +164,39 @@ export class LuckCycleCalculator {
     yearStem: string
   ): LuckSequence {
     const direction = this.calLuckySequence(gender, yearStem);
-    const year = birthDate.getFullYear();
+    const year = birthDate.getUTCFullYear();
     
     // Define JIE terms (节) - only these are used for DaYun calculation
     const jieTerms = ['立春', '惊蛰', '清明', '立夏', '芒种', '小暑', '立秋', '白露', '寒露', '立冬', '大雪', '小寒'];
     
-    // Get all solar terms for birth year and adjacent years
-    const allSolarTerms = [
-      ...getSolarTermsForYear(year - 1),
-      ...getSolarTermsForYear(year),
-      ...getSolarTermsForYear(year + 1)
-    ];
+    // 节气时刻采用 lunar-javascript 权威表（2026-08-30 裁定）：
+    // 此前用自研天文引擎 getSolarTermsForYear，与权威表差可达数小时
+    // （实测 1992 立夏 02:05 vs lunar 14:08），直接影响起运精度。
+    // birthDate 为北京墙钟载体，转 Solar 分量查询后还原为载体。
+    const birthSolar = Solar.fromYmdHms(
+      birthDate.getUTCFullYear(),
+      birthDate.getUTCMonth() + 1,
+      birthDate.getUTCDate(),
+      birthDate.getUTCHours(),
+      birthDate.getUTCMinutes(),
+      birthDate.getUTCSeconds()
+    );
+    const jie = direction === 'forward'
+      ? birthSolar.getLunar().getNextJie()
+      : birthSolar.getLunar().getPrevJie();
     
-    // Filter to only include JIE terms
-    const solarTerms = allSolarTerms.filter(term => jieTerms.includes(term.name));
-    
-    // Find nearest JIE term based on direction
-    let nearestTerm: { date: Date; name: string } | null = null;
-    let minDays = Infinity;
-    
-    for (const term of solarTerms) {
-      const daysDiff = Math.abs(term.date.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24);
-      
-      if (direction === 'forward') {
-        // Find next JIE term
-        if (term.date > birthDate && daysDiff < minDays) {
-          minDays = daysDiff;
-          nearestTerm = term;
+    const nearestTerm: { date: Date; name: string } | null = jie
+      ? {
+          name: jie.getName(),
+          date: (() => {
+            const js = jie.getSolar();
+            return new Date(Date.UTC(js.getYear(), js.getMonth() - 1, js.getDay(), js.getHour(), js.getMinute(), js.getSecond()));
+          })(),
         }
-      } else {
-        // Find previous JIE term
-        if (term.date < birthDate && daysDiff < minDays) {
-          minDays = daysDiff;
-          nearestTerm = term;
-        }
-      }
-    }
+      : null;
+    const minDays = nearestTerm
+      ? Math.abs(nearestTerm.date.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24)
+      : Infinity;
     
     // Calculate starting age using traditional formula from 八字命理算法开发指南2
     // Get precise time difference in minutes
@@ -231,11 +226,18 @@ export class LuckCycleCalculator {
     // Calculate start age based on the detailed time
     // 起运时间是出生后的时间，需要加上虚岁1
     // 如果起运时间是2年9月多，那么第一个大运从虚岁4岁开始
-    const startAge = years + 1 + (months >= 6 ? 1 : 0);
+    // 起运岁数由交运的日历日期定位（与 lunar-javascript getYun 口径对齐，经 oracle 双源验证）：
+    // 交运时刻 = 出生时刻 + N年M月D天H时；起运虚岁 = 交运公历年 - 出生公历年 + 1。
+    // 此前用「年数+1+满6月进位」的纯算术近似，在跨公历年边界处与日历定位分歧。
+    const deliveryDateForAge = new Date(birthDate);
+    deliveryDateForAge.setUTCFullYear(deliveryDateForAge.getUTCFullYear() + years);
+    deliveryDateForAge.setUTCMonth(deliveryDateForAge.getUTCMonth() + months);
+    deliveryDateForAge.setUTCDate(deliveryDateForAge.getUTCDate() + days);
+    deliveryDateForAge.setUTCHours(deliveryDateForAge.getUTCHours() + hours);
+    const startAge = deliveryDateForAge.getUTCFullYear() - birthDate.getUTCFullYear() + 1;
     
     // Calculate actual start date
-    const startDate = new Date(birthDate);
-    startDate.setFullYear(birthDate.getFullYear() + startAge);
+    const startDate = new Date(deliveryDateForAge);
     
     // Calculate delivery years pattern
     const yearStemIndex = HEAVENLY_STEMS.findIndex(s => s.name === yearStem);
@@ -263,8 +265,8 @@ export class LuckCycleCalculator {
       // delivery happens at this exact time offset in delivery years
       
       // Find the solar term closest to this time pattern
-      const deliveryHour = birthDate.getHours() + hours;
-      const deliveryDayOfMonth = birthDate.getDate() + days;
+      const deliveryHour = birthDate.getUTCHours() + hours;
+      const deliveryDayOfMonth = birthDate.getUTCDate() + days;
       
       // For the expected case: birth March 14 + 28 days ≈ April 11
       // The nearest JIE term would be 清明 (April 5) or 立夏 (May 5)
@@ -276,26 +278,37 @@ export class LuckCycleCalculator {
       
       // Calculate the exact delivery date/time pattern
       const deliveryDate = new Date(birthDate);
-      deliveryDate.setFullYear(deliveryDate.getFullYear() + years);
-      deliveryDate.setMonth(deliveryDate.getMonth() + months);
-      deliveryDate.setDate(deliveryDate.getDate() + days);
-      deliveryDate.setHours(deliveryDate.getHours() + hours);
+      deliveryDate.setUTCFullYear(deliveryDate.getUTCFullYear() + years);
+      deliveryDate.setUTCMonth(deliveryDate.getUTCMonth() + months);
+      deliveryDate.setUTCDate(deliveryDate.getUTCDate() + days);
+      deliveryDate.setUTCHours(deliveryDate.getUTCHours() + hours);
       
       // Find which solar term this delivery date is closest to
-      const deliveryYear = deliveryDate.getFullYear();
-      const deliveryTerms = getSolarTermsForYear(deliveryYear).filter(term => 
-        jieTerms.includes(term.name)
+      const deliverySolar = Solar.fromYmdHms(
+        deliveryDate.getUTCFullYear(),
+        deliveryDate.getUTCMonth() + 1,
+        deliveryDate.getUTCDate(),
+        deliveryDate.getUTCHours(),
+        deliveryDate.getUTCMinutes(),
+        deliveryDate.getUTCSeconds()
       );
-      
-      let closestTerm = deliveryTerms[0];
+      const deliveryLunar = deliverySolar.getLunar();
+      // 就近节：比较前后两节取近者（lunar 权威表）
+      const toTerm = (j: ReturnType<typeof deliveryLunar.getPrevJie>): { name: string; date: Date } | null => {
+        if (!j) return null;
+        const js = j.getSolar();
+        return {
+          name: j.getName(),
+          date: new Date(Date.UTC(js.getYear(), js.getMonth() - 1, js.getDay(), js.getHour(), js.getMinute(), js.getSecond())),
+        };
+      };
+      const candidates = [toTerm(deliveryLunar.getPrevJie()), toTerm(deliveryLunar.getNextJie())]
+        .filter((t): t is { name: string; date: Date } => t !== null);
+      let closestTerm: { name: string; date: Date } = candidates[0];
       let minDiff = Math.abs(deliveryDate.getTime() - closestTerm.date.getTime());
-      
-      for (const term of deliveryTerms) {
+      for (const term of candidates) {
         const diff = Math.abs(deliveryDate.getTime() - term.date.getTime());
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestTerm = term;
-        }
+        if (diff < minDiff) { minDiff = diff; closestTerm = term; }
       }
       
       // Calculate days offset from the closest solar term
@@ -466,7 +479,7 @@ export class LuckCycleCalculator {
     const daysSinceReference = Math.floor(startJD - referenceJD);
     
     // Get days in month
-    const daysInMonth = new Date(year, month, 0).getDate();
+    const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
     
     for (let day = 1; day <= daysInMonth; day++) {
       const currentJD = startJD + day - 1;
@@ -482,7 +495,7 @@ export class LuckCycleCalculator {
       const element = HEAVENLY_STEMS[stemIndex].element;
       
       days.push({
-        date: new Date(year, month - 1, day),
+        date: new Date(Date.UTC(year, month - 1, day)),
         stemBranch: { stem, branch },
         element
       });

@@ -100,8 +100,8 @@ export class JuShuCalculator {
    */
   private static calculateYuanMaoshan(jieQiDate: Date, currentDate: Date): YuanType {
     // 使用 UTC 日期避免时区和时间精度问题
-    const jieQiDay = Date.UTC(jieQiDate.getFullYear(), jieQiDate.getMonth(), jieQiDate.getDate());
-    const currentDay = Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+    const jieQiDay = Date.UTC(jieQiDate.getUTCFullYear(), jieQiDate.getUTCMonth(), jieQiDate.getUTCDate());
+    const currentDay = Date.UTC(currentDate.getUTCFullYear(), currentDate.getUTCMonth(), currentDate.getUTCDate());
 
     const diffDays = Math.floor((currentDay - jieQiDay) / (1000 * 60 * 60 * 24)) + 1; // 交节当天算第1天
 

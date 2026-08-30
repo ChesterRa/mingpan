@@ -84,7 +84,7 @@ export class SolarTermsCalculator {
       
       // 轉換為日期
       const termDate = new Date(2000, 0, 1);
-      termDate.setMinutes(termDate.getMinutes() + adjustedMinutes);
+      termDate.setMinutes(termDate.getUTCMinutes() + adjustedMinutes);
       
       // 根據節氣索引調整日期（這是簡化版本）
       const month = Math.floor(i / 2);
@@ -120,7 +120,7 @@ export class SolarTermsCalculator {
     const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
     return terms.some(term => {
-      const termDateStr = `${term.date.getFullYear()}-${String(term.date.getMonth() + 1).padStart(2, '0')}-${String(term.date.getDate()).padStart(2, '0')}`;
+      const termDateStr = `${term.date.getUTCFullYear()}-${String(term.date.getUTCMonth() + 1).padStart(2, '0')}-${String(term.date.getUTCDate()).padStart(2, '0')}`;
       return termDateStr === dateStr;
     });
   }

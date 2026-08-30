@@ -33,6 +33,7 @@ import {
   timezoneNote,
   getYearStemBranch,
 } from './schemas';
+import { nowBeijingParts } from '../utils/wallTime';
 
 const ziweiService = new ZiweiService();
 
@@ -89,7 +90,7 @@ export function registerZiweiTools(server: McpServer): void {
       includePersonal: false,
     };
 
-    const birthDate = new Date(normalized.year, normalized.month - 1, normalized.day, normalized.hour, normalized.minute);
+    const birthDate = new Date(Date.UTC(normalized.year, normalized.month - 1, normalized.day, normalized.hour, normalized.minute));
     return timezoneNote(sourceTimezone) + renderZiweiText(
       {
         ziwei: result,
@@ -201,7 +202,7 @@ export function registerZiweiTools(server: McpServer): void {
     const mingGongPalace = findMingGong(result);
     const mingGongStars = extractStars(mingGongPalace);
 
-    const currentYear = new Date().getFullYear();
+    const currentYear = nowBeijingParts().year;
     const currentAge = currentYear - normalized.year + 1;
     let currentDecade: { palaceName: string; startAge: number; endAge: number } | undefined;
     if (result.decades && result.decades.length > 0) {
@@ -449,15 +450,15 @@ export function registerZiweiTools(server: McpServer): void {
 
     const firstSolar = lunarFirstDay.getSolar();
     const lastSolar = lunarLastDay.getSolar();
-    const startDate = new Date(firstSolar.getYear(), firstSolar.getMonth() - 1, firstSolar.getDay());
-    const endDate = new Date(lastSolar.getYear(), lastSolar.getMonth() - 1, lastSolar.getDay());
+    const startDate = new Date(Date.UTC(firstSolar.getYear(), firstSolar.getMonth() - 1, firstSolar.getDay()));
+    const endDate = new Date(Date.UTC(lastSolar.getYear(), lastSolar.getMonth() - 1, lastSolar.getDay()));
 
     const dailyList: ZiweiDailyInfo[] = [];
     for (let day = 1; day <= lastDayNum; day++) {
       try {
         const lunarDay = Lunar.fromYmd(args.lunarYear, monthParam, day);
         const solarDay = lunarDay.getSolar();
-        const solarDate = new Date(solarDay.getYear(), solarDay.getMonth() - 1, solarDay.getDay());
+        const solarDate = new Date(Date.UTC(solarDay.getYear(), solarDay.getMonth() - 1, solarDay.getDay()));
 
         const dailyInfo = ziweiService.getDailyInfo(
           solarDay.getYear(), solarDay.getMonth(), solarDay.getDay()

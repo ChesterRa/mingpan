@@ -69,7 +69,7 @@ export class PreciseSolarTermCalculator {
    * 获取指定日期的节气信息
    */
   static getSolarTermInfo(date: Date): SolarTermInfo {
-    const year = date.getFullYear();
+    const year = date.getUTCFullYear();
     const solarTerms = this.calculateYearSolarTerms(year);
     
     let currentIndex = -1;
@@ -194,7 +194,7 @@ export class PreciseSolarTermCalculator {
             continue;
           }
           
-          const date = new Date(p.year, p.month - 1, p.day, p.hour || 0, p.minute || 0, p.second || 0);
+          const date = new Date(Date.UTC(p.year, p.month - 1, p.day, p.hour || 0, p.minute || 0, p.second || 0));
           const key = `${chineseName}_${p.year}`;
           
           if (!termsByYear.has(chineseName)) {
@@ -264,9 +264,9 @@ export class PreciseSolarTermCalculator {
     while (currentDate <= endDate) {
       try {
         const solar = Solar.fromYmd(
-          currentDate.getFullYear(),
-          currentDate.getMonth() + 1,
-          currentDate.getDate()
+          currentDate.getUTCFullYear(),
+          currentDate.getUTCMonth() + 1,
+          currentDate.getUTCDate()
         );
         const lunar = solar.getLunar();
         const monthGanZhi = lunar.getMonthInGanZhi();
@@ -279,15 +279,15 @@ export class PreciseSolarTermCalculator {
           for (const [jieName, branch] of Object.entries(jieToMonthBranch)) {
             if (branch === newBranch) {
               // 检查年份是否匹配（小寒和大雪可能跨年）
-              const isCurrentYear = currentDate.getFullYear() === year;
-              const isJanNextYear = currentDate.getFullYear() === year + 1 && currentDate.getMonth() === 0;
-              const isDecCurrentYear = currentDate.getFullYear() === year && currentDate.getMonth() === 11;
+              const isCurrentYear = currentDate.getUTCFullYear() === year;
+              const isJanNextYear = currentDate.getUTCFullYear() === year + 1 && currentDate.getUTCMonth() === 0;
+              const isDecCurrentYear = currentDate.getUTCFullYear() === year && currentDate.getUTCMonth() === 11;
               
               if ((jieName === '小寒' && isJanNextYear) ||
                   (jieName === '大雪' && isDecCurrentYear) ||
                   (jieName !== '小寒' && jieName !== '大雪' && isCurrentYear)) {
                 result.set(jieName, new Date(currentDate));
-              } else if (jieName === '小寒' && currentDate.getFullYear() === year && currentDate.getMonth() === 0) {
+              } else if (jieName === '小寒' && currentDate.getUTCFullYear() === year && currentDate.getUTCMonth() === 0) {
                 // 当年1月的小寒
                 result.set(jieName, new Date(currentDate));
               }
@@ -301,7 +301,7 @@ export class PreciseSolarTermCalculator {
         // 忽略无效日期
       }
       
-      currentDate.setDate(currentDate.getDate() + 1);
+      currentDate.setDate(currentDate.getUTCDate() + 1);
     }
     
     return result;
@@ -464,7 +464,7 @@ function normalizeLongitude(longitude: number): number {
  * 获取某月的天数
  */
 function getDaysInMonth(year: number, month: number): number {
-  return new Date(year, month, 0).getDate();
+  return new Date(year, month, 0).getUTCDate();
 }
 
 /**
@@ -477,7 +477,7 @@ export function findSolarTerm(date: Date): {
   next: { name: string; date: Date; index: number } | null;
   previous: { name: string; date: Date; index: number } | null;
 } {
-  const year = date.getFullYear();
+  const year = date.getUTCFullYear();
   const terms = calculateSolarTerms(year);
   
   // 添加前一年最后一个节气和后一年第一个节气

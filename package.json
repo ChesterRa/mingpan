@@ -1,6 +1,6 @@
 {
   "name": "mingpan",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "MCP service for Chinese metaphysics chart calculations: BaZi, ZiWei Dou Shu, LiuYao, MeiHua YiShu, DaLiuRen, and QiMen DunJia",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -24,7 +24,8 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "deploy:worker": "npm run build && npx wrangler deploy"
   },
   "keywords": [
     "mcp",

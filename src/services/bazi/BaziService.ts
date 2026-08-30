@@ -36,6 +36,7 @@ import { LiuNianCalculator } from './calculators/LiuNianCalculator';
 import { LiuYueCalculator } from './calculators/LiuYueCalculator';
 import { LiuRiCalculator } from './calculators/LiuRiCalculator';
 import { Logger, LogMasker } from '../../shared/logger';
+import { nowBeijingParts } from '../../utils/wallTime';
 
 // Create stem-element mapping
 const STEM_ELEMENTS: Record<Stem, FiveElement> = HEAVENLY_STEMS.reduce((acc, stem) => {
@@ -286,7 +287,7 @@ export class BaziService {
         );
       });
       
-      const currentYear = new Date().getFullYear();
+      const currentYear = nowBeijingParts().year;
       const currentAge = currentYear - input.year + 1;
       const currentDaYun = daYun.find(d => currentAge >= d.startAge && currentAge <= d.endAge);
       
