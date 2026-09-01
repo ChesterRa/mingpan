@@ -24,4 +24,5 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          # wrangler.toml：name=mingpan-mcp，main=src/worker.ts
+          wranglerVersion: "4"
+          # wrangler.toml：name=mingpan-mcp，main=src/worker.ts（需 wrangler v4）
