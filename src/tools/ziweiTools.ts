@@ -10,7 +10,7 @@
  * - ziwei_liuri      流日列表（農曆日）
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Lunar } from 'lunar-javascript';
 import { ZiweiService } from '../services/ziwei/ZiweiService';

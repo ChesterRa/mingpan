@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { CallToolResult } from '@modelcontextprotocol/server';
 import { normalizeBirthDateTime } from '../utils/timeNormalization';
 
 // ============================================

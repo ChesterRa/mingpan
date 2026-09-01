@@ -5,7 +5,7 @@
  * 節氣、干支等曆法量一律由 MCP 自動推得（LLM 手推干支極易出錯）。
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { LiuyaoService } from '../services/liuyao/LiuyaoService';
 import { renderLiuyaoText } from '../output/liuyaoTextRenderer';

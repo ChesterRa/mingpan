@@ -6,7 +6,7 @@
  * - qimen_yongshen  用神分析（按事類，僅確定性信息）
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { QimenService } from '../services/qimen/QimenService';
 import { renderQimenText, renderQimenYongShenText } from '../output/qimenTextRenderer';

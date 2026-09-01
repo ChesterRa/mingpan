@@ -17,7 +17,7 @@ An [MCP](https://modelcontextprotocol.io) server that computes traditional Chine
 LLMs are unreliable at the computational half of Chinese divination: deriving ganzhi pillars from solar terms, converting between lunar and solar calendars, adjusting for timezones and true solar time. They hallucinate these values. Mingpan is the deterministic other half:
 
 - **Deterministic-only output policy.** Every value a tool returns — four pillars, hidden stems, ten gods, na yin, life palace, palaces & stars, mutagens, hexagram lines — is a verifiable fact from classical lookup tables. Fortune scores, auspiciousness labels, and interpretive judgments are deliberately excluded: those belong to your AI.
-- **Correctness discipline.** 218 tests including minute-level LiChun (Start of Spring) boundary cases, golden cases verified against historical records and classical texts, and cross-validation against reference implementations (lunar-javascript, iztro, kinqimen). All caliber decisions are documented in-repo.
+- **Correctness discipline.** 288 tests including minute-level LiChun (Start of Spring) boundary cases, golden cases verified against historical records and classical texts, and cross-validation against reference implementations (lunar-javascript, iztro, kinqimen). All caliber decisions are documented in-repo.
 - **Timezone & true-solar-time aware.** IANA timezone input with historical DST handling (including China's 1986–1991 DST), longitude-based true solar time correction applied consistently to all four pillars. CI enforces cross-timezone reproducibility.
 
 ## Tools (16)
@@ -30,6 +30,7 @@ LLMs are unreliable at the computational half of Chinese divination: deriving ga
 | MeiHua YiShu | `meihua_basic` | Time- or number-cast hexagrams, mutual/transformed, ti-yong relation |
 | Da Liu Ren | `daliuren_basic` | Just supply a Gregorian time — seasonal general, pillars, four lessons, three transmissions, twelve generals |
 | Qi Men Dun Jia | `qimen_basic`, `qimen_yongshen` | Rotating & flying styles, four pan types, chaibu/maoshan; yong-shen analysis with deterministic facts only |
+| Calendar primitives | `jieqi_query`, `calendar_convert` | 24 solar terms to the second (AI's most-hallucinated value) · Solar↔lunar conversion with leap months |
 
 ## Example output (`bazi_basic`)
 
@@ -57,8 +58,5 @@ Year range 1900–2100 · Beijing time (UTC+8) as internal canonical representat
 ## Documentation
 
 - [README（简体中文 · authoritative）](README.md) — full parameter reference, calendar conventions, version history
-- [`docs/qimen-correctness-notes.md`](docs/qimen-correctness-notes.md) — Qi Men caliber adjudications
-- [`docs/product-roadmap.md`](docs/product-roadmap.md) — product principles & roadmap
-- [`docs/release-notes-0.1.4.md`](docs/release-notes-0.1.4.md) — latest release notes
 
-Apache-2.0 · This is a condensed edition; the Chinese README is the single source of truth. Last synced: **v0.1.4**
+Apache-2.0 · This is a condensed edition; the Chinese README is the single source of truth. Last synced: **v0.1.5**

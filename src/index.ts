@@ -15,7 +15,7 @@
  * 入口層統一完成農曆轉換與時區換算（見 utils/timeNormalization.ts）。
  */
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 
 import { Logger } from "./shared/logger";
 import { createMingpanServer, SERVER_VERSION } from "./server";

@@ -8,7 +8,7 @@
  * 两者完全满足输出准入三条件（确定/权威/AI 不易获知）。
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Lunar, Solar } from 'lunar-javascript';
 import { textResult } from './schemas';

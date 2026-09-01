@@ -5,7 +5,7 @@
  * 入口（index.ts）連接 stdio 傳輸；測試可連接 InMemoryTransport。
  */
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { McpServer } from "@modelcontextprotocol/server";
 import { registerBaziTools } from "./tools/baziTools";
 import { registerZiweiTools } from "./tools/ziweiTools";
 import { registerDivinationTools } from "./tools/divinationTools";
@@ -13,7 +13,7 @@ import { registerQimenTools } from "./tools/qimenTools";
 import { registerCalendarTools } from "./tools/calendarTools";
 
 export const SERVER_NAME = "mingpan";
-export const SERVER_VERSION = "0.1.5";
+export const SERVER_VERSION = "0.1.6";
 
 export function createMingpanServer(): McpServer {
   const server = new McpServer(

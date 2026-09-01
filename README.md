@@ -2,7 +2,7 @@
 
 **简体中文（主文档）** | [English](README.en.md) | [日本語](README.ja.md)
 
-[![Version](https://img.shields.io/badge/version-0.1.5-blue.svg)](https://github.com/ChesterRa/mingpan)
+[![Version](https://img.shields.io/badge/version-0.1.6-blue.svg)](https://github.com/ChesterRa/mingpan)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 **命盘（Mingpan）** 是一个中华传统术数 MCP 服务，为 Claude 等 AI 应用提供命理排盘与占卜起卦的计算能力。
@@ -249,10 +249,10 @@ npm run dev  # 监听变化
 
 | 版本 | 说明 |
 | ---- | ---- |
-| 0.1.5 | **口径裁决**：子初换日（23:00 起日柱时柱同属次日，全五系统统一，不采用早晚子时后期修正说）；起运权威化（弃自研天文引擎改用 lunar 权威节气表，起运岁数由交运日历日期定位，经 lunar getYun 六例 oracle 验证）；奇门年盘按典籍修正（180 年三元/只用阴遁/阴一四七局，《遁甲演义》口径，原实现三处全错）；大六壬 guirenMethod 死参数移除；**新能力**：历法原语层（jieqi_query 节气秒级查询 + calendar_convert 公农历互转含闰月）——AI 最易幻觉的确定性量；远程 MCP（Cloudflare Workers HTTP 端点，与 stdio 同引擎跨形态一致）；全库去 TZ 依赖（Date.UTC 载体约定，跨时区字节一致测试看守）；测试 218→288（新增权威历史人物 10 人金样本、跨系统干支一致性、紫微安星法结构不变量、边界条件） |
-| 0.1.4 | **正确性修复**：八字年柱按立春精确时刻换年（原立春至春节窗口错排，连带月干/大运顺逆）、晚子时时柱按次日干起五鼠遁、奇门四类口径修正、stdio 日志不再污染 JSON-RPC 流；**输出定位确立**：只输出确定且权威且 AI 不易获知的排盘量——bazi_basic 为四柱纳音/天干藏干十神/十二长生自坐/命宫胎元/旬空/公农历，紫微补五行局/命主/身主，梅花去断语，奇门格局平列、用神去评分，择日工具（qimen_zeri）移除；**新能力**：大六壬时间起课、多时区（timezone）；MCP SDK 高级 API 迁移与工具模块化、zod v4、净代码缩减约 15%；测试 117→218 |
-| 0.1.5 | **口径裁决**：子初换日（23:00 起日柱时柱同属次日，全五系统统一，不采用早晚子时后期修正说）；起运权威化（弃自研天文引擎改用 lunar 权威节气表，起运岁数由交运日历日期定位，经 lunar getYun 六例 oracle 验证）；奇门年盘按典籍修正（180 年三元/只用阴遁/阴一四七局，《遁甲演义》口径，原实现三处全错）；大六壬 guirenMethod 死参数移除；**新能力**：历法原语层（jieqi_query 节气秒级查询 + calendar_convert 公农历互转含闰月）——AI 最易幻觉的确定性量；远程 MCP（Cloudflare Workers HTTP 端点，与 stdio 同引擎跨形态一致）；全库去 TZ 依赖（Date.UTC 载体约定，跨时区字节一致测试看守）；测试 218→288（新增权威历史人物 10 人金样本、跨系统干支一致性、紫微安星法结构不变量、边界条件） |
-| 0.1.4 | 奇门用神分析与择日 |
+| 0.1.6 | **MCP SDK v2 迁移**（2026-07-28 无状态协议，原生支持 Cloudflare Workers，向后兼容旧客户端）；远程 HTTP 入口从 50 行简化为 20 行（createMcpHandler）；Workers 打包 gzip 638→606KB；测试 288 |
+| 0.1.5 | **口径裁决**：子初换日（23:00 起日柱时柱同属次日，全五系统统一）；起运权威化（lunar 节气表 + 交运日历定位）；奇门年盘按《遁甲演义》典籍修正；真太阳时四柱全量生效；**新能力**：历法原语层（jieqi_query + calendar_convert）；测试 218→288 |
+| 0.1.4 | **正确性修复**：八字立春换年、奇门四类口径修正、stdio 日志修复；**输出定位确立**：只输出确定性排盘量；大六壬时间起课、多时区；测试 117→218 |
+| 0.1.3 | 奇门用神分析与择日 |
 | 0.1.2 | 六爻、梅花易数、大六壬 |
 | 0.1.0 | 首个发布：八字、紫微 |
 

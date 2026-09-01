@@ -1,6 +1,6 @@
 {
   "name": "mingpan",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "MCP service for Chinese metaphysics chart calculations: BaZi, ZiWei Dou Shu, LiuYao, MeiHua YiShu, DaLiuRen, and QiMen DunJia",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -48,7 +48,7 @@
   "author": "ChesterRa",
   "license": "Apache-2.0",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/server": "^2.0.0",
     "iztro": "^2.6.0",
     "lunar-javascript": "^1.7.7",
     "zod": "^4.4.3"
@@ -56,7 +56,8 @@
   "devDependencies": {
     "@types/node": "^20.11.17",
     "typescript": "^5.3.3",
-    "vitest": "^1.6.1"
+    "vitest": "^1.6.1",
+    "@modelcontextprotocol/client": "^2.0.0"
   },
   "engines": {
     "node": ">=20.0.0"
