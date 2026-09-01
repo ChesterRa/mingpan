@@ -2,14 +2,18 @@
 
 **简体中文（主文档）** | English (this page) | [日本語](README.ja.md)
 
-An [MCP](https://modelcontextprotocol.io) server that computes traditional Chinese metaphysics charts — **BaZi, Zi Wei Dou Shu, LiuYao, MeiHua YiShu, Da Liu Ren, and Qi Men Dun Jia** — with calendar-grade rigor, so your AI agent can focus on what it does best: interpretation.
+An open-source [MCP](https://modelcontextprotocol.io) calculation engine for traditional Chinese metaphysics — **BaZi, Zi Wei Dou Shu, LiuYao, MeiHua YiShu, Da Liu Ren, and Qi Men Dun Jia** — with calendar-grade rigor, so your AI agent can focus on interpretation. BaziWei also operates the official hosted service.
+
+```text
+https://mingpan.bzwai.com/mcp
+```
+
+Add this endpoint to any AI client that supports Remote MCP / Streamable HTTP. No Node.js installation or server deployment is required. Visit the [Mingpan open-source project site](https://mingpan.bzwai.com) for the capability overview and connection guide. The service is operated by [BaziWei](https://bzwai.com); the source and calculation conventions remain open here for inspection and collaboration.
+
+For local development or data that must remain on-device, the stdio package remains available:
 
 ```json
-{
-  "mcpServers": {
-    "mingpan": { "command": "npx", "args": ["-y", "mingpan"] }
-  }
-}
+{ "mcpServers": { "mingpan": { "command": "npx", "args": ["-y", "mingpan"] } } }
 ```
 
 ## The problem it solves
@@ -17,10 +21,11 @@ An [MCP](https://modelcontextprotocol.io) server that computes traditional Chine
 LLMs are unreliable at the computational half of Chinese divination: deriving ganzhi pillars from solar terms, converting between lunar and solar calendars, adjusting for timezones and true solar time. They hallucinate these values. Mingpan is the deterministic other half:
 
 - **Deterministic-only output policy.** Every value a tool returns — four pillars, hidden stems, ten gods, na yin, life palace, palaces & stars, mutagens, hexagram lines — is a verifiable fact from classical lookup tables. Fortune scores, auspiciousness labels, and interpretive judgments are deliberately excluded: those belong to your AI.
-- **Correctness discipline.** 288 tests including minute-level LiChun (Start of Spring) boundary cases, golden cases verified against historical records and classical texts, and cross-validation against reference implementations (lunar-javascript, iztro, kinqimen). All caliber decisions are documented in-repo.
+- **Correctness discipline.** 300 tests including minute-level LiChun (Start of Spring) boundary cases, golden cases verified against historical records and classical texts, cross-validation against reference implementations, remote MCP boundary tests, and localized project-site contracts.
 - **Timezone & true-solar-time aware.** IANA timezone input with historical DST handling (including China's 1986–1991 DST), longitude-based true solar time correction applied consistently to all four pillars. CI enforces cross-timezone reproducibility.
+- **Hardened official service.** The stateless remote service does not store, cache, or log birth inputs or chart results, and enforces Host/Origin validation, request-size limits, and rate limiting.
 
-## Tools (16)
+## Tools (18)
 
 | Domain | Tools | Notes |
 |---|---|---|
@@ -59,4 +64,4 @@ Year range 1900–2100 · Beijing time (UTC+8) as internal canonical representat
 
 - [README（简体中文 · authoritative）](README.md) — full parameter reference, calendar conventions, version history
 
-Apache-2.0 · This is a condensed edition; the Chinese README is the single source of truth. Last synced: **v0.1.5**
+Apache-2.0 · This is a condensed edition; the Chinese README is the single source of truth. Last synced: **v0.1.7**

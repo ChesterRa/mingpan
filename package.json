@@ -1,6 +1,6 @@
 {
   "name": "mingpan",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "MCP service for Chinese metaphysics chart calculations: BaZi, ZiWei Dou Shu, LiuYao, MeiHua YiShu, DaLiuRen, and QiMen DunJia",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,18 +14,24 @@
     "type": "git",
     "url": "https://github.com/ChesterRa/mingpan.git"
   },
-  "homepage": "https://github.com/ChesterRa/mingpan#readme",
+  "homepage": "https://mingpan.bzwai.com",
   "bugs": {
     "url": "https://github.com/ChesterRa/mingpan/issues"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build:site && tsc",
+    "build:site": "node scripts/build-site.mjs",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "npm run build",
-    "deploy:worker": "npm run build && npx wrangler deploy"
+    "check": "npm run build && npm test && npm run smoke:stdio",
+    "deploy:worker:dry-run": "wrangler deploy --dry-run",
+    "deploy:worker": "npm run check && npm run deploy:worker:dry-run && wrangler deploy",
+    "smoke:stdio": "node scripts/smoke-stdio.mjs",
+    "smoke:remote": "node scripts/smoke-remote.mjs",
+    "verify:release-version": "node scripts/verify-release-version.mjs"
   },
   "keywords": [
     "mcp",
@@ -54,10 +60,11 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@modelcontextprotocol/client": "^2.0.0",
     "@types/node": "^20.11.17",
     "typescript": "^5.3.3",
-    "vitest": "^1.6.1",
-    "@modelcontextprotocol/client": "^2.0.0"
+    "vitest": "4.1.11",
+    "wrangler": "4.127.1"
   },
   "engines": {
     "node": ">=20.0.0"

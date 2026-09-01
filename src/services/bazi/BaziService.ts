@@ -35,7 +35,7 @@ import { DaYunCalculator } from './calculators/DaYunCalculator';
 import { LiuNianCalculator } from './calculators/LiuNianCalculator';
 import { LiuYueCalculator } from './calculators/LiuYueCalculator';
 import { LiuRiCalculator } from './calculators/LiuRiCalculator';
-import { Logger, LogMasker } from '../../shared/logger';
+import { Logger } from '../../shared/logger';
 import { nowBeijingParts } from '../../utils/wallTime';
 
 // Create stem-element mapping
@@ -86,15 +86,17 @@ export class BaziService {
   async calculate(input: BaziInput): Promise<BaziResult> {
     const startTime = Date.now();
     
-    // 入口日志：记录开始计算
+    // 不记录出生年月日、时刻、姓名、经度或排盘结果。
     this.logger.info('开始八字计算', { 
       type: '八字',
-      input: LogMasker.maskObject(input, ['name', 'birthDate']),
       hasLocation: !!input.longitude 
     });
     
     try {
-      this.debug('Starting calculation with input:', input);
+      this.debug('Starting calculation', {
+        hasLocation: !!input.longitude,
+        hasOptions: !!input.options,
+      });
       
       // Generate cache key
       const cacheKey = this.generateCacheKey(input);
@@ -102,7 +104,7 @@ export class BaziService {
       // Check cache if enabled
       if (this.config.enableCaching && this.cache.has(cacheKey)) {
         const cached = this.cache.get(cacheKey)!;
-        this.debug('Returning cached result for key:', cacheKey);
+        this.debug('Returning cached result');
         
         // 性能日志：缓存命中
         this.logger.info('八字计算完成（缓存命中）', {
@@ -132,11 +134,7 @@ export class BaziService {
         longitude: input.longitude
       });
       
-      this.debug(`Core calculation completed in ${Date.now() - startTime}ms`, {
-        chart: coreResult.chart,
-        zodiac: coreResult.zodiac,
-        dayMasterElement: coreResult.dayMasterElement
-      });
+      this.debug(`Core calculation completed in ${Date.now() - startTime}ms`);
       
       // Step 2: Basic analysis (always included)
       const basic = {
@@ -173,10 +171,10 @@ export class BaziService {
         advancedRelations = RelationsAnalyzer.analyze(coreResult.chart);
         
         // Pattern analysis
-        this.debug('Starting pattern analysis', coreResult.chart);
+        this.debug('Starting pattern analysis');
         try {
           const rawPatternAnalysis = PatternAnalyzer.analyze(coreResult.chart, advancedRelations, strengthAnalysis);
-          this.debug('Pattern analysis result', rawPatternAnalysis);
+          this.debug('Pattern analysis completed');
           // Keep the raw pattern analysis format that the component expects
           patternAnalysis = rawPatternAnalysis;
         } catch (paErr) {
@@ -364,7 +362,6 @@ export class BaziService {
       // 错误日志
       this.logger.error('八字计算失败', error as Error, {
         duration: Date.now() - startTime,
-        input: LogMasker.maskObject(input, ['name', 'birthDate'])
       });
       
       if (error instanceof BaziCalculationError) {

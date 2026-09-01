@@ -22,7 +22,7 @@ import { DailyCalculator } from './calculators/DailyCalculator';
 import { HourlyCalculator } from './calculators/HourlyCalculator';
 import { HoroscopeStarsCalculator } from './calculators/HoroscopeStarsCalculator';
 import { PalaceTransformer } from './transformers/PalaceTransformer';
-import { Logger, LogMasker } from '../../shared/logger';
+import { Logger } from '../../shared/logger';
 import { nowBeijingParts } from '../../utils/wallTime';
 
 export class ZiweiService {
@@ -59,10 +59,9 @@ export class ZiweiService {
   calculate(input: ZiweiInput): ZiweiResult {
     const startTime = Date.now();
     
-    // 入口日志
+    // 不记录出生年月日、时刻、姓名、经度或排盘结果。
     this.logger.info('开始紫微计算', {
       type: '紫微',
-      input: LogMasker.maskObject(input, ['name', 'birthDate']),
       palaceCount: 12
     });
     
@@ -179,7 +178,7 @@ export class ZiweiService {
       };
       
       if (this.config.debug) {
-        this.logger.debug('ZiweiService Debug Info:', this.adapter.getDebugInfo());
+        this.logger.debug('ZiweiService debug enabled');
       }
       
       // 成功出口日志
@@ -196,7 +195,6 @@ export class ZiweiService {
       // 错误日志
       this.logger.error('紫微计算失败', error as Error, {
         duration: Date.now() - startTime,
-        input: LogMasker.maskObject(input, ['name', 'birthDate'])
       });
       
       if (error instanceof ZiweiCalculationError) {

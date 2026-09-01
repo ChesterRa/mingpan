@@ -1,0 +1,97 @@
+{
+  "lang": "en",
+  "path": "/en/",
+  "meta": {
+    "title": "Mingpan | Deterministic Chinese metaphysics for AI",
+    "description": "The open-source remote MCP service by BaziWei for BaZi, Zi Wei Dou Shu, LiuYao, MeiHua YiShu, Da Liu Ren, Qi Men Dun Jia, and Chinese calendar calculations."
+  },
+  "skipLink": "Skip to main content",
+  "nav": {
+    "label": "Primary navigation",
+    "principles": "Principles",
+    "capabilities": "Capabilities",
+    "connect": "Connect"
+  },
+  "languageLabel": "Choose language",
+  "copy": {
+    "success": "MCP endpoint copied",
+    "failure": "Could not copy automatically. Please copy the endpoint manually."
+  },
+  "hero": {
+    "eyebrow": "Official open-source MCP by BaziWei",
+    "title": "Let AI find the meaning. Let Mingpan get the chart right.",
+    "description": "A deterministic Chinese metaphysics calculator built for AI agents. It computes solar terms, pillars, palaces, stars, and divination charts so the model can focus on understanding, reasoning, and expression.",
+    "primaryCta": "Copy MCP endpoint",
+    "secondaryCta": "View source",
+    "note": "No install or account required. Connect from any client that supports Remote MCP / Streamable HTTP."
+  },
+  "endpoint": {
+    "label": "Official service endpoint",
+    "status": "Service ready",
+    "flowLabel": "How Mingpan fits into the workflow",
+    "input": "Birth or casting data",
+    "output": "Deterministic chart",
+    "checks": [
+      "Stateless calculation with no chart database",
+      "Open source and inspectable calculation conventions",
+      "Timezone and longitude-based true solar time support"
+    ]
+  },
+  "statsLabel": "Mingpan at a glance",
+  "stats": [
+    { "value": "18", "label": "MCP tools" },
+    { "value": "6", "label": "metaphysics and divination systems" },
+    { "value": "1900–2100", "label": "primary year range" },
+    { "value": "Apache-2.0", "label": "open-source license" }
+  ],
+  "principles": {
+    "eyebrow": "Why Mingpan",
+    "title": "Put calculation and interpretation where each belongs",
+    "description": "Mingpan is not another fortune-telling bot. It supplies reproducible chart facts and leaves contextual, human interpretation to the AI you choose.",
+    "items": [
+      { "title": "Deterministic first", "description": "Pillars, solar terms, palaces, stars, and hexagrams are computed in code—not guessed by a language model." },
+      { "title": "Privacy by architecture", "description": "The official service is stateless and does not store or cache birth inputs or chart results." },
+      { "title": "Open and auditable", "description": "Source, dependencies, and tests are public so developers and researchers can inspect the calculation conventions." }
+    ]
+  },
+  "capabilities": {
+    "eyebrow": "18 Tools · One Endpoint",
+    "title": "Natal charts, timing cycles, and divination through one endpoint",
+    "description": "Every tool returns structured text designed for AI consumption. Mingpan deliberately avoids fortune scores, pattern verdicts, and life conclusions.",
+    "items": [
+      { "mark": "八", "count": "5 tools", "title": "BaZi", "description": "Four pillars, ten gods, hidden stems, na yin, growth stages, decade luck, and annual, monthly, and daily cycles." },
+      { "mark": "紫", "count": "6 tools", "title": "Zi Wei Dou Shu", "description": "Twelve palaces, major and auxiliary stars, four transformations, five-element bureau, and multi-level timing cycles." },
+      { "mark": "爻", "count": "1 tool", "title": "LiuYao", "description": "Primary and transformed hexagrams, Najia, six relatives, six spirits, host/guest lines, void, and hidden spirits." },
+      { "mark": "梅", "count": "1 tool", "title": "MeiHua YiShu", "description": "Time- or number-based casting with primary, mutual, transformed hexagrams and body–function relations." },
+      { "mark": "壬", "count": "1 tool", "title": "Da Liu Ren", "description": "Derives calendar primitives from Gregorian time and returns the heaven–earth plate, four lessons, three transmissions, and generals." },
+      { "mark": "奇", "count": "2 tools", "title": "Qi Men Dun Jia", "description": "Multiple chart styles and intercalation methods, with the nine-palace chart and deterministic yong-shen facts by subject." }
+    ],
+    "calendarNote": "Plus 2 calendar primitives: precise times for the 24 solar terms and Gregorian–lunar conversion."
+  },
+  "connect": {
+    "eyebrow": "Connect",
+    "title": "Give your AI reliable charts in three steps",
+    "description": "No package download or server maintenance. If your AI client supports Remote MCP, you can use the official service directly.",
+    "steps": [
+      "Open the MCP or Connectors settings in your AI client.",
+      "Add a remote service and paste the official MCP endpoint shown here.",
+      "Provide the time, gender, or casting data in natural language and ask the AI to use Mingpan."
+    ],
+    "fairUse": "The official service is currently free. Please use it fairly; interfaces and quota policies may evolve as the service matures."
+  },
+  "examples": {
+    "eyebrow": "Prompt Ideas",
+    "title": "Try these after connecting",
+    "items": [
+      "Use Mingpan to calculate a BaZi chart for a male born on April 12, 1992 at 07:30, then interpret the resulting chart.",
+      "Find the exact time of LiChun in 2027 and explain whether it changes the year pillar for this birth chart.",
+      "Cast a Qi Men Dun Jia hourly chart for June 21, 2024 at 10:00. List the computed facts before interpreting them."
+    ]
+  },
+  "relationship": {
+    "title": "Mingpan computes the chart. BaziWei completes the experience.",
+    "description": "Mingpan is an independent, open-source calculation foundation. BaziWei connects subject management, BaZi and Zi Wei, AI readings, calendars, and sharing into a complete product. They complement each other without forcing the same school of interpretation.",
+    "cta": "Visit BaziWei"
+  },
+  "footer": { "tagline": "Open-source Chinese metaphysics MCP" }
+}

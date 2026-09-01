@@ -2,10 +2,26 @@
 
 **简体中文（主文档）** | [English](README.en.md) | [日本語](README.ja.md)
 
-[![Version](https://img.shields.io/badge/version-0.1.6-blue.svg)](https://github.com/ChesterRa/mingpan)
+[![Version](https://img.shields.io/badge/version-0.1.7-blue.svg)](https://github.com/ChesterRa/mingpan)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
-**命盘（Mingpan）** 是一个中华传统术数 MCP 服务，为 Claude 等 AI 应用提供命理排盘与占卜起卦的计算能力。
+**命盘（Mingpan）** 是一个开源的中华传统术数 MCP 计算引擎，为 AI 应用提供命理排盘与占卜起卦能力。BaziWei 同时维护可直接使用的官方远程服务。
+
+## 立即使用官方 MCP
+
+将下面的端点添加到支持 Remote MCP / Streamable HTTP 的 AI 客户端：
+
+```text
+https://mingpan.bzwai.com/mcp
+```
+
+无需安装 Node.js，也无需自行部署服务器。添加后可以直接尝试：
+
+> 请帮我排一个八字命盘，1992年4月12日7点30分，男性
+
+> 请帮我起一个奇门遁甲时盘，2024年6月21日10点
+
+先访问 [Mingpan 开源项目网站](https://mingpan.bzwai.com) 可查看能力范围与连接说明。官方服务由 [BaziWei](https://bzwai.com) 维护；源代码与计算口径继续在本仓库公开，方便审阅、复现与共同改进。
 
 ## 特性
 
@@ -14,15 +30,16 @@
 - 📊 **结构化文本**：便于 AI 理解与分析的格式
 - 🕐 **多时区支持**：海外出生/起卦时间自动换算为北京时间排盘
 
-## 服务形态
+## 使用方式
 
 | 形态 | 适用 | 用法 |
 | ---- | ---- | ---- |
-| **stdio MCP**（默认） | Claude Desktop / Claude Code 等本地客户端 | 见下方配置方法 |
+| **官方远程 MCP**（推荐） | 支持 Remote MCP / Streamable HTTP 的 AI 客户端 | 添加 `https://mingpan.bzwai.com/mcp` |
+| **本地 stdio MCP** | 本地开发、离线使用或要求资料不离开设备 | 见下方可选配置 |
 
-也支持自部署远程 HTTP 形态（`npm run deploy:worker`，需 Cloudflare 账号）。
+官方远程服务使用无状态纯计算：不建立命盘数据库，不缓存或记录出生参数与命盘结果。若要求资料完全不离开设备，可选择本地 stdio 形态。
 
-## 配置方法
+## 本地运行（可选）
 
 ### Claude Desktop
 
@@ -217,8 +234,9 @@ claude mcp add mingpan -- npx -y mingpan
 ```bash
 git clone https://github.com/ChesterRa/mingpan.git
 cd mingpan
-npm install
-npm run build
+npm ci
+npm run check                 # 构建 + 完整测试
+npm run deploy:worker:dry-run # 只验证 Worker 打包，不部署
 npm run dev  # 监听变化
 ```
 
@@ -226,7 +244,8 @@ npm run dev  # 监听变化
 
 | 库                          | 用途             |
 | --------------------------- | ---------------- |
-| `@modelcontextprotocol/sdk` | MCP 协议实现     |
+| `@modelcontextprotocol/server` | MCP v2 服务端协议实现 |
+| `@modelcontextprotocol/client` | MCP v2 协议集成测试   |
 | `lunar-javascript`          | 农历/公历转换    |
 | `iztro`                     | 紫微斗数计算引擎 |
 | `zod`                       | 输入参数校验     |
@@ -249,6 +268,7 @@ npm run dev  # 监听变化
 
 | 版本 | 说明 |
 | ---- | ---- |
+| 0.1.7 | **官方托管服务**：`mingpan.bzwai.com` 产品站与 `/mcp` 同仓、同版本、同一 Worker 发布；生产域名、无状态隐私边界、Host/Origin、请求体、限流与现代 MCP 协议烟雾测试完成收口；测试 300 |
 | 0.1.6 | **MCP SDK v2 迁移**（2026-07-28 无状态协议，原生支持 Cloudflare Workers，向后兼容旧客户端）；远程 HTTP 入口从 50 行简化为 20 行（createMcpHandler）；Workers 打包 gzip 638→606KB；测试 288 |
 | 0.1.5 | **口径裁决**：子初换日（23:00 起日柱时柱同属次日，全五系统统一）；起运权威化（lunar 节气表 + 交运日历定位）；奇门年盘按《遁甲演义》典籍修正；真太阳时四柱全量生效；**新能力**：历法原语层（jieqi_query + calendar_convert）；测试 218→288 |
 | 0.1.4 | **正确性修复**：八字立春换年、奇门四类口径修正、stdio 日志修复；**输出定位确立**：只输出确定性排盘量；大六壬时间起课、多时区；测试 117→218 |

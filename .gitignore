@@ -3,6 +3,8 @@ node_modules/
 
 # Build output
 dist/
+site/
+.wrangler/
 
 # IDE
 .idea/
@@ -29,12 +31,17 @@ coverage/
 # Test results (generated files)
 test/results/
 
+# 本地手工对照脚本与样例输出（Vitest 回归用例及快照必须入库）
+test/compare-*
+test/*-comparison-results.md
+test/sample-*-output.md
+test/sample-output.ts
+
 # Temporary files
 *.tmp
 *.temp
 
 .venv/
-test/
 
 # Openspec
 openspec

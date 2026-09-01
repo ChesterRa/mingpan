@@ -10,19 +10,75 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  # 生产只有一个正式 Worker；不同 tag 也必须串行，避免旧部署覆盖新部署。
+  group: mingpan-production
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
         with:
           node-version: 24.x
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Verify release tag matches package version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: npm run verify:release-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Smoke test packaged stdio entry
+        run: npm run smoke:stdio
+
+      - name: Validate Worker bundle
+        run: npm run deploy:worker:dry-run
 
       - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          wranglerVersion: "4"
-          # wrangler.toml：name=mingpan-mcp，main=src/worker.ts（需 wrangler v4）
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.127.1"
+
+      - name: Smoke test deployed Worker
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+          OFFICIAL_URL: https://mingpan.bzwai.com
+        run: |
+          set -euo pipefail
+          test -n "$DEPLOYMENT_URL"
+
+          wait_for_url() {
+            local url="$1"
+            for attempt in $(seq 1 30); do
+              if curl --fail --silent --show-error --output /dev/null "$url"; then
+                return 0
+              fi
+              echo "Waiting for $url ($attempt/30)"
+              sleep 10
+            done
+            echo "Timed out waiting for $url" >&2
+            return 1
+          }
+
+          wait_for_url "${DEPLOYMENT_URL%/}/healthz"
+          MCP_ENDPOINT="${DEPLOYMENT_URL%/}/mcp" npm run smoke:remote
+
+          wait_for_url "${OFFICIAL_URL%/}/healthz"
+          wait_for_url "${OFFICIAL_URL%/}/"
+          MCP_ENDPOINT="${OFFICIAL_URL%/}/mcp" npm run smoke:remote

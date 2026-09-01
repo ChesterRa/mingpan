@@ -35,13 +35,11 @@ import {
 } from './schemas';
 import { nowBeijingParts } from '../utils/wallTime';
 
-const ziweiService = new ZiweiService();
-
 const detailField = z.enum(['simple', 'standard', 'detailed']).optional().default('standard').describe('Output detail level');
 const countField = z.number().int().min(1).max(12).optional().default(10).describe('Number of decade periods to display (default 10)');
 
 /** 提取命宮主星（宮位名稱兼容繁簡） */
-function findMingGong(result: Awaited<ReturnType<typeof ziweiService.calculate>>) {
+function findMingGong(result: Awaited<ReturnType<ZiweiService['calculate']>>) {
   return result.palaces?.find(p =>
     p.name === '命宮' || p.name === '命宫' || p.name === 'Life'
   );
@@ -52,6 +50,10 @@ function extractStars(palace: ReturnType<typeof findMingGong>): string[] {
 }
 
 export function registerZiweiTools(server: McpServer): void {
+  // ZiweiService owns a mutable adapter/currentGender pair. It must live no
+  // longer than the server instance so concurrent Worker requests never share it.
+  const ziweiService = new ZiweiService();
+
   server.registerTool('ziwei_basic', {
     title: '紫微基礎排盤',
     description: `計算紫微斗數命盤（基礎排盤）。

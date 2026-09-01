@@ -3,5 +3,37 @@ main = "src/worker.ts"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
 
-# 免费档：10 万请求/天，对排盘计算量级绰绰有余（单次 30-250ms CPU）
-# 部署：npx wrangler deploy（需 CLOUDFLARE_API_TOKEN 或 wrangler login）
+# 官方产品站与 MCP 固定使用 mingpan.bzwai.com；workers.dev 仅保留为维护者诊断入口，
+# 不出现在面向用户的文档中。
+workers_dev = true
+
+[[routes]]
+pattern = "mingpan.bzwai.com"
+custom_domain = true
+
+# 产品页与 MCP 服务同属一个部署单元。静态资源命中时由 Assets 直接提供；
+# /mcp 与 /healthz 没有同名资源，会落到 Worker 入口。
+[assets]
+directory = "./site"
+html_handling = "auto-trailing-slash"
+not_found_handling = "none"
+
+# 生产按 Workers Standard（Paid）运行；1 秒足以覆盖当前最重排盘，
+# 同时限制异常输入或回归造成的失控 CPU 消耗。
+[limits]
+cpu_ms = 1000
+
+[vars]
+ALLOWED_HOSTS = "mingpan.bzwai.com"
+ALLOWED_ORIGINS = "bzwai.com,www.bzwai.com,mingpan.bzwai.com"
+
+# 匿名公网端点的防滥用护栏。namespace_id 只需在同一 Cloudflare 账号内唯一。
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "20260901"
+
+  [ratelimits.simple]
+  limit = 60
+  period = 60
+
+# 部署：npm run deploy:worker（需 CLOUDFLARE_API_TOKEN 或 wrangler login）

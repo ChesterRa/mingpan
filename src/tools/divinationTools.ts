@@ -24,12 +24,14 @@ import {
   timezoneNote,
 } from './schemas';
 
-const liuyaoService = new LiuyaoService();
-const meihuaService = new MeihuaService();
-
 const yaoValue = z.union([z.literal(6), z.literal(7), z.literal(8), z.literal(9)]);
 
 export function registerDivinationTools(server: McpServer): void {
+  // Keep service lifetime aligned with the MCP server instance. The HTTP
+  // factory creates one server per request; stdio still reuses one server.
+  const liuyaoService = new LiuyaoService();
+  const meihuaService = new MeihuaService();
+
   // ============= 六爻 =============
 
   server.registerTool('liuyao_basic', {

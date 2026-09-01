@@ -1,0 +1,97 @@
+{
+  "lang": "ja",
+  "path": "/ja/",
+  "meta": {
+    "title": "Mingpan｜AIのための決定論的な中国命理計算エンジン",
+    "description": "BaziWei が運営するオープンソースのリモート MCP。四柱推命、紫微斗数、六爻、梅花易数、大六壬、奇門遁甲、中国暦を計算します。"
+  },
+  "skipLink": "メインコンテンツへ移動",
+  "nav": {
+    "label": "メインナビゲーション",
+    "principles": "設計原則",
+    "capabilities": "計算機能",
+    "connect": "接続方法"
+  },
+  "languageLabel": "言語を選択",
+  "copy": {
+    "success": "MCP エンドポイントをコピーしました",
+    "failure": "自動コピーに失敗しました。エンドポイントを手動でコピーしてください。"
+  },
+  "hero": {
+    "eyebrow": "BaziWei 公式オープンソース MCP",
+    "title": "意味を読むのは AI。盤を正しく出すのは Mingpan。",
+    "description": "AI Agent のために作られた、決定論的な中国命理計算エンジンです。節気、干支、宮位、星曜、占術盤を計算し、AI が理解・推論・表現に集中できるようにします。",
+    "primaryCta": "MCP エンドポイントをコピー",
+    "secondaryCta": "ソースを見る",
+    "note": "インストールもアカウントも不要。Remote MCP / Streamable HTTP 対応クライアントから接続できます。"
+  },
+  "endpoint": {
+    "label": "公式サービスエンドポイント",
+    "status": "サービス稼働準備完了",
+    "flowLabel": "Mingpan の役割",
+    "input": "出生・起卦データ",
+    "output": "決定論的な盤面",
+    "checks": [
+      "命盤データベースを持たないステートレス計算",
+      "ソースと計算規則を公開し、検証可能",
+      "タイムゾーンと経度による真太陽時補正に対応"
+    ]
+  },
+  "statsLabel": "Mingpan の概要",
+  "stats": [
+    { "value": "18", "label": "MCP ツール" },
+    { "value": "6", "label": "命理・占術システム" },
+    { "value": "1900–2100", "label": "主な対応年" },
+    { "value": "Apache-2.0", "label": "オープンソースライセンス" }
+  ],
+  "principles": {
+    "eyebrow": "Why Mingpan",
+    "title": "計算と解釈を、それぞれ得意な場所へ",
+    "description": "Mingpan は結論を押しつける占い Bot ではありません。再現可能な盤面の事実を提供し、文脈のある人間的な解釈は選んだ AI に委ねます。",
+    "items": [
+      { "title": "決定論を優先", "description": "四柱、節気、宮位、星曜、卦象はコードで計算し、言語モデルの推測を盤面として見せません。" },
+      { "title": "構造から守るプライバシー", "description": "公式サービスはステートレスで、出生情報や命盤結果を保存・キャッシュしません。" },
+      { "title": "オープンで検証可能", "description": "ソース、依存関係、テストを公開し、開発者や研究者が計算規則を確認できます。" }
+    ]
+  },
+  "capabilities": {
+    "eyebrow": "18 Tools · One Endpoint",
+    "title": "命盤・運勢周期・占術を一つのエンドポイントから",
+    "description": "各ツールは AI が読み取りやすい構造化テキストを返します。吉凶スコア、格局の断定、人生の結論は意図的に出力しません。",
+    "items": [
+      { "mark": "八", "count": "5 tools", "title": "四柱推命（八字）", "description": "四柱、十神、蔵干、納音、十二運、大運、流年、流月、流日を計算します。" },
+      { "mark": "紫", "count": "6 tools", "title": "紫微斗数", "description": "十二宮、主星・副星、四化、五行局、大限・小限、多層の運勢周期を計算します。" },
+      { "mark": "爻", "count": "1 tool", "title": "六爻", "description": "本卦・変卦、納甲、六親、六神、世応、旬空、伏神、進退神を出力します。" },
+      { "mark": "梅", "count": "1 tool", "title": "梅花易数", "description": "時間または数字で起卦し、本卦・互卦・変卦と体用関係を出力します。" },
+      { "mark": "壬", "count": "1 tool", "title": "大六壬", "description": "西暦時刻から月将と干支を導き、天地盤、四課、三伝、十二天将を出力します。" },
+      { "mark": "奇", "count": "2 tools", "title": "奇門遁甲", "description": "複数の盤式・置閏法に対応し、九宮盤と用途別の決定論的な用神情報を提供します。" }
+    ],
+    "calendarNote": "さらに、二十四節気の正確な時刻と西暦・旧暦変換の 2 つの暦ツールを収録。"
+  },
+  "connect": {
+    "eyebrow": "Connect",
+    "title": "3 ステップで AI に信頼できる盤面を",
+    "description": "パッケージのダウンロードもサーバー管理も不要です。AI クライアントが Remote MCP に対応していれば、公式サービスを直接使えます。",
+    "steps": [
+      "AI クライアントの MCP または Connectors 設定を開きます。",
+      "リモートサービスを追加し、右側の公式 MCP エンドポイントを貼り付けます。",
+      "日時、性別、起卦データを自然言語で伝え、Mingpan を使うよう AI に依頼します。"
+    ],
+    "fairUse": "公式サービスは現在無料です。適正利用にご協力ください。インターフェースや利用上限は成熟度に応じて変更される場合があります。"
+  },
+  "examples": {
+    "eyebrow": "Prompt Ideas",
+    "title": "接続後はこう質問できます",
+    "items": [
+      "Mingpan で 1992 年 4 月 12 日 07:30 生まれ、男性の四柱命盤を出し、その盤面に基づいて解釈してください。",
+      "2027 年の立春の正確な時刻を調べ、この出生図の年柱が変わるか説明してください。",
+      "2024 年 6 月 21 日 10:00 の奇門遁甲時盤を出し、解釈の前に計算された事実を列挙してください。"
+    ]
+  },
+  "relationship": {
+    "title": "Mingpan が盤を計算し、BaziWei が体験を完成させる",
+    "description": "Mingpan は独立したオープンソースの計算基盤です。BaziWei は命主管理、八字と紫微、AI 解読、カレンダー、共有を一つの製品にまとめます。両者は補完関係にありますが、同じ解釈流派を強制しません。",
+    "cta": "BaziWei へ"
+  },
+  "footer": { "tagline": "Open-source Chinese metaphysics MCP" }
+}

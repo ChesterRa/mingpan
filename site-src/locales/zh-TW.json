@@ -1,0 +1,108 @@
+{
+  "lang": "zh-TW",
+  "path": "/",
+  "meta": {
+    "title": "Mingpan｜給 AI 使用的確定性中華術數計算引擎",
+    "description": "由 BaziWei 維護的開源遠端 MCP 服務，提供八字、紫微斗數、六爻、梅花易數、大六壬、奇門遁甲與曆法計算。"
+  },
+  "skipLink": "跳至主要內容",
+  "nav": {
+    "label": "主要導覽",
+    "principles": "設計原則",
+    "capabilities": "計算能力",
+    "connect": "開始使用"
+  },
+  "languageLabel": "選擇語言",
+  "copy": {
+    "success": "已複製 MCP 端點",
+    "failure": "無法自動複製，請手動複製端點"
+  },
+  "hero": {
+    "eyebrow": "BaziWei 官方開源 MCP",
+    "title": "讓 AI 負責洞察，讓 Mingpan 負責算準。",
+    "description": "一個為 AI Agent 打造的中華術數確定性計算引擎。它把節氣、干支、宮位與盤式算清楚，讓模型把能力留給理解、推理與表達。",
+    "primaryCta": "複製 MCP 端點",
+    "secondaryCta": "檢視原始碼",
+    "note": "免安裝、無帳號；支援 Remote MCP / Streamable HTTP 的客戶端即可連線。"
+  },
+  "endpoint": {
+    "label": "官方服務端點",
+    "status": "服務已就緒",
+    "flowLabel": "Mingpan 的工作分工",
+    "input": "出生或起卦資料",
+    "output": "確定性盤面",
+    "checks": [
+      "無狀態計算，不建立命盤資料庫",
+      "原始碼與計算口徑公開可審閱",
+      "支援時區與經度真太陽時校正"
+    ]
+  },
+  "statsLabel": "Mingpan 概要",
+  "stats": [
+    { "value": "18", "label": "個 MCP 工具" },
+    { "value": "6", "label": "套命理與占卜系統" },
+    { "value": "1900–2100", "label": "主要支援年份" },
+    { "value": "Apache-2.0", "label": "開源授權" }
+  ],
+  "principles": {
+    "eyebrow": "Why Mingpan",
+    "title": "把計算與解讀放在各自擅長的位置",
+    "description": "Mingpan 不是另一個會替你下結論的算命機器。它提供可重現的盤面事實，把有情境、有溫度的解讀留給你選擇的 AI。",
+    "items": [
+      {
+        "title": "確定性優先",
+        "description": "四柱、節氣、宮位、星曜與卦象由程式計算；不把模型猜測偽裝成排盤結果。"
+      },
+      {
+        "title": "隱私從架構開始",
+        "description": "官方服務採無狀態請求，不儲存、不快取出生參數與命盤結果。"
+      },
+      {
+        "title": "開放而可驗證",
+        "description": "程式碼、依賴與測試皆公開，方便研究者與開發者追查計算口徑。"
+      }
+    ]
+  },
+  "capabilities": {
+    "eyebrow": "18 Tools · One Endpoint",
+    "title": "從本命盤到時運與占卜，一個端點完成",
+    "description": "每個工具都回傳適合 AI 閱讀的結構化文字；Mingpan 不輸出吉凶評分、格局裁決或人生結論。",
+    "items": [
+      { "mark": "八", "count": "5 tools", "title": "八字命理", "description": "四柱、十神、藏干、納音、十二長生，以及大運、流年、流月與流日。" },
+      { "mark": "紫", "count": "6 tools", "title": "紫微斗數", "description": "十二宮、主輔星、四化、五行局，以及大限、小限與多層時運。" },
+      { "mark": "爻", "count": "1 tool", "title": "六爻", "description": "本卦與變卦、納甲、六親、六神、世應、旬空、伏神與進退神。" },
+      { "mark": "梅", "count": "1 tool", "title": "梅花易數", "description": "支援時間與數字起卦，輸出本卦、互卦、變卦與體用關係。" },
+      { "mark": "壬", "count": "1 tool", "title": "大六壬", "description": "從公曆時間自動推得月將與干支，輸出天地盤、四課、三傳與天將。" },
+      { "mark": "奇", "count": "2 tools", "title": "奇門遁甲", "description": "支援多種盤式與置閏法，提供九宮盤面及按事類取得的確定性用神資訊。" }
+    ],
+    "calendarNote": "另含 2 個曆法原語工具：二十四節氣精確時刻與公農曆互轉。"
+  },
+  "connect": {
+    "eyebrow": "Connect",
+    "title": "三步讓你的 AI 取得可靠盤面",
+    "description": "不必下載套件或維護伺服器。只要你的 AI 客戶端支援 Remote MCP，即可直接使用官方服務。",
+    "steps": [
+      "在 AI 客戶端開啟 MCP 或 Connectors 設定。",
+      "新增遠端服務，貼上右側的官方 MCP 端點。",
+      "用自然語言提供時間、性別或起卦資料，並請 AI 呼叫 Mingpan。"
+    ],
+    "fairUse": "官方服務目前免費提供，請合理使用；介面與額度政策可能隨服務成熟度調整。"
+  },
+  "examples": {
+    "eyebrow": "Prompt Ideas",
+    "title": "連線後可以這樣問",
+    "items": [
+      "請用 Mingpan 排出 1992 年 4 月 12 日 07:30、男性的八字命盤，再根據盤面分析。",
+      "請查詢 2027 年立春的精確時刻，並說明它是否影響這個八字的年份歸屬。",
+      "請為 2024 年 6 月 21 日 10:00 起一個奇門遁甲時盤，先列盤面事實再解讀。"
+    ]
+  },
+  "relationship": {
+    "title": "Mingpan 算盤，BaziWei 做完整的命理體驗",
+    "description": "Mingpan 是獨立開源的計算底座；BaziWei 則把命主管理、八字與紫微整合、AI 解讀、日曆與分享串成完整產品。兩者相輔相成，但不綁定彼此的命理流派。",
+    "cta": "前往 BaziWei"
+  },
+  "footer": {
+    "tagline": "Open-source Chinese metaphysics MCP"
+  }
+}

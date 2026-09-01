@@ -27,11 +27,17 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Verify release tag matches package version
+        run: npm run verify:release-version
+
       - name: Build
         run: npm run build
 
       - name: Test
         run: npm test
+
+      - name: Smoke test packaged stdio entry
+        run: npm run smoke:stdio
 
       # OIDC 自动认证（无需任何 npm token；公共仓库自动附带 provenance 证明）
       - name: Publish

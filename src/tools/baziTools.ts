@@ -36,15 +36,24 @@ import {
   getMonthStemBranch,
 } from './schemas';
 
-const baziService = new BaziService({ debug: false });
-
 const countField = z.number().int().min(1).max(12).optional().default(10).describe('Number of periods to display (default 10)');
 const ganzhiYearField = z.union([
   z.string().describe("GanZhi year like '乙巳'"),
   z.number().int().min(1900).max(2100).describe('Gregorian year like 2025'),
 ]);
 
-export function registerBaziTools(server: McpServer): void {
+export interface BaziToolOptions {
+  enableCaching?: boolean;
+}
+
+export function registerBaziTools(server: McpServer, options: BaziToolOptions = {}): void {
+  // createMingpanServer is request-scoped on HTTP. Keeping this instance local
+  // prevents calculations and cache entries from leaking across remote calls.
+  const baziService = new BaziService({
+    debug: false,
+    enableCaching: options.enableCaching ?? true,
+  });
+
   server.registerTool('bazi_basic', {
     title: '八字基礎排盤',
     description: `計算八字四柱（基礎排盤）。

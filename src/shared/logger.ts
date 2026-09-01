@@ -58,9 +58,18 @@ export class Logger {
 
   error(message: string, error?: unknown, data?: unknown): void {
     if (this.shouldLog('error')) {
-      const errorData = error instanceof Error
-        ? { message: error.message, stack: error.stack, ...((data && typeof data === 'object') ? data : {}) }
-        : { error, ...((data && typeof data === 'object') ? data : {}) };
+      // 第三方计算库的异常消息可能回显出生参数。远程 MCP 默认只记录
+      // 错误类别与稳定错误码，避免姓名、日期、时间、地点落入平台日志。
+      const errorRecord = error && typeof error === 'object'
+        ? error as { name?: unknown; code?: unknown }
+        : undefined;
+      const errorData = {
+        errorName: error instanceof Error ? error.name : 'UnknownError',
+        ...(typeof errorRecord?.code === 'string' || typeof errorRecord?.code === 'number'
+          ? { errorCode: errorRecord.code }
+          : {}),
+        ...((data && typeof data === 'object') ? data : {})
+      };
       this.write('error', this.formatMessage('error', message, errorData));
     }
   }
@@ -84,72 +93,5 @@ export class Logger {
 export function createLogger(context: string): Logger {
   return new Logger(context);
 }
-
-/**
- * Log masker for sensitive data
- * Provides methods to mask PII and sensitive information in logs
- */
-export const LogMasker = {
-  /**
-   * Mask a name - keep first character, mask the rest
-   */
-  maskName(name: string): string {
-    if (!name || name.length < 2) return '***';
-    return name[0] + '*'.repeat(name.length - 1);
-  },
-
-  /**
-   * Mask a date - keep year and month, mask day
-   */
-  maskDate(date: string): string {
-    // Only mask day part: YYYY-MM-DD -> YYYY-MM-**
-    if (!date || date.length < 10) return '****-**-**';
-    return date.slice(0, 8) + '**';
-  },
-
-  /**
-   * Mask a time - keep hour, mask minutes
-   */
-  maskTime(time: string): string {
-    // Keep hour, mask minutes: HH:mm -> HH:**
-    if (!time || time.length < 5) return '**:**';
-    return time.slice(0, 3) + '**';
-  },
-
-  /**
-   * Mask an object's sensitive fields
-   * @param obj - The object to mask
-   * @param sensitiveKeys - Array of keys to mask
-   * @returns A new object with sensitive fields masked
-   */
-  maskObject<T extends object>(obj: T, sensitiveKeys: string[]): Record<string, unknown> {
-    if (!obj || typeof obj !== 'object') return obj as unknown as Record<string, unknown>;
-
-    const result: Record<string, unknown> = { ...(obj as Record<string, unknown>) };
-
-    for (const key of sensitiveKeys) {
-      if (key in result && result[key] !== undefined) {
-        const value = result[key];
-        if (typeof value === 'string') {
-          // Apply appropriate masking based on key name
-          if (key.toLowerCase().includes('name')) {
-            result[key] = this.maskName(value);
-          } else if (key.toLowerCase().includes('date')) {
-            result[key] = this.maskDate(value);
-          } else if (key.toLowerCase().includes('time')) {
-            result[key] = this.maskTime(value);
-          } else {
-            // Generic masking: show first 2 chars
-            result[key] = value.length > 2 ? value.slice(0, 2) + '***' : '***';
-          }
-        } else {
-          result[key] = '[MASKED]';
-        }
-      }
-    }
-
-    return result;
-  }
-};
 
 export default Logger;

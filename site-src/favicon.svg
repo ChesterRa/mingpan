@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#254f42"/>
+  <rect x="4" y="4" width="56" height="56" rx="13" fill="none" stroke="#fff" stroke-opacity=".2" stroke-width="2"/>
+  <text x="32" y="43" fill="#fff" font-family="serif" font-size="35" font-weight="700" text-anchor="middle">命</text>
+</svg>
