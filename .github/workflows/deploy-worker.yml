@@ -62,23 +62,55 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$DEPLOYMENT_URL"
+          EXPECTED_VERSION="$(node -p "require('./package.json').version")"
 
-          wait_for_url() {
-            local url="$1"
-            for attempt in $(seq 1 30); do
-              if curl --fail --silent --show-error --output /dev/null "$url"; then
+          wait_for_release() {
+            local base_url="${1%/}"
+            local health_url="${base_url}/healthz"
+            local health_json
+            for attempt in $(seq 1 24); do
+              health_json="$(curl --fail --silent --show-error "$health_url" || true)"
+              if HEALTH_JSON="$health_json" EXPECTED_VERSION="$EXPECTED_VERSION" node -e '
+                try {
+                  const health = JSON.parse(process.env.HEALTH_JSON ?? "");
+                  const ready = health.status === "ok"
+                    && health.service === "mingpan"
+                    && health.version === process.env.EXPECTED_VERSION
+                    && health.protocol === "2026-07-28";
+                  process.exit(ready ? 0 : 1);
+                } catch {
+                  process.exit(1);
+                }
+              '; then
+                echo "Release ${EXPECTED_VERSION} is ready at ${base_url}"
                 return 0
               fi
-              echo "Waiting for $url ($attempt/30)"
-              sleep 10
+              echo "Waiting for release ${EXPECTED_VERSION} at ${health_url} ($attempt/24)"
+              sleep 5
             done
-            echo "Timed out waiting for $url" >&2
+            echo "Timed out waiting for release ${EXPECTED_VERSION} at ${health_url}" >&2
             return 1
           }
 
-          wait_for_url "${DEPLOYMENT_URL%/}/healthz"
-          MCP_ENDPOINT="${DEPLOYMENT_URL%/}/mcp" npm run smoke:remote
+          smoke_remote() {
+            local endpoint="${1%/}/mcp"
+            for attempt in $(seq 1 6); do
+              echo "Testing MCP endpoint ${endpoint} ($attempt/6)"
+              if MCP_ENDPOINT="$endpoint" npm run smoke:remote; then
+                return 0
+              fi
+              if [ "$attempt" -lt 6 ]; then
+                echo "MCP endpoint is not ready yet; retrying in 5 seconds"
+                sleep 5
+              fi
+            done
+            echo "MCP smoke failed after 6 attempts: ${endpoint}" >&2
+            return 1
+          }
 
-          wait_for_url "${OFFICIAL_URL%/}/healthz"
-          wait_for_url "${OFFICIAL_URL%/}/"
-          MCP_ENDPOINT="${OFFICIAL_URL%/}/mcp" npm run smoke:remote
+          wait_for_release "$DEPLOYMENT_URL"
+          smoke_remote "$DEPLOYMENT_URL"
+
+          wait_for_release "$OFFICIAL_URL"
+          curl --fail --silent --show-error --output /dev/null "${OFFICIAL_URL%/}/"
+          smoke_remote "$OFFICIAL_URL"
