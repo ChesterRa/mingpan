@@ -8,6 +8,7 @@
   "skipLink": "Skip to main content",
   "nav": {
     "label": "Primary navigation",
+    "evidence": "Examples",
     "principles": "Principles",
     "capabilities": "Capabilities",
     "connect": "Connect"
@@ -44,6 +45,43 @@
     { "value": "1900–2100", "label": "primary year range" },
     { "value": "Apache-2.0", "label": "open-source license" }
   ],
+  "evidence": {
+    "eyebrow": "Real Invocation",
+    "title": "One real call: how an AI obtains a deterministic chart through Mingpan",
+    "description": "LLMs are strong at context and synthesis, yet they slip on solar-term boundaries, stem-branch arithmetic and Zi Wei star placement. Everything below was produced by the official stdio server — it is not illustrative copy.",
+    "steps": [
+      {
+        "role": "User",
+        "tag": "User prompt",
+        "title": "Birth data and a question, in plain language",
+        "content": "\"Chart the BaZi and Zi Wei for a man born 1990-05-15 at 10:00 in Taipei, then talk me through his career direction.\""
+      },
+      {
+        "role": "Agent",
+        "tag": "MCP tool call",
+        "title": "The AI assembles the parameters from the tool description",
+        "content": "bazi_basic({\n  year: 1990, month: 5,\n  day: 15, hour: 10,\n  gender: \"male\",\n  timezone: \"Asia/Taipei\"\n})\nziwei_basic({ …same birth parameters })"
+      },
+      {
+        "role": "Mingpan",
+        "tag": "Tool output (excerpt)",
+        "title": "Mingpan returns deterministic chart facts only — Chinese structured text, as the tool emits it",
+        "content": "年柱：庚午　月柱：辛巳\n日柱：庚辰　時柱：辛巳\n天干十神：年比肩　月劫財　時劫財\n月支藏干：丙七殺※ 戊偏印 庚比肩\n命宮：癸未　胎元：壬申\n——\n本命命宮 戊子：破軍(廟)\n身宮：夫妻　五行局：火六局\n命主：貪狼　身主：火星\n四化：祿太陽 權武曲 科太陰 忌天同"
+      },
+      {
+        "role": "Agent",
+        "tag": "AI reading (illustrative)",
+        "title": "The AI interprets on top of the facts; the reading belongs to the AI and may vary by school",
+        "content": "\"Day Master Geng Metal born in a Si month: the month branch's principal qi is Bing Fire, Seven Killings in command, with Companion and Rob Wealth stems in the other three pillars — strong Killings, but the Day Master is supported. In Zi Wei, Po Jun sits alone in the Life Palace at temple brightness, the Body Palace falls in Spouse with Wu Qu (Power), and Tan Lang (temple) rules Career — career favours proactive pioneering, tempered through partnership and structure…\""
+      }
+    ],
+    "contrast": {
+      "badTitle": "Asking a general-purpose LLM directly",
+      "badDesc": "Misplaced solar-term cut-offs, confused early/late Zi hours, Zi Wei stars placed from memory.",
+      "goodTitle": "Calling Mingpan before interpreting",
+      "goodDesc": "Identical input always yields the identical chart; the rules are published, reproducible and checkable. The AI only interprets on top of the facts."
+    }
+  },
   "principles": {
     "eyebrow": "Why Mingpan",
     "title": "Put calculation and interpretation where each belongs",
@@ -70,14 +108,20 @@
   },
   "connect": {
     "eyebrow": "Connect",
-    "title": "Give your AI reliable charts in three steps",
-    "description": "No package download or server maintenance. If your AI client supports Remote MCP, you can use the official service directly.",
-    "steps": [
-      "Open the MCP or Connectors settings in your AI client.",
-      "Add a remote service and paste the official MCP endpoint shown here.",
-      "Provide the time, gender, or casting data in natural language and ask the AI to use Mingpan."
-    ],
-    "fairUse": "The official service is currently free. Please use it fairly; interfaces and quota policies may evolve as the service matures."
+    "title": "One endpoint is the whole configuration",
+    "description": "Mingpan is a standard MCP server and is not tied to any client. Any MCP-capable agent, IDE, CLI or SDK takes the endpoint wherever it asks for an MCP server — no API key, nothing to install.",
+    "remote": {
+      "title": "Official remote service",
+      "description": "Stateless pure computation: no chart database, no logging of birth parameters or results. Currently free for fair use."
+    },
+    "local": {
+      "title": "Run locally",
+      "description": "The same engine as a stdio process on your own machine; data never leaves the device. Requires Node.js.",
+      "copy": "Copy command",
+      "copied": "Command copied"
+    },
+    "note": "Per-client configuration locations and examples live in the GitHub README.",
+    "docsCta": "Open the README"
   },
   "examples": {
     "eyebrow": "Prompt Ideas",

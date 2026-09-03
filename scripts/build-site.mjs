@@ -90,6 +90,85 @@ function renderExamples(items) {
     .join("");
 }
 
+function renderEvidence(evidence) {
+  if (!evidence) return "";
+  const steps = evidence.steps.map((step, index) => {
+    const isCode = /^[a-z_]+\(/m.test(step.content || "");
+    return `
+      <div class="evidence-step" data-role="${escapeHtml(step.role.toLowerCase())}">
+        <div class="evidence-step__header">
+          <span class="evidence-step__num" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
+          <span class="evidence-step__tag">${escapeHtml(step.tag)}</span>
+          <h4 class="evidence-step__title">${escapeHtml(step.title)}</h4>
+        </div>
+        <div class="evidence-step__body">
+          <pre class="evidence-step__text${isCode ? " evidence-step__text--code" : ""}"><code>${escapeHtml(step.content)}</code></pre>
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <section class="section section--tinted" id="evidence">
+      <div class="shell section-heading">
+        <p class="eyebrow">${escapeHtml(evidence.eyebrow)}</p>
+        <h2>${escapeHtml(evidence.title)}</h2>
+        <p>${escapeHtml(evidence.description)}</p>
+      </div>
+      <div class="shell evidence-wrapper">
+        <div class="evidence-flow">${steps}</div>
+        <div class="evidence-contrast">
+          <div class="contrast-card contrast-card--bad">
+            <div class="contrast-card__badge">✕ ${escapeHtml(evidence.contrast.badTitle)}</div>
+            <p>${escapeHtml(evidence.contrast.badDesc)}</p>
+          </div>
+          <div class="contrast-card contrast-card--good">
+            <div class="contrast-card__badge">✓ ${escapeHtml(evidence.contrast.goodTitle)}</div>
+            <p>${escapeHtml(evidence.contrast.goodDesc)}</p>
+          </div>
+        </div>
+      </div>
+    </section>`;
+}
+
+const COPY_ICON = '<svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
+const STDIO_COMMAND = "npx -y mingpan";
+
+function renderConnect(connect, primaryCta) {
+  return `
+    <section class="section" id="connect">
+      <div class="shell section-heading">
+        <p class="eyebrow">${escapeHtml(connect.eyebrow)}</p>
+        <h2>${escapeHtml(connect.title)}</h2>
+        <p>${escapeHtml(connect.description)}</p>
+      </div>
+      <div class="shell connect-forms">
+        <article class="connect-form connect-form--primary">
+          <div class="connect-form__head">
+            <h3>${escapeHtml(connect.remote.title)}</h3>
+            <span class="connect-form__tag">Streamable HTTP</span>
+          </div>
+          <button class="endpoint-value" type="button" data-copy-endpoint aria-label="${escapeHtml(primaryCta)}">
+            <code>${ENDPOINT}</code>
+            ${COPY_ICON}
+          </button>
+          <p>${escapeHtml(connect.remote.description)}</p>
+        </article>
+        <article class="connect-form">
+          <div class="connect-form__head">
+            <h3>${escapeHtml(connect.local.title)}</h3>
+            <span class="connect-form__tag">stdio</span>
+          </div>
+          <button class="endpoint-value" type="button" data-copy-text="${STDIO_COMMAND}" data-copied-label="${escapeHtml(connect.local.copied)}" aria-label="${escapeHtml(connect.local.copy)}">
+            <code>${STDIO_COMMAND}</code>
+            ${COPY_ICON}
+          </button>
+          <p>${escapeHtml(connect.local.description)}</p>
+        </article>
+      </div>
+      <p class="shell connect-note">${escapeHtml(connect.note)} <a href="${SOURCE_URL}#readme" rel="noreferrer">${escapeHtml(connect.docsCta)}<span aria-hidden="true"> ↗</span></a></p>
+    </section>`;
+}
+
 function renderPage(content) {
   const canonicalUrl = `${ORIGIN}${content.path === "/" ? "" : content.path.replace(/\/$/, "")}`;
   const alternateLinks = localeDefinitions
@@ -143,6 +222,7 @@ function renderPage(content) {
         <span class="brand-name"><strong>Mingpan</strong><small>by BaziWei</small></span>
       </a>
       <nav class="desktop-nav" aria-label="${escapeHtml(content.nav.label)}">
+        <a href="#evidence">${escapeHtml(content.nav.evidence)}</a>
         <a href="#principles">${escapeHtml(content.nav.principles)}</a>
         <a href="#capabilities">${escapeHtml(content.nav.capabilities)}</a>
         <a href="#connect">${escapeHtml(content.nav.connect)}</a>
@@ -196,6 +276,8 @@ function renderPage(content) {
       <div class="shell stats" aria-label="${escapeHtml(content.statsLabel)}">${renderStats(content.stats)}</div>
     </section>
 
+    ${renderEvidence(content.evidence)}
+
     <section class="section" id="principles">
       <div class="shell section-heading section-heading--split">
         <div>
@@ -217,23 +299,9 @@ function renderPage(content) {
       <p class="shell calendar-note"><span aria-hidden="true">＋</span>${escapeHtml(content.capabilities.calendarNote)}</p>
     </section>
 
-    <section class="section" id="connect">
-      <div class="shell connect-grid">
-        <div class="connect-copy">
-          <p class="eyebrow">${escapeHtml(content.connect.eyebrow)}</p>
-          <h2>${escapeHtml(content.connect.title)}</h2>
-          <p>${escapeHtml(content.connect.description)}</p>
-          <ol class="steps">
-            ${content.connect.steps.map((item, index) => `<li><span>${index + 1}</span><p>${escapeHtml(item)}</p></li>`).join("")}
-          </ol>
-        </div>
-        <div class="connect-card">
-          <div class="connect-card__label">${escapeHtml(content.endpoint.label)}</div>
-          <code>${ENDPOINT}</code>
-          <button class="button button--primary button--wide" type="button" data-copy-endpoint>${escapeHtml(content.hero.primaryCta)}</button>
-          <p>${escapeHtml(content.connect.fairUse)}</p>
-        </div>
-      </div>
+    ${renderConnect(content.connect, content.hero.primaryCta)}
+
+    <section class="section section--tinted" id="prompts">
       <div class="shell prompt-panel">
         <div>
           <p class="eyebrow">${escapeHtml(content.examples.eyebrow)}</p>

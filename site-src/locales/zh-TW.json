@@ -8,9 +8,10 @@
   "skipLink": "跳至主要內容",
   "nav": {
     "label": "主要導覽",
+    "evidence": "呼叫範例",
     "principles": "設計原則",
     "capabilities": "計算能力",
-    "connect": "開始使用"
+    "connect": "連接客戶端"
   },
   "languageLabel": "選擇語言",
   "copy": {
@@ -44,6 +45,43 @@
     { "value": "1900–2100", "label": "主要支援年份" },
     { "value": "Apache-2.0", "label": "開源授權" }
   ],
+  "evidence": {
+    "eyebrow": "Real Invocation",
+    "title": "一次真實的呼叫：AI 如何透過 Mingpan 取得確定性盤面",
+    "description": "大模型擅長脈絡理解與綜合論述，但在節氣交節、干支換算與紫微星曜安放上容易出錯。下面是用官方 stdio 伺服器實際跑出的結果，不是示意文字。",
+    "steps": [
+      {
+        "role": "User",
+        "tag": "使用者提問",
+        "title": "以自然語言給出生辰與問題",
+        "content": "「請排 1990-05-15 10:00 台北出生男性的八字與紫微，並談談事業方向。」"
+      },
+      {
+        "role": "Agent",
+        "tag": "MCP 工具呼叫",
+        "title": "AI 依工具描述自動組出參數",
+        "content": "bazi_basic({\n  year: 1990, month: 5,\n  day: 15, hour: 10,\n  gender: \"male\",\n  timezone: \"Asia/Taipei\"\n})\nziwei_basic({ …同一組出生參數 })"
+      },
+      {
+        "role": "Mingpan",
+        "tag": "工具回傳（節錄）",
+        "title": "Mingpan 只回傳確定性盤面事實",
+        "content": "年柱：庚午　月柱：辛巳\n日柱：庚辰　時柱：辛巳\n天干十神：年比肩　月劫財　時劫財\n月支藏干：丙七殺※ 戊偏印 庚比肩\n命宮：癸未　胎元：壬申\n——\n本命命宮 戊子：破軍(廟)\n身宮：夫妻　五行局：火六局\n命主：貪狼　身主：火星\n四化：祿太陽 權武曲 科太陰 忌天同"
+      },
+      {
+        "role": "Agent",
+        "tag": "AI 解讀（示意）",
+        "title": "AI 以盤面事實為據展開解讀；解讀屬 AI，流派可以不同",
+        "content": "「日主庚金生於巳月，月支本氣丙火七殺當令，年、月、時三透比劫，屬殺旺而身有扶之局；紫微命宮破軍獨坐廟地，身宮落夫妻見武曲化權，官祿貪狼廟旺——事業面適合主動開創與轉型，但鋒芒需靠合作與制度收斂……」"
+      }
+    ],
+    "contrast": {
+      "badTitle": "直接詢問通用大模型",
+      "badDesc": "常算錯交節時刻、混淆早晚子時、憑印象安放紫微主輔星。",
+      "goodTitle": "先呼叫 Mingpan 再解讀",
+      "goodDesc": "同一組輸入永遠得到同一盤面；口徑公開、可重現、可核對。AI 只負責在事實之上解讀。"
+    }
+  },
   "principles": {
     "eyebrow": "Why Mingpan",
     "title": "把計算與解讀放在各自擅長的位置",
@@ -79,14 +117,20 @@
   },
   "connect": {
     "eyebrow": "Connect",
-    "title": "三步讓你的 AI 取得可靠盤面",
-    "description": "不必下載套件或維護伺服器。只要你的 AI 客戶端支援 Remote MCP，即可直接使用官方服務。",
-    "steps": [
-      "在 AI 客戶端開啟 MCP 或 Connectors 設定。",
-      "新增遠端服務，貼上右側的官方 MCP 端點。",
-      "用自然語言提供時間、性別或起卦資料，並請 AI 呼叫 Mingpan。"
-    ],
-    "fairUse": "官方服務目前免費提供，請合理使用；介面與額度政策可能隨服務成熟度調整。"
+    "title": "一個端點，就是全部設定",
+    "description": "Mingpan 是標準 MCP 伺服器，不綁定任何客戶端。任何支援 MCP 的 Agent、IDE、CLI 或 SDK，把端點填進「MCP 伺服器」欄位即可；沒有金鑰、沒有安裝步驟。",
+    "remote": {
+      "title": "官方遠端服務",
+      "description": "無狀態純計算：不建立命盤資料庫，不記錄出生參數與結果。目前免費提供，請合理使用。"
+    },
+    "local": {
+      "title": "本地執行",
+      "description": "同一套引擎以 stdio 形態在你的機器上執行，資料完全不離開裝置；需要 Node.js。",
+      "copy": "複製指令",
+      "copied": "已複製指令"
+    },
+    "note": "各客戶端的設定位置與範例，見 GitHub README。",
+    "docsCta": "查看 README"
   },
   "examples": {
     "eyebrow": "Prompt Ideas",
