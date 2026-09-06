@@ -15,20 +15,21 @@
   },
   "languageLabel": "Choose language",
   "copy": {
-    "success": "MCP endpoint copied",
-    "failure": "Could not copy automatically. Please copy the endpoint manually."
+    "success": "Endpoint copied. Continue setup in your client.",
+    "failure": "Could not copy automatically. Select the displayed text and copy it manually."
   },
   "hero": {
     "eyebrow": "Official open-source MCP by BaziWei",
-    "title": "Let AI find the meaning. Let Mingpan get the chart right.",
-    "description": "A deterministic Chinese metaphysics calculator built for AI agents. It computes solar terms, pillars, palaces, stars, and divination charts so the model can focus on understanding, reasoning, and expression.",
+    "title": "Ground your AI",
+    "description": "Let a deterministic engine calculate the pillars, calendar and star placements. Leave interpretation to the AI you choose.",
     "primaryCta": "Copy MCP endpoint",
-    "secondaryCta": "View source",
-    "note": "No install or account required. Connect from any client that supports Remote MCP / Streamable HTTP."
+    "secondaryCta": "See a real tool call",
+    "note": "Official remote endpoint · No account or API key",
+    "emphasis": "in real calculation."
   },
   "endpoint": {
     "label": "Official service endpoint",
-    "status": "Service ready",
+    "status": "Official remote service",
     "flowLabel": "How Mingpan fits into the workflow",
     "input": "Birth or casting data",
     "output": "Deterministic chart",
@@ -40,102 +41,145 @@
   },
   "statsLabel": "Mingpan at a glance",
   "stats": [
-    { "value": "18", "label": "MCP tools" },
-    { "value": "6", "label": "metaphysics and divination systems" },
-    { "value": "1900–2100", "label": "primary year range" },
-    { "value": "Apache-2.0", "label": "open-source license" }
+    {
+      "value": "18",
+      "label": "MCP tools"
+    },
+    {
+      "value": "6",
+      "label": "metaphysics and divination systems"
+    },
+    {
+      "value": "1900–2100",
+      "label": "primary year range"
+    },
+    {
+      "value": "Apache-2.0",
+      "label": "open-source license"
+    }
   ],
   "evidence": {
-    "eyebrow": "Real Invocation",
-    "title": "One real call: how an AI obtains a deterministic chart through Mingpan",
-    "description": "LLMs are strong at context and synthesis, yet they slip on solar-term boundaries, stem-branch arithmetic and Zi Wei star placement. Everything below was produced by the official stdio server — it is not illustrative copy.",
-    "steps": [
-      {
-        "role": "User",
-        "tag": "User prompt",
-        "title": "Birth data and a question, in plain language",
-        "content": "\"Chart the BaZi and Zi Wei for a man born 1990-05-15 at 10:00 in Taipei, then talk me through his career direction.\""
-      },
-      {
-        "role": "Agent",
-        "tag": "MCP tool call",
-        "title": "The AI assembles the parameters from the tool description",
-        "content": "bazi_basic({\n  year: 1990, month: 5,\n  day: 15, hour: 10,\n  gender: \"male\",\n  timezone: \"Asia/Taipei\"\n})\nziwei_basic({ …same birth parameters })"
-      },
-      {
-        "role": "Mingpan",
-        "tag": "Tool output (excerpt)",
-        "title": "Mingpan returns deterministic chart facts only — Chinese structured text, as the tool emits it",
-        "content": "年柱：庚午　月柱：辛巳\n日柱：庚辰　時柱：辛巳\n天干十神：年比肩　月劫財　時劫財\n月支藏干：丙七殺※ 戊偏印 庚比肩\n命宮：癸未　胎元：壬申\n——\n本命命宮 戊子：破軍(廟)\n身宮：夫妻　五行局：火六局\n命主：貪狼　身主：火星\n四化：祿太陽 權武曲 科太陰 忌天同"
-      },
-      {
-        "role": "Agent",
-        "tag": "AI reading (illustrative)",
-        "title": "The AI interprets on top of the facts; the reading belongs to the AI and may vary by school",
-        "content": "\"Day Master Geng Metal born in a Si month: the month branch's principal qi is Bing Fire, Seven Killings in command, with Companion and Rob Wealth stems in the other three pillars — strong Killings, but the Day Master is supported. In Zi Wei, Po Jun sits alone in the Life Palace at temple brightness, the Body Palace falls in Spouse with Wu Qu (Power), and Tan Lang (temple) rules Career — career favours proactive pioneering, tempered through partnership and structure…\""
-      }
-    ],
-    "contrast": {
-      "badTitle": "Asking a general-purpose LLM directly",
-      "badDesc": "Misplaced solar-term cut-offs, confused early/late Zi hours, Zi Wei stars placed from memory.",
-      "goodTitle": "Calling Mingpan before interpreting",
-      "goodDesc": "Identical input always yields the identical chart; the rules are published, reproducible and checkable. The AI only interprets on top of the facts."
+    "eyebrow": "Real tool call",
+    "title": "From one question to an inspectable chart.",
+    "description": "This public fictional input was sent to the official remote MCP. Mingpan returns calculated facts; your chosen AI supplies the interpretation.",
+    "fullZiwei": "Inspect the full Ziwei output for this birth",
+    "source": "Public fictional data. Original Chinese tool output, not an AI interpretation",
+    "prompt": {
+      "tag": "User prompt",
+      "title": "Birth data and a question, in plain language",
+      "content": "\"Chart the BaZi and Zi Wei for a man born 1990-05-15 at 10:00 in Taipei, then talk me through his career direction.\""
+    },
+    "output": {
+      "tag": "Original tool output",
+      "title": "Mingpan returns deterministic chart facts only — Chinese structured text, as the tool emits it"
     }
   },
   "principles": {
     "eyebrow": "Why Mingpan",
-    "title": "Put calculation and interpretation where each belongs",
+    "title": "Open calculations. Clear boundaries.",
     "description": "Mingpan is not another fortune-telling bot. It supplies reproducible chart facts and leaves contextual, human interpretation to the AI you choose.",
     "items": [
-      { "title": "Deterministic first", "description": "Pillars, solar terms, palaces, stars, and hexagrams are computed in code—not guessed by a language model." },
-      { "title": "Privacy by architecture", "description": "The official service is stateless and does not store or cache birth inputs or chart results." },
-      { "title": "Open and auditable", "description": "Source, dependencies, and tests are public so developers and researchers can inspect the calculation conventions." }
+      {
+        "title": "Inspectable",
+        "description": "Source code, calculation conventions and tool parameters are open to inspection by version."
+      },
+      {
+        "title": "No personal archive",
+        "description": "The official MCP is stateless and does not build a birth-profile database. Check your client’s data policy separately."
+      },
+      {
+        "title": "Your AI, your interpretation",
+        "description": "No life conclusions, and no promise of free AI access. Choose the client and model that suit you."
+      }
     ]
   },
   "capabilities": {
-    "eyebrow": "18 Tools · One Endpoint",
+    "eyebrow": "18 tools. One endpoint.",
     "title": "Natal charts, timing cycles, and divination through one endpoint",
     "description": "Every tool returns structured text designed for AI consumption. Mingpan deliberately avoids fortune scores, pattern verdicts, and life conclusions.",
     "items": [
-      { "mark": "八", "count": "5 tools", "title": "BaZi", "description": "Four pillars, ten gods, hidden stems, na yin, growth stages, decade luck, and annual, monthly, and daily cycles." },
-      { "mark": "紫", "count": "6 tools", "title": "Zi Wei Dou Shu", "description": "Twelve palaces, major and auxiliary stars, four transformations, five-element bureau, and multi-level timing cycles." },
-      { "mark": "爻", "count": "1 tool", "title": "LiuYao", "description": "Primary and transformed hexagrams, Najia, six relatives, six spirits, host/guest lines, void, and hidden spirits." },
-      { "mark": "梅", "count": "1 tool", "title": "MeiHua YiShu", "description": "Time- or number-based casting with primary, mutual, transformed hexagrams and body–function relations." },
-      { "mark": "壬", "count": "1 tool", "title": "Da Liu Ren", "description": "Derives calendar primitives from Gregorian time and returns the heaven–earth plate, four lessons, three transmissions, and generals." },
-      { "mark": "奇", "count": "2 tools", "title": "Qi Men Dun Jia", "description": "Multiple chart styles and intercalation methods, with the nine-palace chart and deterministic yong-shen facts by subject." }
+      {
+        "mark": "八",
+        "count": "5 tools",
+        "title": "BaZi",
+        "description": "Four pillars, ten gods, hidden stems, na yin, growth stages, decade luck, and annual, monthly, and daily cycles."
+      },
+      {
+        "mark": "紫",
+        "count": "6 tools",
+        "title": "Zi Wei Dou Shu",
+        "description": "Twelve palaces, major and auxiliary stars, four transformations, five-element bureau, and multi-level timing cycles."
+      },
+      {
+        "mark": "爻",
+        "count": "1 tool",
+        "title": "LiuYao",
+        "description": "Primary and transformed hexagrams, Najia, six relatives, six spirits, host/guest lines, void, and hidden spirits."
+      },
+      {
+        "mark": "梅",
+        "count": "1 tool",
+        "title": "MeiHua YiShu",
+        "description": "Time- or number-based casting with primary, mutual, transformed hexagrams and body–function relations."
+      },
+      {
+        "mark": "壬",
+        "count": "1 tool",
+        "title": "Da Liu Ren",
+        "description": "Derives calendar primitives from Gregorian time and returns the heaven–earth plate, four lessons, three transmissions, and generals."
+      },
+      {
+        "mark": "奇",
+        "count": "2 tools",
+        "title": "Qi Men Dun Jia",
+        "description": "Multiple chart styles and intercalation methods, with the nine-palace chart and deterministic yong-shen facts by subject."
+      }
     ],
     "calendarNote": "Plus 2 calendar primitives: precise times for the 24 solar terms and Gregorian–lunar conversion."
   },
   "connect": {
     "eyebrow": "Connect",
-    "title": "One endpoint is the whole configuration",
-    "description": "Mingpan is a standard MCP server and is not tied to any client. Any MCP-capable agent, IDE, CLI or SDK takes the endpoint wherever it asks for an MCP server — no API key, nothing to install.",
+    "title": "Copy the endpoint. Complete the connection.",
+    "description": "Use a Remote MCP / Streamable HTTP client. Mingpan needs no key; your AI client may have its own fees.",
     "remote": {
       "title": "Official remote service",
       "description": "Stateless pure computation: no chart database, no logging of birth parameters or results. Currently free for fair use."
     },
     "local": {
-      "title": "Run locally",
-      "description": "The same engine as a stdio process on your own machine; data never leaves the device. Requires Node.js.",
+      "title": "Local stdio (optional)",
+      "description": "Calculation runs locally. A cloud-based AI client may still send the results to its provider. Requires Node.js.",
       "copy": "Copy command",
       "copied": "Command copied"
     },
     "note": "Per-client configuration locations and examples live in the GitHub README.",
-    "docsCta": "Open the README"
+    "docsCta": "Open the README",
+    "steps": [
+      "Add a remote HTTP MCP server",
+      "Paste the endpoint; no API key",
+      "Check the tool list, then try fictional data"
+    ],
+    "check": "Use /mcp in Claude Code to inspect the connection and tools. If unavailable, check the transport and URL first.",
+    "officialDocs": "Official connection guide",
+    "troubles": "If the connection fails",
+    "troubleBody": "Include /mcp in the URL. The client needs remote HTTP support, not just stdio. Retry later after temporary errors or rate limiting. Copying is not a connection test.",
+    "successCheck": "The tool list should include bazi_basic and ziwei_basic. With the fictional input below, expect these four pillars: 庚午 · 辛巳 · 庚辰 · 辛巳."
   },
   "examples": {
-    "eyebrow": "Prompt Ideas",
+    "eyebrow": "Try it after connecting",
     "title": "Try these after connecting",
     "items": [
-      "Use Mingpan to calculate a BaZi chart for a male born on April 12, 1992 at 07:30, then interpret the resulting chart.",
+      "Use Mingpan bazi_basic for a fictional male born 1990-05-15 at 10:00, timezone Asia/Taipei. Return the four pillars first, without interpreting them.",
       "Find the exact time of LiChun in 2027 and explain whether it changes the year pillar for this birth chart.",
       "Cast a Qi Men Dun Jia hourly chart for June 21, 2024 at 10:00. List the computed facts before interpreting them."
     ]
   },
   "relationship": {
-    "title": "Mingpan computes the chart. BaziWei completes the experience.",
-    "description": "Mingpan is an independent, open-source calculation foundation. BaziWei connects subject management, BaZi and Zi Wei, AI readings, calendars, and sharing into a complete product. They complement each other without forcing the same school of interpretation.",
-    "cta": "Visit BaziWei"
+    "title": "Rather start with your own reading?",
+    "description": "BaziWei brings charts, AI readings and calendars into a personal archive you can revisit.",
+    "cta": "Visit BaziWei",
+    "independent": "Independently operated. No shared accounts or birth profiles."
   },
-  "footer": { "tagline": "Open-source Chinese metaphysics MCP" }
+  "footer": {
+    "tagline": "Open-source Chinese metaphysics MCP"
+  }
 }

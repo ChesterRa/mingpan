@@ -9,7 +9,7 @@ function showStatus(message) {
   window.clearTimeout(hideStatusTimer);
   hideStatusTimer = window.setTimeout(() => {
     delete status.dataset.visible;
-  }, 2600);
+  }, 5000);
 }
 
 async function copyEndpoint() {
@@ -51,7 +51,7 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && languageMenu instanceof HTMLDetailsElement) {
+  if (event.key === "Escape" && languageMenu instanceof HTMLDetailsElement && languageMenu.open) {
     languageMenu.open = false;
     languageMenu.querySelector("summary")?.focus();
   }

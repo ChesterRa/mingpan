@@ -13,6 +13,7 @@ const SOURCE_URL = "https://github.com/ChesterRa/mingpan";
 const BAZIWEI_URL = "https://bzwai.com";
 const manifest = JSON.parse(await readFile(path.join(rootDir, "package.json"), "utf8"));
 const VERSION = manifest.version;
+const example = JSON.parse(await readFile(path.join(sourceDir, 'example.json'), 'utf8'));
 
 const localeDefinitions = [
   { id: "zh-TW", href: "/", label: "繁體中文", file: "zh-TW.json" },
@@ -91,49 +92,41 @@ function renderExamples(items) {
 }
 
 function renderEvidence(evidence) {
-  if (!evidence) return "";
-  const steps = evidence.steps.map((step, index) => {
-    const isCode = /^[a-z_]+\(/m.test(step.content || "");
-    return `
-      <div class="evidence-step" data-role="${escapeHtml(step.role.toLowerCase())}">
-        <div class="evidence-step__header">
-          <span class="evidence-step__num" aria-hidden="true">${String(index + 1).padStart(2, "0")}</span>
-          <span class="evidence-step__tag">${escapeHtml(step.tag)}</span>
-          <h4 class="evidence-step__title">${escapeHtml(step.title)}</h4>
-        </div>
-        <div class="evidence-step__body">
-          <pre class="evidence-step__text${isCode ? " evidence-step__text--code" : ""}"><code>${escapeHtml(step.content)}</code></pre>
-        </div>
-      </div>`;
-  }).join("");
-
+  const input = JSON.stringify(example.input, null, 2);
+  const bazi = example.results.find(item => item.name === "bazi_basic").text;
   return `
-    <section class="section section--tinted" id="evidence">
-      <div class="shell section-heading">
+    <section class="section evidence-section" id="evidence">
+      <div class="evidence-heading-band"><div class="shell section-heading">
         <p class="eyebrow">${escapeHtml(evidence.eyebrow)}</p>
         <h2>${escapeHtml(evidence.title)}</h2>
         <p>${escapeHtml(evidence.description)}</p>
-      </div>
-      <div class="shell evidence-wrapper">
-        <div class="evidence-flow">${steps}</div>
-        <div class="evidence-contrast">
-          <div class="contrast-card contrast-card--bad">
-            <div class="contrast-card__badge">✕ ${escapeHtml(evidence.contrast.badTitle)}</div>
-            <p>${escapeHtml(evidence.contrast.badDesc)}</p>
-          </div>
-          <div class="contrast-card contrast-card--good">
-            <div class="contrast-card__badge">✓ ${escapeHtml(evidence.contrast.goodTitle)}</div>
-            <p>${escapeHtml(evidence.contrast.goodDesc)}</p>
-          </div>
+      </div></div>
+      <div class="shell evidence-workbench">
+        <div class="evidence-input">
+          <p class="eyebrow">01 / ${escapeHtml(evidence.prompt.tag)}</p>
+          <h3>${escapeHtml(evidence.prompt.title)}</h3>
+          <p>${escapeHtml(evidence.prompt.content)}</p>
+          <p class="eyebrow">02 / bazi_basic</p>
+          <pre><code>${escapeHtml(input)}</code></pre>
+        </div>
+        <div class="evidence-output">
+          <p class="eyebrow">03 / ${escapeHtml(evidence.output.tag)}</p>
+          <h3>${escapeHtml(evidence.output.title)}</h3>
+          <pre lang="zh-TW"><code>${escapeHtml(bazi)}</code></pre>
+          <details>
+            <summary>${escapeHtml(evidence.fullZiwei)}</summary>
+            <pre lang="zh-TW"><code>${escapeHtml(example.results.find(item => item.name === "ziwei_basic").text)}</code></pre>
+          </details>
         </div>
       </div>
+      <p class="shell evidence-source">${escapeHtml(evidence.source)} · v${example.version} · Streamable HTTP</p>
     </section>`;
 }
 
 const COPY_ICON = '<svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
 const STDIO_COMMAND = "npx -y mingpan";
 
-function renderConnect(connect, primaryCta) {
+function renderConnect(connect, primaryCta, examplesTitle) {
   return `
     <section class="section" id="connect">
       <div class="shell section-heading">
@@ -152,18 +145,28 @@ function renderConnect(connect, primaryCta) {
             ${COPY_ICON}
           </button>
           <p>${escapeHtml(connect.remote.description)}</p>
+          <ol class="connect-steps">${connect.steps.map(step => `<li>${escapeHtml(step)}</li>`).join('')}</ol>
+          <p>${escapeHtml(connect.successCheck)} <a class="text-link" href="#prompts">${escapeHtml(examplesTitle)} ↓</a></p>
+          <details open>
+            <summary>Claude Code</summary>
+            <pre><code>claude mcp add --transport http mingpan ${ENDPOINT}</code></pre>
+            <button class="button button--secondary" type="button" data-copy-text="claude mcp add --transport http mingpan ${ENDPOINT}" data-copied-label="${escapeHtml(connect.local.copied)}">${escapeHtml(connect.local.copy)}</button>
+            <p>${escapeHtml(connect.check)}</p>
+            <a class="text-link" href="https://code.claude.com/docs/en/mcp" rel="noreferrer">${escapeHtml(connect.officialDocs)} ↗</a>
+          </details>
+          <details>
+            <summary>${escapeHtml(connect.troubles)}</summary>
+            <p>${escapeHtml(connect.troubleBody)}</p>
+          </details>
         </article>
-        <article class="connect-form">
-          <div class="connect-form__head">
-            <h3>${escapeHtml(connect.local.title)}</h3>
-            <span class="connect-form__tag">stdio</span>
-          </div>
+        <details class="connect-form connect-local">
+          <summary>${escapeHtml(connect.local.title)}</summary>
           <button class="endpoint-value" type="button" data-copy-text="${STDIO_COMMAND}" data-copied-label="${escapeHtml(connect.local.copied)}" aria-label="${escapeHtml(connect.local.copy)}">
             <code>${STDIO_COMMAND}</code>
             ${COPY_ICON}
           </button>
           <p>${escapeHtml(connect.local.description)}</p>
-        </article>
+        </details>
       </div>
       <p class="shell connect-note">${escapeHtml(connect.note)} <a href="${SOURCE_URL}#readme" rel="noreferrer">${escapeHtml(connect.docsCta)}<span aria-hidden="true"> ↗</span></a></p>
     </section>`;
@@ -171,6 +174,7 @@ function renderConnect(connect, primaryCta) {
 
 function renderPage(content) {
   const canonicalUrl = `${ORIGIN}${content.path === "/" ? "" : content.path.replace(/\/$/, "")}`;
+  const familyUrl = `${BAZIWEI_URL}/${content.lang}`;
   const alternateLinks = localeDefinitions
     .map((locale) => `<link rel="alternate" hreflang="${locale.id}" href="${ORIGIN}${locale.href === "/" ? "" : locale.href.replace(/\/$/, "")}">`)
     .concat(`<link rel="alternate" hreflang="x-default" href="${ORIGIN}">`)
@@ -194,7 +198,7 @@ function renderPage(content) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f4ed">
+  <meta name="theme-color" content="#0d211c">
   <meta name="description" content="${escapeHtml(content.meta.description)}">
   <meta name="robots" content="index,follow">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
@@ -206,7 +210,10 @@ function renderPage(content) {
   <meta property="og:title" content="${escapeHtml(content.meta.title)}">
   <meta property="og:description" content="${escapeHtml(content.meta.description)}">
   <meta property="og:url" content="${canonicalUrl}">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="${ORIGIN}/assets/time-atlas.webp">
+  <meta property="og:image:width" content="1586">
+  <meta property="og:image:height" content="992">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/styles.css">
   <script type="application/ld+json">${structuredData}</script>
@@ -236,26 +243,25 @@ function renderPage(content) {
 
   <main id="main">
     <section class="hero">
-      <div class="hero-orbit hero-orbit--one" aria-hidden="true"></div>
-      <div class="hero-orbit hero-orbit--two" aria-hidden="true"></div>
+      <picture class="hero-scene" aria-hidden="true"><source media="(max-width:767px)" srcset="/assets/time-atlas-mobile.webp"><img src="/assets/time-atlas.webp" alt="" width="1586" height="992" fetchpriority="high"></picture>
       <div class="shell hero-grid">
         <div class="hero-copy">
           <p class="eyebrow">${escapeHtml(content.hero.eyebrow)}</p>
-          <h1>${escapeHtml(content.hero.title)}</h1>
+          <h1>${escapeHtml(content.hero.title)}<em>${escapeHtml(content.hero.emphasis)}</em></h1>
           <p class="hero-lede">${escapeHtml(content.hero.description)}</p>
           <div class="hero-actions">
             <button class="button button--primary" type="button" data-copy-endpoint>
               <svg aria-hidden="true" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
               <span>${escapeHtml(content.hero.primaryCta)}</span>
             </button>
-            <a class="button button--secondary" href="${SOURCE_URL}" rel="noreferrer">${escapeHtml(content.hero.secondaryCta)}<span aria-hidden="true">↗</span></a>
+            <a class="text-link" href="#evidence">${escapeHtml(content.hero.secondaryCta)}<span aria-hidden="true"> ↓</span></a>
           </div>
           <p class="hero-note">${escapeHtml(content.hero.note)}</p>
         </div>
 
         <aside class="endpoint-panel" aria-label="${escapeHtml(content.endpoint.label)}">
           <div class="endpoint-panel__head">
-            <span><i aria-hidden="true"></i>${escapeHtml(content.endpoint.status)}</span>
+            <span>${escapeHtml(content.endpoint.status)}</span>
             <span>v${escapeHtml(VERSION)}</span>
           </div>
           <div class="endpoint-panel__body">
@@ -299,7 +305,7 @@ function renderPage(content) {
       <p class="shell calendar-note"><span aria-hidden="true">＋</span>${escapeHtml(content.capabilities.calendarNote)}</p>
     </section>
 
-    ${renderConnect(content.connect, content.hero.primaryCta)}
+    ${renderConnect(content.connect, content.hero.primaryCta, content.examples.title)}
 
     <section class="section section--tinted" id="prompts">
       <div class="shell prompt-panel">
@@ -317,8 +323,9 @@ function renderPage(content) {
           <p class="eyebrow eyebrow--light">Mingpan × BaziWei</p>
           <h2>${escapeHtml(content.relationship.title)}</h2>
           <p>${escapeHtml(content.relationship.description)}</p>
+          <p class="relationship-note">${escapeHtml(content.relationship.independent)}</p>
         </div>
-        <a class="button button--light" href="${BAZIWEI_URL}">${escapeHtml(content.relationship.cta)}<span aria-hidden="true">→</span></a>
+        <a class="button button--light" href="${familyUrl}">${escapeHtml(content.relationship.cta)}<span aria-hidden="true">→</span></a>
       </div>
     </section>
   </main>
@@ -328,7 +335,7 @@ function renderPage(content) {
       <div class="footer-brand"><span class="brand-mark" aria-hidden="true">命</span><div><strong>Mingpan</strong><p>${escapeHtml(content.footer.tagline)}</p></div></div>
       <div class="footer-links">
         <a href="${SOURCE_URL}" rel="noreferrer">GitHub</a>
-        <a href="${BAZIWEI_URL}">BaziWei</a>
+        <a href="${familyUrl}">BaziWei</a>
         <span>Apache-2.0</span>
       </div>
     </div>
@@ -354,8 +361,8 @@ if (path.basename(outputDir) !== "site" || path.dirname(outputDir) !== rootDir) 
 await rm(outputDir, { recursive: true, force: true });
 await mkdir(outputDir, { recursive: true });
 
-for (const asset of ["styles.css", "site.js", "favicon.svg"]) {
-  await cp(path.join(sourceDir, asset), path.join(outputDir, asset));
+for (const asset of ["styles.css", "site.js", "favicon.svg", "assets"]) {
+  await cp(path.join(sourceDir, asset), path.join(outputDir, asset), { recursive: true });
 }
 
 for (const definition of localeDefinitions) {
