@@ -1,6 +1,6 @@
 {
   "name": "mingpan",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "MCP service for Chinese metaphysics chart calculations: BaZi, ZiWei Dou Shu, LiuYao, MeiHua YiShu, DaLiuRen, and QiMen DunJia",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

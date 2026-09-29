@@ -27,11 +27,11 @@
 
 1. 在 GitHub 仓库配置 `CLOUDFLARE_API_TOKEN` 与
    `CLOUDFLARE_ACCOUNT_ID`；Token 仅授予目标 Worker 与自定义域名所需权限。
-2. 在本地完成本文的发布前验证，并确认 `package.json` 版本为 `0.1.7`。
-3. 提交并推送代码后建立 `v0.1.7` tag。tag 会分别触发 npm 发布与 Worker
+2. 在本地完成本文的发布前验证，并确认待发布版本与 `package.json` 一致。
+3. 提交并推送代码后建立对应的 `v<版本号>` tag。tag 会分别触发 npm 发布与 Worker
    发布；两个工作流都会先校验 tag 与 package 版本一致。
 4. Worker 工作流会建立 `mingpan.bzwai.com` Custom Domain、发布项目站与
-   `/mcp`，再以 MCP v2 官方客户端实调紫微工具。
+   `/mcp`，再以 MCP v2 官方客户端实调紫微与梅花工具。
 
 `wrangler.toml` 的 Custom Domain 会由 Cloudflare 建立 DNS 记录和证书，不要
 再手工建立指向 Worker 的 CNAME，也不要同时开启 Dashboard Git 自动部署。
@@ -52,6 +52,8 @@ npm run deploy:worker
 1. `/healthz` 返回成功；
 2. MCP `initialize` 与 `tools/list` 成功；
 3. 至少实调一次 `bazi_basic`、`ziwei_basic`、`qimen_basic`；
+   梅花修复发布后另调 `meihua_basic`（`method=number, upperNumber=7, lowerNumber=4, yaoNumber=1`），
+   确认本卦山雷颐、变卦山地剥、互卦坤为地；
 4. Cloudflare Metrics 无 `exceededCpu` / 1102，延迟与错误率可接受；
 5. 日志中没有出生时间、姓名、经度或完整命盘。
 
@@ -78,7 +80,7 @@ MCP_ENDPOINT=https://mingpan.bzwai.com/mcp npm run smoke:remote
 
 工作流先校验版本、安装、构建四语言项目站、运行完整测试与 Worker dry-run，
 部署后再检查部署域名与正式域名，并用 MCP v2 客户端完成协议协商、工具列表和
-一次实际紫微排盘。生产部署使用固定 concurrency group 串行执行，避免多个 tag
+实际紫微排盘与梅花互变卦金样本。生产部署使用固定 concurrency group 串行执行，避免多个 tag
 互相覆盖。不要同时启用另一条自动部署入口，以免重复发布。
 
 ## 监控与告警

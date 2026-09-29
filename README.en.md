@@ -21,7 +21,7 @@ For local development or data that must remain on-device, the stdio package rema
 LLMs are unreliable at the computational half of Chinese divination: deriving ganzhi pillars from solar terms, converting between lunar and solar calendars, adjusting for timezones and true solar time. They hallucinate these values. Mingpan is the deterministic other half:
 
 - **Deterministic-only output policy.** Every value a tool returns — four pillars, hidden stems, ten gods, na yin, life palace, palaces & stars, mutagens, hexagram lines — is a verifiable fact from classical lookup tables. Fortune scores, auspiciousness labels, and interpretive judgments are deliberately excluded: those belong to your AI.
-- **Correctness discipline.** 300 tests including minute-level LiChun (Start of Spring) boundary cases, golden cases verified against historical records and classical texts, cross-validation against reference implementations, remote MCP boundary tests, and localized project-site contracts.
+- **Correctness discipline.** Tests cover minute-level LiChun (Start of Spring) boundaries, golden cases from historical records and classical texts, all 384 MeiHua line changes and 64 nuclear hexagrams, MCP boundaries, and localized project-site contracts.
 - **Timezone & true-solar-time aware.** IANA timezone input with historical DST handling (including China's 1986–1991 DST), longitude-based true solar time correction applied consistently to all four pillars. CI enforces cross-timezone reproducibility.
 - **Hardened official service.** The stateless remote service does not store, cache, or log birth inputs or chart results, and enforces Host/Origin validation, request-size limits, and rate limiting.
 
@@ -60,8 +60,15 @@ The chart text is Chinese by design (terms are canonical). Structure: birth data
 
 Year range 1900–2100 · Beijing time (UTC+8) as internal canonical representation · interpretation intentionally left to the AI.
 
+### MeiHua line order and v0.1.8 fix
+
+Lines are numbered 1–6 from bottom to top. The changed hexagram flips the moving line; the nuclear hexagram uses lines 2–4 below and 3–5 above, following [MeiHua YiShu, volume 1](https://zh.wikisource.org/wiki/梅花易數/卷一). Qian and Kun use the same extraction rule; the alternative of taking their changed hexagram's nuclear hexagram is not implemented.
+
+**0.1.8** fixes the reversed trigram mapping reported in [issue #2](https://github.com/ChesterRa/mingpan/issues/2). Under this rule, 256 of 384 changed-hexagram combinations and 60 of 64 nuclear hexagrams were wrong in the old implementation. Both time and number casting are affected. Inputs, text structure, base hexagrams, moving-line numbers, and base ti-yong relations stay the same. After upgrading, recalculate and review interpretations based on old changed/nuclear hexagrams.
+
 ## Documentation
 
 - [README（简体中文 · authoritative）](README.md) — full parameter reference, calendar conventions, version history
+- [v0.1.8 release notes (Chinese)](docs/release-notes-0.1.8.md)
 
-Apache-2.0 · This is a condensed edition; the Chinese README is the single source of truth. Last synced: **v0.1.7**
+Apache-2.0 · This is a condensed edition; the Chinese README is the single source of truth. Last synced: **v0.1.8**

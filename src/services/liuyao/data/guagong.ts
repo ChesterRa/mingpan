@@ -15,36 +15,28 @@ import { BaGua, WuXing, DiZhi } from '../types';
 // 八卦基礎數據
 // ============================================
 
-/** 
- * 八卦對應的二進制值（陽爻=1，陰爻=0，上爻是最高位）
- * 
- * 八卦符號從下往上看（下爻、中爻、上爻）：
- * - 乾 ☰ = 阳阳阳 -> 上爻*4 + 中爻*2 + 下爻*1 = 1*4 + 1*2 + 1*1 = 7
- * - 兌 ☱ = 阴阳阳 -> 上爻*4 + 中爻*2 + 下爻*1 = 1*4 + 1*2 + 0*1 = 6
- * - 離 ☲ = 阳阴阳 -> 上爻*4 + 中爻*2 + 下爻*1 = 1*4 + 0*2 + 1*1 = 5
- * - 震 ☳ = 阴阴阳 -> 上爻*4 + 中爻*2 + 下爻*1 = 0*4 + 0*2 + 1*1 = 1 (錯誤！)
- * 
- * 實際定義（與先天八卦數一致）：
- * - 震 ☳ = 100 = 4
- * - 艮 ☶ = 001 = 1
- * 
- * 這是因為二進制表示是"上爻是最高位"，但八卦符號的閱讀順序是從下往上。
+/**
+ * 八卦整數編碼（陽=1，陰=0）：下爻*4 + 中爻*2 + 上爻*1。
+ * bit 2 是下爻，bit 0 是上爻；二進制字面量從左到右依次為下、中、上爻。
+ * 例如震「陽陰陰」= 0b100，艮「陰陰陽」= 0b001。
+ * 此值是爻位編碼，不是乾1、兌2等先天卦數。
+ * 必須與 NajiaCalculator.getGuaFromYaoValues 的權重一致。
  */
 export const BAGUA_BINARY: Record<BaGua, number> = {
   '坤': 0b000,  // ☷ 阴阴阴 = 0
-  '艮': 0b001,  // ☶ 阳阴阴 = 1 (上爻阳)
+  '艮': 0b001,  // ☶ 阴阴阳 = 1 (上爻阳)
   '坎': 0b010,  // ☵ 阴阳阴 = 2
-  '巽': 0b011,  // ☴ 阳阳阴 = 3
-  '震': 0b100,  // ☳ 阴阴阳 = 4 (下爻阳)
+  '巽': 0b011,  // ☴ 阴阳阳 = 3
+  '震': 0b100,  // ☳ 阳阴阴 = 4 (下爻阳)
   '離': 0b101,  // ☲ 阳阴阳 = 5
-  '兌': 0b110,  // ☱ 阴阳阳 = 6
+  '兌': 0b110,  // ☱ 阳阳阴 = 6
   '乾': 0b111,  // ☰ 阳阳阳 = 7
 };
 
 /** 
  * 二進制值對應的八卦
  * 
- * 計算方式：上爻*4 + 中爻*2 + 下爻*1
+ * 計算方式：下爻*4 + 中爻*2 + 上爻*1（與上表相同）。
  */
 export const BINARY_TO_BAGUA: Record<number, BaGua> = {
   0b000: '坤',
@@ -335,16 +327,8 @@ export function getGua64Info(upper: BaGua, lower: BaGua): Gua64Info {
 export function getGua64InfoByYao(yaoYinYang: [boolean, boolean, boolean, boolean, boolean, boolean]): Gua64Info {
   const lowerBinary = (yaoYinYang[0] ? 4 : 0) + (yaoYinYang[1] ? 2 : 0) + (yaoYinYang[2] ? 1 : 0);
   const upperBinary = (yaoYinYang[3] ? 4 : 0) + (yaoYinYang[4] ? 2 : 0) + (yaoYinYang[5] ? 1 : 0);
-  
-  // 注意：這裡的 binary 計算需要調整，因為八卦的二進制是從下到上
-  const lowerGua = BINARY_TO_BAGUA[
-    (yaoYinYang[2] ? 4 : 0) + (yaoYinYang[1] ? 2 : 0) + (yaoYinYang[0] ? 1 : 0)
-  ];
-  const upperGua = BINARY_TO_BAGUA[
-    (yaoYinYang[5] ? 4 : 0) + (yaoYinYang[4] ? 2 : 0) + (yaoYinYang[3] ? 1 : 0)
-  ];
-  
-  return getGua64Info(upperGua, lowerGua);
+
+  return getGua64Info(BINARY_TO_BAGUA[upperBinary], BINARY_TO_BAGUA[lowerBinary]);
 }
 
 /**

@@ -163,6 +163,15 @@ describe('HTTP 入口（Streamable HTTP 无状态）', () => {
       await client.connect(transport);
       expect(client.getProtocolEra()).toBe('modern');
       expect((await client.listTools()).tools).toHaveLength(18);
+      const result = await client.callTool({
+        name: 'meihua_basic',
+        arguments: { method: 'number', upperNumber: 7, lowerNumber: 4, yaoNumber: 1 },
+      });
+      expect(result.isError).toBeFalsy();
+      expect(result.content).toContainEqual({
+        type: 'text',
+        text: expect.stringContaining('**本卦**：山雷頤 → **變卦**：山地剝 | **互卦**：坤為地'),
+      });
     } finally {
       await client.close();
     }

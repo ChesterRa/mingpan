@@ -36,6 +36,15 @@ try {
     throw new Error("bazi_basic stdio smoke call returned an invalid result");
   }
 
+  const meihua = await client.callTool({
+    name: "meihua_basic",
+    arguments: { method: "number", upperNumber: 7, lowerNumber: 4, yaoNumber: 1 },
+  });
+  if (meihua.isError || !meihua.content.some((item) => item.type === "text" &&
+    item.text.includes("**本卦**：山雷頤 → **變卦**：山地剝 | **互卦**：坤為地"))) {
+    throw new Error("meihua_basic stdio smoke returned incorrect changed/nuclear hexagrams (issue #2)");
+  }
+
   console.log(`stdio smoke passed: mingpan v${manifest.version} (${tools.length} tools)`);
 } finally {
   await client.close();

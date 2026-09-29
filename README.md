@@ -2,7 +2,7 @@
 
 **简体中文（主文档）** | [English](README.en.md) | [日本語](README.ja.md)
 
-[![Version](https://img.shields.io/badge/version-0.1.7-blue.svg)](https://github.com/ChesterRa/mingpan)
+[![Version](https://img.shields.io/badge/version-0.1.8-blue.svg)](https://github.com/ChesterRa/mingpan)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 **命盘（Mingpan）** 是一个开源的中华传统术数 MCP 计算引擎，为 AI 应用提供命理排盘与占卜起卦能力。BaziWei 同时维护可直接使用的官方远程服务。
@@ -139,6 +139,10 @@ claude mcp add mingpan -- npx -y mingpan
 - 时间起卦：根据农历年月日时计算
 - 数字起卦：根据两个数字计算
 
+爻位统一**自下而上**编号 1–6；变卦反转指定动爻，互卦取本卦第 2、3、4 爻为下卦，第 3、4、5 爻为上卦。依据为《梅花易数》卷一的[八卦象例、爻以六除与互卦起例](https://zh.wikisource.org/wiki/梅花易數/卷一)。当前实现对乾、坤也按相同爻位取互；未采用原文另述的“乾坤无互，互其变卦”分支。
+
+**0.1.8 修复**：[Issue #2](https://github.com/ChesterRa/mingpan/issues/2) 指出的爻序映射错误会影响旧版的变卦和互卦。按上述取互规则，64 卦 × 6 动爻中有 256 个变卦结果、64 卦中有 60 个互卦结果需要纠正。时间与数字起卦均受影响；本卦、动爻编号与本卦体用关系不变，输入参数和文本结构兼容。升级后，依赖旧互变卦的解读需重新计算后复核。
+
 #### 大六壬
 
 | 工具             | 说明                                             |
@@ -268,6 +272,7 @@ npm run dev  # 监听变化
 
 | 版本 | 说明 |
 | ---- | ---- |
+| [0.1.8](docs/release-notes-0.1.8.md) | **梅花正确性修复**：统一八卦爻序与反向映射，纠正变卦和互卦；独立位运算穷举 384 种变卦与 64 种互卦，补齐 MCP、HTTP 与构建后 stdio 回归；感谢 [@1270643866](https://github.com/1270643866) 的详细报告 |
 | 0.1.7 | **官方托管服务**：`mingpan.bzwai.com` 产品站与 `/mcp` 同仓、同版本、同一 Worker 发布；生产域名、无状态隐私边界、Host/Origin、请求体、限流与现代 MCP 协议烟雾测试完成收口；测试 300 |
 | 0.1.6 | **MCP SDK v2 迁移**（2026-07-28 无状态协议，原生支持 Cloudflare Workers，向后兼容旧客户端）；远程 HTTP 入口从 50 行简化为 20 行（createMcpHandler）；Workers 打包 gzip 638→606KB；测试 288 |
 | 0.1.5 | **口径裁决**：子初换日（23:00 起日柱时柱同属次日，全五系统统一）；起运权威化（lunar 节气表 + 交运日历定位）；奇门年盘按《遁甲演义》典籍修正；真太阳时四柱全量生效；**新能力**：历法原语层（jieqi_query + calendar_convert）；测试 218→288 |

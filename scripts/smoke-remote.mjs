@@ -42,6 +42,15 @@ try {
     throw new Error("ziwei_basic smoke call returned an invalid result");
   }
 
+  const meihua = await client.callTool({
+    name: "meihua_basic",
+    arguments: { method: "number", upperNumber: 7, lowerNumber: 4, yaoNumber: 1 },
+  });
+  if (meihua.isError || !meihua.content.some((item) => item.type === "text" &&
+    item.text.includes("**本卦**：山雷頤 → **變卦**：山地剝 | **互卦**：坤為地"))) {
+    throw new Error("meihua_basic smoke returned incorrect changed/nuclear hexagrams (issue #2)");
+  }
+
   console.log(`MCP v2 smoke passed: ${endpoint} (${tools.length} tools)`);
 } finally {
   await client.close();

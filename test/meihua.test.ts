@@ -98,22 +98,36 @@ describe('時間起卦', () => {
     expect(qiGuaData.upperGuaIndex).toBe(6); // 坎
     expect(qiGuaData.lowerGuaIndex).toBe(4); // 震
   });
+
+  it('觀梅：戊辰年十二月十七日申時為澤火革初爻', () => {
+    const { qiGuaData, timeDetail } = QiguaCalculator.fromTime(1989, 1, 24, 15, false);
+    expect(timeDetail).toMatchObject({ lunarMonth: 12, lunarDay: 17, yearZhiIndex: 5, shiChenIndex: 9 });
+    expect(qiGuaData).toMatchObject({ upperGuaIndex: 2, lowerGuaIndex: 3, movingYao: 1 });
+    expect(getGua64Name('兌', '離')).toBe('澤火革');
+    expect(TiyongCalculator.calculate('金', '火', 1).yongGua).toBe('lower');
+  });
+
+  it('牡丹：己巳年三月十六日卯時為天風姤五爻', () => {
+    const { qiGuaData, timeDetail } = QiguaCalculator.fromTime(1989, 4, 21, 5, false);
+    expect(timeDetail).toMatchObject({ lunarMonth: 3, lunarDay: 16, yearZhiIndex: 6, shiChenIndex: 4 });
+    expect(qiGuaData).toMatchObject({ upperGuaIndex: 1, lowerGuaIndex: 5, movingYao: 5 });
+    expect(getGua64Name('乾', '巽')).toBe('天風姤');
+    expect(TiyongCalculator.calculate('金', '木', 5).yongGua).toBe('upper');
+  });
+
+  it('申年按地支序數 9 起卦', () => {
+    const { qiGuaData, timeDetail } = QiguaCalculator.fromTime(2017, 1, 14, 10, false);
+    expect(timeDetail).toMatchObject({ lunarMonth: 12, lunarDay: 17, yearZhiIndex: 9, shiChenIndex: 6 });
+    expect(qiGuaData).toMatchObject({ upperGuaIndex: 6, lowerGuaIndex: 4, movingYao: 2 });
+  });
 });
 
 describe('互卦計算', () => {
   it('地水師互卦為地雷復', () => {
-    // 地水師：上坤(000)下坎(010)
-    // 六爻：010 000（自下而上）
-    // 互卦下卦：2,3,4爻 = 100 = 艮
-    // 互卦上卦：3,4,5爻 = 000 = 坤
-    // 互卦：坤艮 = 地山謙
+    // 自下而上 [陰,陽,陰,陰,陰,陰]：2/3/4 爻為震，3/4/5 爻為坤。
     const result = HuguaCalculator.calculate('坤', '坎');
 
-    // 實際計算：坎=010，坤=000
-    // 六爻：[0,1,0,0,0,0]
-    // 互下：[1,0,0] = 艮
-    // 互上：[0,0,0] = 坤
-    expect(result.lower).toBe('艮');
+    expect(result.lower).toBe('震');
     expect(result.upper).toBe('坤');
   });
 
@@ -135,30 +149,19 @@ describe('互卦計算', () => {
 });
 
 describe('變卦計算', () => {
-  it('地水師六爻動變地澤臨', () => {
-    // 地水師：上坤下坎
-    // 六爻動：上爻變
-    // 坤=000，上爻(第6爻)變 → 還是坤（因為坤的上爻本來就是0）
-    // 實際：坎=010，坤=000
-    // 六爻：[0,1,0,0,0,0]
-    // 第6爻變：[0,1,0,0,0,1]
-    // 下卦：[0,1,0]=坎，上卦：[0,0,1]=震
-    // 結果：震坎 = 雷水解
+  it('地水師六爻動變山水蒙', () => {
+    // 上坤的最上爻由陰變陽，成艮；下坎不變。
     const result = BianguaCalculator.calculate('坤', '坎', 6);
 
     expect(result.lower).toBe('坎');
-    expect(result.upper).toBe('震');
+    expect(result.upper).toBe('艮');
   });
 
-  it('初爻動', () => {
-    // 乾為天初爻動
-    // 乾=111，六爻：[1,1,1,1,1,1]
-    // 初爻變：[0,1,1,1,1,1]
-    // 下卦：[0,1,1]=兌，上卦：[1,1,1]=乾
-    // 結果：天澤履
+  it('乾為天初爻動變天風姤', () => {
+    // 下乾的最下爻由陽變陰，成巽；上乾不變。
     const result = BianguaCalculator.calculate('乾', '乾', 1);
 
-    expect(result.lower).toBe('兌');
+    expect(result.lower).toBe('巽');
     expect(result.upper).toBe('乾');
   });
 });
@@ -248,6 +251,8 @@ describe('完整排盤', () => {
     expect(result.benGua.upperGua.name).toBe('坎');
     expect(result.benGua.lowerGua.name).toBe('震');
     expect(result.movingYao).toBe(4);
+    expect(result.bianGua.name).toBe('澤雷隨');
+    expect(result.huGua.name).toBe('山地剝');
     expect(result.timeDetail).toBeDefined();
   });
 
@@ -262,6 +267,8 @@ describe('完整排盤', () => {
     expect(result.benGua.upperGua.name).toBe('巽');
     expect(result.benGua.lowerGua.name).toBe('離');
     expect(result.movingYao).toBe(2);
+    expect(result.bianGua.name).toBe('風天小畜');
+    expect(result.huGua.name).toBe('火水未濟');
     expect(result.timeDetail).toBeUndefined();
   });
 

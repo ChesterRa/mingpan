@@ -58,24 +58,24 @@ export function getGua64Name(upper: BaGuaName, lower: BaGuaName): string {
   return GUA64_NAMES[key] || `${upper}${lower}卦`;
 }
 
-/** 八卦二進制表示（用於互卦計算） */
+/** 八卦爻序（自下而上：bits[0] = 初爻；true = 陽），供變卦與互卦共用。 */
 export const BAGUA_BINARY: Record<BaGuaName, [boolean, boolean, boolean]> = {
   '乾': [true, true, true],    // 111
-  '兌': [false, true, true],   // 011
+  '兌': [true, true, false],   // 110（兌上缺）
   '離': [true, false, true],   // 101
-  '震': [false, false, true],  // 001
-  '巽': [true, true, false],   // 110
+  '震': [true, false, false],  // 100（震仰盂）
+  '巽': [false, true, true],   // 011（巽下斷）
   '坎': [false, true, false],  // 010
-  '艮': [true, false, false],  // 100
+  '艮': [false, false, true],  // 001（艮覆碗）
   '坤': [false, false, false], // 000
 };
 
-/** 二進制轉八卦 */
+/** 自下而上的三爻轉八卦；字串鍵依序為初、二、三爻。 */
 export function binaryToBaGua(bits: [boolean, boolean, boolean]): BaGuaName {
   const key = bits.map(b => b ? '1' : '0').join('');
   const map: Record<string, BaGuaName> = {
-    '111': '乾', '011': '兌', '101': '離', '001': '震',
-    '110': '巽', '010': '坎', '100': '艮', '000': '坤',
+    '111': '乾', '110': '兌', '101': '離', '100': '震',
+    '011': '巽', '010': '坎', '001': '艮', '000': '坤',
   };
   return map[key];
 }

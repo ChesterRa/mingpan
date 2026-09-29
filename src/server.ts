@@ -13,7 +13,7 @@ import { registerQimenTools } from "./tools/qimenTools";
 import { registerCalendarTools } from "./tools/calendarTools";
 
 export const SERVER_NAME = "mingpan";
-export const SERVER_VERSION = "0.1.7";
+export const SERVER_VERSION = "0.1.8";
 
 export interface MingpanServerOptions {
   /**

@@ -54,14 +54,35 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
     }
   });
 
-  it('梅花數字起卦：協議層調用返回 Markdown 文本', async () => {
+  it.each([
+    { upperNumber: 1, lowerNumber: 2, yaoNumber: 4, ben: '天澤履', bian: '風澤中孚', hu: '風火家人' },
+    { upperNumber: 1, lowerNumber: 2, yaoNumber: 6, ben: '天澤履', bian: '兌為澤', hu: '風火家人' },
+    { upperNumber: 7, lowerNumber: 4, yaoNumber: 1, ben: '山雷頤', bian: '山地剝', hu: '坤為地' },
+    { upperNumber: 2, lowerNumber: 3, yaoNumber: 5, ben: '澤火革', bian: '雷火豐', hu: '天風姤' },
+    { upperNumber: 8, lowerNumber: 6, yaoNumber: 6, ben: '地水師', bian: '山水蒙', hu: '地雷復' },
+    { upperNumber: 1, lowerNumber: 1, yaoNumber: 1, ben: '乾為天', bian: '天風姤', hu: '乾為天' },
+  ])('梅花數字起卦：$ben $yaoNumber 爻動 → $bian，互 $hu', async ({ upperNumber, lowerNumber, yaoNumber, ben, bian, hu }) => {
     const res = await client.callTool({
       name: 'meihua_basic',
-      arguments: { method: 'number', upperNumber: 5, lowerNumber: 3 },
+      arguments: { method: 'number', upperNumber, lowerNumber, yaoNumber },
     });
     expect(res.isError).toBeFalsy();
     const text = (res.content as { type: string; text: string }[])[0].text;
-    expect(text).toContain('梅花');
+    expect(text).toContain(`**本卦**：${ben} → **變卦**：${bian} | **互卦**：${hu}`);
+  });
+
+  it('梅花時間起卦：觀梅占的革之咸、互乾巽經 MCP 輸出', async () => {
+    // 原例為辰年十二月十七日申時；以 1989-01-24（戊辰年臘月十七）復現。
+    // https://zh.wikisource.org/wiki/梅花易數/卷一#觀梅占
+    const res = await client.callTool({
+      name: 'meihua_basic',
+      arguments: { method: 'time', year: 1989, month: 1, day: 24, hour: 15 },
+    });
+    expect(res.isError).toBeFalsy();
+    const text = (res.content as { type: string; text: string }[])[0].text;
+    expect(text).toContain('**本卦**：澤火革 → **變卦**：澤山咸 | **互卦**：天風姤');
+    expect(text).toContain('**動爻**：初爻（下卦）');
+    expect(text).toContain('**體用關係**：火剋金，用剋體');
   });
 
   it('八字排盤：基礎調用成功', async () => {
