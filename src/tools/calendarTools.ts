@@ -12,7 +12,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Lunar, Solar } from 'lunar-javascript';
 import { textResult } from './schemas';
-import { BEIJING_TZ } from '../utils/timeNormalization';
+import { BEIJING_TZ, validateSolarDate } from '../utils/timeNormalization';
 
 export function registerCalendarTools(server: McpServer): void {
   // ============= 节气精确时刻查询 =============
@@ -98,6 +98,7 @@ export function registerCalendarTools(server: McpServer): void {
     const lines: string[] = [];
 
     if (args.direction === 'solar2lunar') {
+      validateSolarDate(args.year, args.month, args.day);
       const solar = Solar.fromYmd(args.year, args.month, args.day);
       const lunar = solar.getLunar();
       const isLeap = lunar.getMonth() < 0;

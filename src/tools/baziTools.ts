@@ -30,6 +30,7 @@ import {
   normalizeBirthInfo,
   textResult,
   timezoneNote,
+  beijingDstNote,
   parseGanzhiYear,
   parseGanzhiMonth,
   getYearStemBranch,
@@ -66,8 +67,10 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
 - 日柱旬空
 - 公曆/農曆出生日期對照
 
-時區說明：默認按北京時間排盤；海外出生者請提供 timezone 參數，
-系統將換算為北京時間後計算；可提供 longitude 做真太陽時校正。
+時區說明：默認按北京標準時（UTC+8）排盤；海外出生者請提供 timezone 參數，
+系統將換算為北京時間後計算；中國大陸 1986–1991 年夏令時期間記錄的
+鐘錶時間請傳 timezone: "Asia/Shanghai"（未傳時輸出會附提示）；
+可提供 longitude 做真太陽時校正。
 
 定位說明：本工具只負責確定性排盤（干支、藏干、十神）。
 五行強弱、格局、用神、神煞等屬解讀層，無權威統一口徑，
@@ -78,7 +81,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       ...baseBirthInfoFields,
     },
   }, async (args) => textResult('bazi_basic', async () => {
-    const { normalized, sourceTimezone } = normalizeBirthInfo(args);
+    const { normalized, sourceTimezone, beijingDst } = normalizeBirthInfo(args);
 
     const result = await baziService.calculate({
       year: normalized.year,
@@ -99,7 +102,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       { includePersonal: false, includeLocation: !!normalized.longitude }
     );
 
-    return timezoneNote(sourceTimezone) + text;
+    return timezoneNote(sourceTimezone) + beijingDstNote(beijingDst) + text;
   }));
 
   server.registerTool('bazi_dayun', {
@@ -119,7 +122,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       count: countField,
     },
   }, async (args) => textResult('bazi_dayun', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
 
     const result = await baziService.calculate({
       year: normalized.year, month: normalized.month, day: normalized.day,
@@ -157,7 +160,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       startYear,
     };
 
-    return renderBaziDaYunList(daYunList.slice(0, args.count), options);
+    return beijingDstNote(beijingDst) + renderBaziDaYunList(daYunList.slice(0, args.count), options);
   }));
 
   server.registerTool('bazi_liunian', {
@@ -177,7 +180,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       endYear: z.number().int().min(1900).max(2100).describe('End year for the range'),
     },
   }, async (args) => textResult('bazi_liunian', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
 
     const result = await baziService.calculate({
       year: normalized.year, month: normalized.month, day: normalized.day,
@@ -215,7 +218,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       daYunList,
     };
 
-    return renderBaziLiuNianList(liuNianList, options);
+    return beijingDstNote(beijingDst) + renderBaziLiuNianList(liuNianList, options);
   }));
 
   server.registerTool('bazi_liuyue', {
@@ -238,7 +241,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       ganzhiYear: ganzhiYearField.describe("The year to query (either GanZhi string like '乙巳' or Gregorian year like 2025)"),
     },
   }, async (args) => textResult('bazi_liuyue', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
     const { year: gregorianYear, ganzhi: ganzhiYear } = parseGanzhiYear(args.ganzhiYear);
 
     const result = await baziService.calculate({
@@ -314,7 +317,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       currentLiuNian,
     };
 
-    return renderBaziLiuYueList(liuYueList, options);
+    return beijingDstNote(beijingDst) + renderBaziLiuYueList(liuYueList, options);
   }));
 
   server.registerTool('bazi_liuri', {
@@ -336,7 +339,7 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       ]).describe('The month to query (either GanZhi string or month number 1-12)'),
     },
   }, async (args) => textResult('bazi_liuri', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
     const { year: gregorianYear, ganzhi: ganzhiYear } = parseGanzhiYear(args.ganzhiYear);
     const monthNum = parseGanzhiMonth(args.ganzhiMonth);
 
@@ -425,6 +428,6 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
       currentLiuYue,
     };
 
-    return renderBaziLiuRiList(liuRiList, options);
+    return beijingDstNote(beijingDst) + renderBaziLiuRiList(liuRiList, options);
   }));
 }

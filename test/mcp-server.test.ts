@@ -138,6 +138,37 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
     expect(text).toContain('Error');
   });
 
+  it('不存在的公曆日期：返回 isError 並說明原因，不進位到次月排盤', async () => {
+    const res = await client.callTool({
+      name: 'bazi_basic',
+      arguments: { year: 1988, month: 4, day: 31, hour: 15, gender: 'male' },
+    });
+    expect(res.isError).toBe(true);
+    const text = (res.content as { type: string; text: string }[])[0].text;
+    expect(text).toContain('公曆日期不存在：1988 年 4 月 31 日（該月只有 30 日）');
+  });
+
+  it('奇門描述列出的參數取值與 schema 枚舉逐字一致（照描述填寫不被拒絕）', async () => {
+    const { tools } = await client.listTools();
+    const tool = (name: string) => tools.find(t => t.name === name)!;
+    const enumOf = (name: string, prop: string) =>
+      (tool(name).inputSchema.properties as Record<string, { enum?: string[] }>)[prop].enum ?? [];
+
+    const yongshen = tool('qimen_yongshen').description ?? '';
+    const shiLeiLine = yongshen.split('\n').find(line => line.endsWith('、其他'));
+    expect(shiLeiLine?.split('、')).toEqual(enumOf('qimen_yongshen', 'shiLei'));
+
+    const basic = tool('qimen_basic').description ?? '';
+    for (const prop of ['panType', 'panStyle', 'zhiRunMethod']) {
+      const values = enumOf('qimen_basic', prop);
+      expect(values.length).toBeGreaterThan(0);
+      for (const value of values) expect(basic).toContain(value);
+    }
+    // 繁體寫法不是合法取值，不應出現在描述裡誤導調用方
+    expect(basic).not.toMatch(/時盤|日盤|月盤|年盤|轉盤|飛盤/);
+    expect(yongshen).not.toMatch(/求財|訴訟|考試|置業|孕產|尋人/);
+  });
+
   it('參數校驗：非法爻值應被 schema 拒絕', async () => {
     const res = await client.callTool({
       name: 'liuyao_basic',
@@ -157,5 +188,86 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
     expect(res.isError).toBeFalsy();
     const text = (res.content as { type: string; text: string }[])[0].text;
     expect(text).toContain('阴遁3局');
+  });
+
+  describe('北京夏令時提示（未傳 timezone）', () => {
+    // 1988 年夏令時為 4/17–9/11：7/15 在窗口內，11/15 為窗口外對照
+    const inDst = { year: 1988, month: 7, day: 15, hour: 15 };
+    const control = { year: 1988, month: 11, day: 15, hour: 15 };
+    const timeTools: Array<[string, Record<string, unknown>]> = [
+      ['bazi_basic', { gender: 'male' }],
+      ['bazi_dayun', { gender: 'male' }],
+      ['bazi_liunian', { gender: 'male', startYear: 2024, endYear: 2025 }],
+      ['bazi_liuyue', { gender: 'male', ganzhiYear: 2025 }],
+      ['bazi_liuri', { gender: 'male', ganzhiYear: 2025, ganzhiMonth: 1 }],
+      ['ziwei_basic', { gender: 'male' }],
+      ['ziwei_daxian', { gender: 'male' }],
+      ['ziwei_xiaoxian', { gender: 'male', startAge: 30, endAge: 32 }],
+      ['ziwei_liunian', { gender: 'male', startYear: 2024, endYear: 2025 }],
+      ['ziwei_liuyue', { gender: 'male', lunarYear: 2025 }],
+      ['ziwei_liuri', { gender: 'male', lunarYear: 2025, lunarMonth: 1 }],
+      ['liuyao_basic', { yaoValues: [7, 8, 9, 6, 7, 8] }],
+      ['meihua_basic', { method: 'time' }],
+      ['daliuren_basic', {}],
+      ['qimen_basic', {}],
+      ['qimen_yongshen', { shiLei: '求财' }],
+    ];
+
+    async function callText(name: string, args: Record<string, unknown>): Promise<string> {
+      const res = await client.callTool({ name, arguments: args });
+      expect(res.isError).toBeFalsy();
+      return (res.content as { type: string; text: string }[])[0].text;
+    }
+
+    it('覆蓋全部接受鐘錶時間的工具', async () => {
+      const { tools } = await client.listTools();
+      const withHour = tools
+        .filter(t => 'hour' in ((t.inputSchema.properties ?? {}) as Record<string, unknown>))
+        .map(t => t.name);
+      expect(withHour.sort()).toEqual(timeTools.map(([name]) => name).sort());
+    });
+
+    it.each(timeTools)('%s：夏令時期間開頭附提示，窗口外不附', async (name, extra) => {
+      const dstText = await callText(name, { ...inDst, ...extra });
+      expect(dstText.startsWith(
+        '> 注：公曆 1988-07-15 15:00 落在 1988 年北京夏令時期間（04-17 至 09-11，UTC+9），對應北京標準時 1988-07-15 14:00。'
+      )).toBe(true);
+
+      const controlText = await callText(name, { ...control, ...extra });
+      expect(controlText).not.toContain('夏令時');
+    });
+
+    it('bazi_basic：四柱仍按輸入時間；傳 Asia/Shanghai 後按標準時排盤且不再提示', async () => {
+      const plain = await callText('bazi_basic', { ...inDst, minute: 30, gender: 'male' });
+      expect(plain).toContain('對應北京標準時 1988-07-15 14:30');
+      expect(plain).toContain('時柱：丙申');
+
+      const converted = await callText('bazi_basic', { ...inDst, minute: 30, gender: 'male', timezone: 'Asia/Shanghai' });
+      expect(converted).not.toContain('夏令時');
+      expect(converted).toContain('時柱：乙未');
+    });
+
+    it('切換日：回撥重複與撥快跳過的時段分別提示；照提示傳 Etc/GMT-9 取第一次且不再提示', async () => {
+      const repeatedArgs = { year: 1988, month: 9, day: 11, hour: 1, minute: 30, gender: 'male' };
+      const repeated = await callText('bazi_basic', repeatedArgs);
+      expect(repeated).toContain('當日 01:00–01:59 出現兩次');
+      expect(repeated).toContain('對應北京標準時 1988-09-11 00:30');
+
+      const firstPass = await callText('bazi_basic', { ...repeatedArgs, timezone: 'Etc/GMT-9' });
+      expect(firstPass).not.toContain('夏令時');
+      expect(firstPass).toContain('公曆：1988-09-11 00:30');
+
+      const skipped = await callText('bazi_basic', { year: 1988, month: 4, day: 17, hour: 2, minute: 30, gender: 'male' });
+      expect(skipped).toContain('當日鐘錶上不存在此時間');
+      expect(skipped).toContain('若輸入已是標準時，可忽略本提示');
+    });
+
+    it('農曆輸入未傳 timezone 時按換算後的公曆時間提示；傳了 timezone 則不提示', async () => {
+      // 農曆 1988 年六月初二 = 公曆 1988-07-15
+      const lunar = { year: 1988, month: 6, day: 2, hour: 15, minute: 30, isLunar: true, gender: 'male' };
+      expect(await callText('bazi_basic', lunar)).toContain('> 注：公曆 1988-07-15 15:30 落在 1988 年北京夏令時期間');
+      // 農曆輸入會忽略 timezone，但調用方已聲明時區，提示不應與其聲明相左
+      expect(await callText('bazi_basic', { ...lunar, timezone: 'America/New_York' })).not.toContain('夏令時');
+    });
   });
 });

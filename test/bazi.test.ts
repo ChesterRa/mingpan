@@ -255,6 +255,8 @@ describe('四柱金樣本（lunar-javascript oracle 對照）', () => {
     { input: { year: 1988, month: 2, day: 15, hour: 23, minute: 30 }, expected: '戊辰 甲寅 辛丑 戊子', label: '子初換日（23 點起日柱時柱同換次日）+ 立春後春節前' },
     { input: { year: 1988, month: 2, day: 15, hour: 22, minute: 30 }, expected: '戊辰 甲寅 庚子 丁亥', label: '立春後春節前·亥時' },
     { input: { year: 1988, month: 2, day: 2, hour: 22, minute: 30 }, expected: '丁卯 癸丑 丁亥 辛亥', label: '立春前（年柱不換）' },
+    // 1966 年春節 1/21 早於立春 2/4 14:37：農曆已是丙午年，八字年柱仍為乙巳
+    { input: { year: 1966, month: 1, day: 28, hour: 12, minute: 0 }, expected: '乙巳 己丑 丁亥 丙午', label: '春節後立春前（年柱不換）' },
     { input: { year: 1999, month: 6, day: 7, hour: 9, minute: 11 }, expected: '己卯 庚午 庚寅 辛巳', label: '常規2' },
     { input: { year: 1992, month: 4, day: 12, hour: 7, minute: 30 }, expected: '壬申 甲辰 戊午 丙辰', label: 'README 示例' },
   ];

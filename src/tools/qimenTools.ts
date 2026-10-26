@@ -15,6 +15,7 @@ import {
   normalizeBirthInfo,
   textResult,
   timezoneNote,
+  beijingDstNote,
 } from './schemas';
 
 const SHI_LEI_VALUES = [
@@ -47,20 +48,20 @@ export function registerQimenTools(server: McpServer): void {
 - 日干/時干落宮
 - 格局判斷（吉格/凶格約20-30種）
 
-支持選項：
-- 盤類型：時盤（默認）、日盤、月盤、年盤
-- 盤式：轉盤（默認，遵循《神奇之門》）或飛盤
-- 置閏法：拆補法（默認）或茅山法
+支持選項（參數取值）：
+- panType：时盘（默認）、日盘、月盘、年盘
+- panStyle：转盘（默認，遵循《神奇之門》）或飞盘
+- zhiRunMethod：chaibu（拆補法，默認）或 maoshan（茅山法）
 
 盤類型說明：
-- 時盤：以時辰為主導，適用於即時預測
-- 日盤：以日干支為主導，適用於當日吉凶
-- 月盤：以月干支為主導，適用於月度運勢
-- 年盤：以年干支為主導，適用於年度規劃
+- 时盘：以時辰為主導，適用於即時預測
+- 日盘：以日干支為主導，適用於當日吉凶
+- 月盘：以月干支為主導，適用於月度運勢
+- 年盘：以年干支為主導，適用於年度規劃
 
 盤式說明：
-- 轉盤：天盤、八門、九星按物理方向旋轉（《神奇之門》派）
-- 飛盤：天盤、八門、九星按宮位數字飛布（傳統飛宮法）
+- 转盘：天盤、八門、九星按物理方向旋轉（《神奇之門》派）
+- 飞盘：天盤、八門、九星按宮位數字飛布（傳統飛宮法）
 
 輸出為 Markdown 格式，含 ASCII 九宮格，便於 AI 分析解讀。`,
     inputSchema: {
@@ -70,7 +71,7 @@ export function registerQimenTools(server: McpServer): void {
       zhiRunMethod: zhiRunMethodField,
     },
   }, async (args) => textResult('qimen_basic', async () => {
-    const { normalized, sourceTimezone } = normalizeBirthInfo(args);
+    const { normalized, sourceTimezone, beijingDst } = normalizeBirthInfo(args);
 
     const qimenService = new QimenService();
     const result = qimenService.calculate({
@@ -85,7 +86,7 @@ export function registerQimenTools(server: McpServer): void {
       zhiRunMethod: args.zhiRunMethod,
     });
 
-    return timezoneNote(sourceTimezone) + renderQimenText(result);
+    return timezoneNote(sourceTimezone) + beijingDstNote(beijingDst) + renderQimenText(result);
   }));
 
   server.registerTool('qimen_yongshen', {
@@ -94,8 +95,8 @@ export function registerQimenTools(server: McpServer): void {
 
 在基礎排盤基礎上，根據事類選取用神並分析：
 
-**支持 14 種事類**：
-求財、婚姻、疾病、出行、訴訟、考試、工作、失物、置業、求官、孕產、尋人、合作、其他
+**支持 14 種事類**（shiLei 參數取值）：
+求财、婚姻、疾病、出行、诉讼、考试、工作、失物、置业、求官、孕产、寻人、合作、其他
 
 **分析內容**（僅確定性事實）：
 - 主用神/輔用神識別及落宮（依《神奇之門》通行用神表）
@@ -120,7 +121,7 @@ export function registerQimenTools(server: McpServer): void {
       includeShenSha: z.boolean().optional().default(true).describe('是否包含神煞分析'),
     },
   }, async (args) => textResult('qimen_yongshen', async () => {
-    const { normalized, sourceTimezone } = normalizeBirthInfo(args);
+    const { normalized, sourceTimezone, beijingDst } = normalizeBirthInfo(args);
 
     const qimenService = new QimenService();
     const result = qimenService.calculateWithYongShen(
@@ -142,7 +143,7 @@ export function registerQimenTools(server: McpServer): void {
       }
     );
 
-    return timezoneNote(sourceTimezone) + renderQimenYongShenText(result);
+    return timezoneNote(sourceTimezone) + beijingDstNote(beijingDst) + renderQimenYongShenText(result);
   }));
 
 }

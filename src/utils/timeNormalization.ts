@@ -47,6 +47,24 @@ export interface NormalizedBirthDateTime {
   sourceTimezone?: string;
 }
 
+/** 北京壁鐘分量 */
+export interface WallClock {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+}
+
+/** 北京鐘錶時間落在中國 1986–1991 年夏令時相關時段的判定（僅用於輸出提示，不改變排盤） */
+export type BeijingDstStatus =
+  /** 處於夏令時（UTC+9）期間；standard 為該鐘錶時間對應的北京標準時 */
+  | { kind: 'dst'; clock: WallClock; standard: WallClock }
+  /** 夏令時結束日回撥後重複的時段：第一次（夏令時）對應 standard，第二次即標準時本身 */
+  | { kind: 'repeated'; clock: WallClock; standard: WallClock }
+  /** 夏令時開始日撥快跳過的時段：當日鐘錶上不存在 */
+  | { kind: 'skipped'; clock: WallClock };
+
 // ============================================
 // Timezone conversion (Intl-based, no deps)
 // ============================================
@@ -57,6 +75,18 @@ export function validateTimezone(timeZone: string): void {
     new Intl.DateTimeFormat('en-US', { timeZone });
   } catch {
     throw new Error(`無效的時區標識: ${timeZone}（需為 IANA 名稱，如 America/New_York）`);
+  }
+}
+
+/**
+ * 校驗公曆日期存在（如 4 月 31 日、平年 2 月 29 日）
+ * 月 1-12、日 1-31 的範圍由各工具 schema 保證；此處補足各月天數，
+ * 避免 Date 把不存在的日期進位到次月後靜默排盤
+ */
+export function validateSolarDate(year: number, month: number, day: number): void {
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (day > daysInMonth) {
+    throw new Error(`公曆日期不存在：${year} 年 ${month} 月 ${day} 日（該月只有 ${daysInMonth} 日）`);
   }
 }
 
@@ -128,6 +158,52 @@ export function convertToBeijingWallClock(
 }
 
 // ============================================
+// China DST 1986–1991 (table-based, no Intl)
+// ============================================
+
+const HOUR_MS = 3600 * 1000;
+
+/**
+ * 中國大陸 1986–1991 年全國夏令時起止日（[月, 日]；國務院辦公廳通知，與 IANA tzdata Rule PRC 一致）
+ * 開始日 02:00 撥快至 03:00，結束日 02:00（夏令時）回撥至 01:00
+ */
+export const CHINA_DST_PERIODS: Readonly<Record<number, { start: [number, number]; end: [number, number] }>> = {
+  1986: { start: [5, 4], end: [9, 14] },
+  1987: { start: [4, 12], end: [9, 13] },
+  1988: { start: [4, 17], end: [9, 11] },
+  1989: { start: [4, 16], end: [9, 17] },
+  1990: { start: [4, 15], end: [9, 16] },
+  1991: { start: [4, 14], end: [9, 15] },
+};
+
+/**
+ * 判定北京鐘錶時間是否落在中國 1986–1991 年夏令時相關時段
+ *
+ * 未提供 timezone 時，輸入按北京標準時（UTC+8）直接排盤，不扣夏令時；
+ * 但這六年夏季的鐘錶讀數是夏令時（UTC+9）。判定三種情況：
+ * - 夏令時期間：開始日 03:00 起至結束日 01:00 前
+ * - 結束日 01:00–01:59：回撥後重複的一小時
+ * - 開始日 02:00–02:59：撥快跳過的一小時
+ * 1919 年與 1940 年代的夏令時只見於 IANA 的上海地方記錄、各地做法不一，
+ * 不在此提示；顯式傳 Asia/Shanghai 時仍按 IANA 換算。純查表，不依賴 Intl。
+ */
+export function detectBeijingDst(input: WallClock): BeijingDstStatus | undefined {
+  const period = CHINA_DST_PERIODS[input.year];
+  if (!period) return undefined;
+
+  const clock = { year: input.year, month: input.month, day: input.day, hour: input.hour, minute: input.minute };
+  const t = Date.UTC(clock.year, clock.month - 1, clock.day, clock.hour, clock.minute);
+  const on = ([month, day]: [number, number], hour: number) => Date.UTC(clock.year, month - 1, day, hour);
+  // 夏令時讀數（UTC+9）對應的北京標準時，即早一小時
+  const standard = beijingStandardWallClock(new Date(t - 9 * HOUR_MS));
+
+  if (t >= on(period.start, 2) && t < on(period.start, 3)) return { kind: 'skipped', clock };
+  if (t >= on(period.end, 1) && t < on(period.end, 2)) return { kind: 'repeated', clock, standard };
+  if (t >= on(period.start, 3) && t < on(period.end, 1)) return { kind: 'dst', clock, standard };
+  return undefined;
+}
+
+// ============================================
 // Normalization
 // ============================================
 
@@ -158,7 +234,8 @@ export function normalizeBirthDateTime(input: BirthDateTimeInput): NormalizedBir
     return { ...solar, isLunarInput };
   }
 
-  // 公曆輸入：時區換算（含北京時區歷史夏令時的歸一化）
+  // 公曆輸入：先確認日期存在，再做時區換算（含北京時區歷史夏令時的歸一化）
+  validateSolarDate(solar.year, solar.month, solar.day);
   if (input.timezone) {
     solar = convertToBeijingWallClock(solar, input.timezone);
     return { ...solar, isLunarInput, sourceTimezone: input.timezone };

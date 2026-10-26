@@ -31,6 +31,7 @@ import {
   normalizeBirthInfo,
   textResult,
   timezoneNote,
+  beijingDstNote,
   getYearStemBranch,
 } from './schemas';
 import { nowBeijingParts } from '../utils/wallTime';
@@ -66,7 +67,9 @@ export function registerZiweiTools(server: McpServer): void {
 - 五行局、命主、身主
 - 本命四化（化祿/權/科/忌）
 
-時區說明：默認按北京時間排盤；海外出生者請提供 timezone 參數。
+時區說明：默認按北京標準時（UTC+8）排盤；海外出生者請提供 timezone 參數；
+中國大陸 1986–1991 年夏令時期間記錄的鐘錶時間請傳
+timezone: "Asia/Shanghai"（未傳時輸出會附提示）。
 
 輸出為結構化文本，便於 AI 分析解讀。`,
     inputSchema: {
@@ -77,7 +80,7 @@ export function registerZiweiTools(server: McpServer): void {
       includeMutagen: z.boolean().optional().default(true).describe('Include four mutagens (四化)'),
     },
   }, async (args) => textResult('ziwei_basic', async () => {
-    const { normalized, sourceTimezone } = normalizeBirthInfo(args);
+    const { normalized, sourceTimezone, beijingDst } = normalizeBirthInfo(args);
 
     const result = await ziweiService.calculate({
       year: normalized.year,
@@ -93,7 +96,7 @@ export function registerZiweiTools(server: McpServer): void {
     };
 
     const birthDate = new Date(Date.UTC(normalized.year, normalized.month - 1, normalized.day, normalized.hour, normalized.minute));
-    return timezoneNote(sourceTimezone) + renderZiweiText(
+    return timezoneNote(sourceTimezone) + beijingDstNote(beijingDst) + renderZiweiText(
       {
         ziwei: result,
         gender: normalized.gender,
@@ -121,7 +124,7 @@ export function registerZiweiTools(server: McpServer): void {
       count: countField,
     },
   }, async (args) => textResult('ziwei_daxian', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
 
     const result = await ziweiService.calculate({
       year: normalized.year, month: normalized.month, day: normalized.day,
@@ -160,7 +163,7 @@ export function registerZiweiTools(server: McpServer): void {
       direction,
     };
 
-    return renderZiweiDaXianList(result.decades.slice(0, args.count), options);
+    return beijingDstNote(beijingDst) + renderZiweiDaXianList(result.decades.slice(0, args.count), options);
   }));
 
   server.registerTool('ziwei_xiaoxian', {
@@ -186,7 +189,7 @@ export function registerZiweiTools(server: McpServer): void {
       endAge: z.number().int().min(1).max(120).describe('End age (nominal age) for the range'),
     },
   }, async (args) => textResult('ziwei_xiaoxian', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
 
     const result = await ziweiService.calculate({
       year: normalized.year, month: normalized.month, day: normalized.day,
@@ -238,7 +241,7 @@ export function registerZiweiTools(server: McpServer): void {
       decades: result.decades,
     };
 
-    return renderZiweiXiaoXianList(minorLimitList, options);
+    return beijingDstNote(beijingDst) + renderZiweiXiaoXianList(minorLimitList, options);
   }));
 
   server.registerTool('ziwei_liunian', {
@@ -261,7 +264,7 @@ export function registerZiweiTools(server: McpServer): void {
       endYear: z.number().int().min(1900).max(2100).describe('End year for the range'),
     },
   }, async (args) => textResult('ziwei_liunian', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
 
     const result = await ziweiService.calculate({
       year: normalized.year, month: normalized.month, day: normalized.day,
@@ -300,7 +303,7 @@ export function registerZiweiTools(server: McpServer): void {
       decades: result.decades,
     };
 
-    return renderZiweiLiuNianList(yearlyList, options);
+    return beijingDstNote(beijingDst) + renderZiweiLiuNianList(yearlyList, options);
   }));
 
   server.registerTool('ziwei_liuyue', {
@@ -324,7 +327,7 @@ export function registerZiweiTools(server: McpServer): void {
       lunarYear: z.number().int().min(1900).max(2100).describe('The lunar year (Gregorian year) to query'),
     },
   }, async (args) => textResult('ziwei_liuyue', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
 
     const result = await ziweiService.calculate({
       year: normalized.year, month: normalized.month, day: normalized.day,
@@ -406,7 +409,7 @@ export function registerZiweiTools(server: McpServer): void {
       currentYearly,
     };
 
-    return renderZiweiLiuYueList(monthlyList, options);
+    return beijingDstNote(beijingDst) + renderZiweiLiuYueList(monthlyList, options);
   }));
 
   server.registerTool('ziwei_liuri', {
@@ -428,7 +431,7 @@ export function registerZiweiTools(server: McpServer): void {
       lunarMonth: z.number().int().min(-12).max(12).describe('Lunar month (1-12, use negative for leap month, e.g. -6 for leap 6th month)'),
     },
   }, async (args) => textResult('ziwei_liuri', async () => {
-    const { normalized } = normalizeBirthInfo(args);
+    const { normalized, beijingDst } = normalizeBirthInfo(args);
 
     const result = await ziweiService.calculate({
       year: normalized.year, month: normalized.month, day: normalized.day,
@@ -569,6 +572,6 @@ export function registerZiweiTools(server: McpServer): void {
       currentMonthly,
     };
 
-    return renderZiweiLiuRiList(dailyList, options);
+    return beijingDstNote(beijingDst) + renderZiweiLiuRiList(dailyList, options);
   }));
 }

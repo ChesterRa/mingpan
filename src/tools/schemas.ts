@@ -13,7 +13,13 @@
 
 import { z } from 'zod';
 import type { CallToolResult } from '@modelcontextprotocol/server';
-import { normalizeBirthDateTime } from '../utils/timeNormalization';
+import {
+  normalizeBirthDateTime,
+  detectBeijingDst,
+  CHINA_DST_PERIODS,
+  type BeijingDstStatus,
+  type WallClock,
+} from '../utils/timeNormalization';
 
 // ============================================
 // 共享字段 Schema
@@ -31,7 +37,7 @@ export const nameField = z.string().optional().describe('命主姓名（可選�
 export const isLunarField = z.boolean().optional().default(false).describe('輸入日期是否為農曆，默認公曆');
 
 export const timezoneField = z.string().optional().describe(
-  'IANA 時區名（如 America/New_York）。默認北京時間；設置後輸入時間按此時區換算為北京時間排盤。農曆輸入時忽略'
+  'IANA 時區名（如 America/New_York）。默認按北京標準時（UTC+8）排盤，不扣夏令時；中國大陸 1986–1991 年夏令時期間記錄的鐘錶時間請傳 Asia/Shanghai。設置後輸入時間按此時區換算為北京時間排盤。農曆輸入時忽略'
 );
 
 /** 出生/起卦時間字段（公曆或農曆，含可選時區） */
@@ -73,6 +79,8 @@ export interface NormalizedBirthInfo<T> {
   isLunarInput: boolean;
   /** 發生時區換算時的來源時區 */
   sourceTimezone?: string;
+  /** 未傳 timezone 時，北京鐘錶時間落在 1986–1991 年夏令時相關時段的判定（僅供輸出提示） */
+  beijingDst?: BeijingDstStatus;
 }
 
 /**
@@ -103,6 +111,8 @@ export function normalizeBirthInfo<T extends NormalizableBirthInfo>(input: T): N
     },
     isLunarInput: normalized.isLunarInput,
     sourceTimezone: normalized.sourceTimezone,
+    // 調用方聲明過時區（含農曆輸入時被忽略的情形）就不再提示，避免與其聲明相左
+    beijingDst: input.timezone ? undefined : detectBeijingDst(normalized),
   };
 }
 
@@ -140,6 +150,32 @@ export async function textResult(
 export function timezoneNote(sourceTimezone?: string, isLunarInput?: boolean): string {
   if (!sourceTimezone) return '';
   return `> 注：輸入時間（${sourceTimezone}）已換算為北京時間後排盤。\n\n`;
+}
+
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+const formatWallClock = (w: WallClock): string =>
+  `${w.year}-${pad2(w.month)}-${pad2(w.day)} ${pad2(w.hour)}:${pad2(w.minute)}`;
+const formatMonthDay = ([month, day]: [number, number]): string => `${pad2(month)}-${pad2(day)}`;
+
+/**
+ * 夏令時提示（僅當未傳 timezone 且北京鐘錶時間落在 1986–1991 年夏令時相關時段時輸出）
+ * 排盤仍把輸入視為標準時；提示只給出可直接照做的重排方式（傳時區，而非手改時間），
+ * 並說明輸入已是標準時可忽略，避免 Agent 照做後重複扣減
+ */
+export function beijingDstNote(status?: BeijingDstStatus): string {
+  if (!status) return '';
+  const { year } = status.clock;
+  const clock = formatWallClock(status.clock);
+  switch (status.kind) {
+    case 'dst': {
+      const period = CHINA_DST_PERIODS[year];
+      return `> 注：公曆 ${clock} 落在 ${year} 年北京夏令時期間（${formatMonthDay(period.start)} 至 ${formatMonthDay(period.end)}，UTC+9），對應北京標準時 ${formatWallClock(status.standard)}。本次將輸入視為標準時（UTC+8）排盤；若此為當時鐘錶時間，請以同一公曆時間加傳 timezone: "Asia/Shanghai" 重新排盤（自動扣除夏令時）；若輸入已是標準時，可忽略本提示。\n\n`;
+    }
+    case 'repeated':
+      return `> 注：公曆 ${clock} 落在 ${year} 年北京夏令時結束日的回撥時段，當日 01:00–01:59 出現兩次。本次按第二次（回撥後的標準時）排盤；若為第一次（夏令時），對應北京標準時 ${formatWallClock(status.standard)}，請以同一公曆時間加傳 timezone: "Etc/GMT-9"（固定 UTC+9）重新排盤。\n\n`;
+    case 'skipped':
+      return `> 注：公曆 ${clock} 落在 ${year} 年北京夏令時開始日的撥快時段（02:00 直接撥至 03:00），當日鐘錶上不存在此時間。本次將輸入視為標準時（UTC+8）排盤；若輸入已是標準時，可忽略本提示，否則請核實輸入時間。\n\n`;
+  }
 }
 
 // ============================================

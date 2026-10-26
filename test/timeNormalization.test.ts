@@ -227,3 +227,26 @@ describe('normalizeBirthDateTime', () => {
     });
   });
 });
+
+describe('不存在的日期：拒絕而非進位到次月', () => {
+  it('公曆 4 月 31 日、平年 2 月 29 日（含 1900 年）報錯並說明該月天數', () => {
+    expect(() => normalizeBirthDateTime({ year: 1988, month: 4, day: 31, hour: 15 }))
+      .toThrow('公曆日期不存在：1988 年 4 月 31 日（該月只有 30 日）');
+    expect(() => normalizeBirthDateTime({ year: 1990, month: 2, day: 29, hour: 12 })).toThrow(/該月只有 28 日/);
+    // 1900 年能被 100 整除而不能被 400 整除，不是閏年
+    expect(() => normalizeBirthDateTime({ year: 1900, month: 2, day: 29, hour: 12 })).toThrow(/該月只有 28 日/);
+  });
+
+  it('提供 timezone 時同樣先校驗日期', () => {
+    expect(() => normalizeBirthDateTime({ year: 1988, month: 4, day: 31, hour: 15, timezone: 'America/New_York' }))
+      .toThrow(/公曆日期不存在/);
+  });
+
+  it('閏年 2 月 29 日正常通過', () => {
+    expect(normalizeBirthDateTime({ year: 2000, month: 2, day: 29, hour: 12 })).toMatchObject({ month: 2, day: 29 });
+  });
+
+  it('農曆不存在的日期由曆表報錯（1988 年六月只有 29 日）', () => {
+    expect(() => normalizeBirthDateTime({ year: 1988, month: 6, day: 30, hour: 12, isLunar: true })).toThrow();
+  });
+});

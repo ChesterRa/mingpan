@@ -191,19 +191,20 @@ claude mcp add mingpan -- npx -y mingpan
 | --------- | ------- | ---- | ---------------------------- |
 | year      | number  | ✓    | 出生年份（1900-2100）        |
 | month     | number  | ✓    | 出生月份（1-12）             |
-| day       | number  | ✓    | 出生日期（1-31）             |
+| day       | number  | ✓    | 出生日期（1-31，须为该月实际存在的日期） |
 | hour      | number  | ✓    | 出生时辰（0-23）             |
 | minute    | number  |      | 出生分钟（0-59），默认 0     |
 | gender    | string  | ✓    | `male` / `female`            |
 | longitude | number  |      | 出生地经度，用于真太阳时校正 |
 | isLunar   | boolean |      | 是否为农历输入，默认 false   |
-| timezone  | string  |      | IANA 时区名（如 `America/New_York`），默认北京时间 |
+| timezone  | string  |      | IANA 时区名（如 `America/New_York`），默认北京标准时（UTC+8） |
 
 ### 时区说明（v0.1.4+）
 
-- 输入时间默认按**北京时间**排盘
+- 未提供 `timezone` 时，输入时间按**北京标准时（UTC+8）**排盘，不扣除夏令时
 - 海外出生/起卦时提供 `timezone` 参数，系统将当地墙钟时间换算为北京时间后计算
-- 输入侧使用 IANA 时区数据库（正确处理各国历史夏令时，如 1986-1991 年中国夏令时）
+- 提供 `timezone` 时按 IANA 时区数据库换算，正确处理各国历史夏令时
+- 中国大陆 1986–1991 年夏令时期间记录的钟表时间，请传 `timezone: "Asia/Shanghai"`；未传 `timezone` 且输入落在这六年的夏令时（含切换日重复或跳过的一小时）时，0.1.9 起输出开头会附提示，说明对应的标准时或该时刻当日不存在；四柱照常按输入排出，输入已是标准时可忽略提示
 - 内部规范表示为 UTC+8 平太阳时，与历法换算口径一致
 
 ### 占卜工具（六爻/梅花/大六壬）
@@ -217,11 +218,11 @@ claude mcp add mingpan -- npx -y mingpan
 | ------------ | ------- | ---- | ---- |
 | year         | number  | ✓    | 起盘年份（1900-2100） |
 | month        | number  | ✓    | 起盘月份（1-12） |
-| day          | number  | ✓    | 起盘日期（1-31） |
+| day          | number  | ✓    | 起盘日期（1-31，须为该月实际存在的日期） |
 | hour         | number  | ✓    | 起盘时辰（0-23） |
 | minute       | number  |      | 分钟（0-59），默认 0 |
 | isLunar      | boolean |      | 是否为农历输入，默认 false |
-| timezone     | string  |      | IANA 时区名，默认北京时间 |
+| timezone     | string  |      | IANA 时区名，默认北京标准时（UTC+8） |
 | panType      | string  |      | `时盘` / `日盘` / `月盘` / `年盘`，默认 `时盘` |
 | panStyle     | string  |      | `转盘` / `飞盘`，默认 `转盘` |
 | zhiRunMethod | string  |      | `chaibu`（拆补法）/ `maoshan`（茅山法），默认 `chaibu` |

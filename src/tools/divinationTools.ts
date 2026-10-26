@@ -19,9 +19,11 @@ import {
   monthField,
   dayField,
   hourField,
+  timezoneField,
   normalizeBirthInfo,
   textResult,
   timezoneNote,
+  beijingDstNote,
 } from './schemas';
 
 const yaoValue = z.union([z.literal(6), z.literal(7), z.literal(8), z.literal(9)]);
@@ -54,7 +56,8 @@ export function registerDivinationTools(server: McpServer): void {
 - 9 = 老陽（動爻，陽變陰）
 
 輸入順序：自下而上（初爻到上爻）
-起卦時間默認北京時間，可提供 timezone 换算。
+起卦時間默認按北京標準時（UTC+8），可提供 timezone 換算；
+1986–1991 年夏令時期間的鐘錶時間請傳 Asia/Shanghai。
 
 輸出為 Markdown 格式，便於 AI 分析解讀。`,
     inputSchema: {
@@ -63,7 +66,7 @@ export function registerDivinationTools(server: McpServer): void {
       ...birthTimeFields,
     },
   }, async (args) => textResult('liuyao_basic', async () => {
-    const { normalized, sourceTimezone } = normalizeBirthInfo(args);
+    const { normalized, sourceTimezone, beijingDst } = normalizeBirthInfo(args);
 
     const result = liuyaoService.calculate({
       yaoValues: args.yaoValues as [6 | 7 | 8 | 9, 6 | 7 | 8 | 9, 6 | 7 | 8 | 9, 6 | 7 | 8 | 9, 6 | 7 | 8 | 9, 6 | 7 | 8 | 9],
@@ -74,7 +77,7 @@ export function registerDivinationTools(server: McpServer): void {
       isLunar: false,
     });
 
-    return timezoneNote(sourceTimezone) + renderLiuyaoText(result);
+    return timezoneNote(sourceTimezone) + beijingDstNote(beijingDst) + renderLiuyaoText(result);
   }));
 
   // ============= 梅花易數 =============
@@ -107,7 +110,7 @@ export function registerDivinationTools(server: McpServer): void {
       day: dayField.optional().describe('起卦日期（1-31，time 模式必填）'),
       hour: hourField.optional().describe('起卦時辰（0-23，time 模式必填）'),
       isLunar: z.boolean().optional().default(false).describe('輸入是否為農曆，默認 false'),
-      timezone: z.string().optional().describe('IANA 時區名（time 模式，默認北京時間）'),
+      timezone: timezoneField,
       upperNumber: z.number().int().min(1).optional().describe('上卦數（number 模式必填）'),
       lowerNumber: z.number().int().min(1).optional().describe('下卦數（number 模式必填）'),
       yaoNumber: z.number().int().min(1).optional().describe('動爻數（可選，默認用上下卦數之和）'),
@@ -118,10 +121,11 @@ export function registerDivinationTools(server: McpServer): void {
     let day = args.day;
     let hour = args.hour;
     let isLunar = args.isLunar;
+    let dstNote = '';
 
     // 時間模式：入口層完成時區歸一化後再交給服務層
     if (args.method === 'time' && year !== undefined && month !== undefined && day !== undefined && hour !== undefined) {
-      const { normalized } = normalizeBirthInfo({
+      const { normalized, beijingDst } = normalizeBirthInfo({
         year, month, day, hour,
         isLunar,
         timezone: args.timezone,
@@ -131,6 +135,7 @@ export function registerDivinationTools(server: McpServer): void {
       day = normalized.day;
       hour = normalized.hour;
       isLunar = false;
+      dstNote = beijingDstNote(beijingDst);
     }
 
     const result = meihuaService.calculate({
@@ -145,7 +150,7 @@ export function registerDivinationTools(server: McpServer): void {
       yaoNumber: args.yaoNumber,
     });
 
-    return renderMeihuaText(result);
+    return dstNote + renderMeihuaText(result);
   }));
 
   // ============= 大六壬 =============
@@ -182,7 +187,7 @@ export function registerDivinationTools(server: McpServer): void {
       hour: hourField.optional().describe('起課時辰（0-23）'),
       minute: z.number().int().min(0).max(59).optional().describe('分鐘（0-59），默認 0'),
       isLunar: z.boolean().optional().default(false).describe('輸入是否為農曆，默認 false'),
-      timezone: z.string().optional().describe('IANA 時區名（默認北京時間）'),
+      timezone: timezoneField,
       // 專家模式：顯式曆法量
       jieqi: z.string().optional().describe('【專家模式】節氣（如：立春、驚蟄，簡繁均可）'),
       lunarMonth: z.number().int().min(1).max(12).optional().describe('【專家模式】農曆月份（1-12）'),
@@ -195,7 +200,7 @@ export function registerDivinationTools(server: McpServer): void {
     // 推薦路徑：由時間自動推節氣/月將/干支
     const hasTime = args.year !== undefined && args.month !== undefined && args.day !== undefined && args.hour !== undefined;
     if (hasTime) {
-      const { normalized, sourceTimezone } = normalizeBirthInfo({
+      const { normalized, sourceTimezone, beijingDst } = normalizeBirthInfo({
         year: args.year!,
         month: args.month!,
         day: args.day!,
@@ -212,7 +217,7 @@ export function registerDivinationTools(server: McpServer): void {
         hour: normalized.hour,
         minute: normalized.minute,
         });
-      return timezoneNote(sourceTimezone) + renderDaliurenText(result);
+      return timezoneNote(sourceTimezone) + beijingDstNote(beijingDst) + renderDaliurenText(result);
     }
 
     // 專家模式：顯式曆法量

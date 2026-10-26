@@ -226,6 +226,19 @@ describe('HTTP 入口（Streamable HTTP 无状态）', () => {
     expect(text).toContain('庚午'); // 北京 1990-06-16 → 年柱庚午
   });
 
+  it('未传 timezone 时夏令时提示经 HTTP 输出（1988 年夏令时窗口内）', async () => {
+    const call = await rpc({
+      jsonrpc: '2.0', id: 6, method: 'tools/call',
+      params: {
+        name: 'bazi_basic',
+        arguments: { year: 1988, month: 7, day: 15, hour: 15, minute: 30, gender: 'male' },
+      },
+    });
+    const text = call.json.result.content[0].text;
+    expect(text).toContain('對應北京標準時 1988-07-15 14:30');
+    expect(text).toContain('時柱：丙申'); // 四柱仍按输入时间
+  });
+
   it('并发紫微请求不共享命盘状态', async () => {
     const cases = [
       { year: 1985, month: 3, day: 14, hour: 12, minute: 56, gender: 'male' },
@@ -233,13 +246,16 @@ describe('HTTP 入口（Streamable HTTP 无状态）', () => {
     ];
     const call = (id: number, args: Record<string, unknown>) => rpc({
       jsonrpc: '2.0', id, method: 'tools/call',
-      params: { name: 'ziwei_xiaoxian', arguments: { ...args, count: 6 } },
+      params: { name: 'ziwei_xiaoxian', arguments: { ...args, startAge: 1, endAge: 6 } },
     });
 
-    const expected = [];
+    const expected: string[] = [];
     for (const [index, args] of cases.entries()) {
-      expected.push((await call(20 + index, args)).json?.result?.content?.[0]?.text);
+      const result = (await call(20 + index, args)).json?.result;
+      expect(result?.isError).toBeFalsy(); // 必须是真实命盘；两条参数报错文本相同也会让比较通过
+      expected.push(result?.content?.[0]?.text);
     }
+    expect(expected[0]).not.toBe(expected[1]);
 
     const concurrent = await Promise.all(
       cases.map((args, index) => call(30 + index, args))

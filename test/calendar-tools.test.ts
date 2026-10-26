@@ -98,5 +98,15 @@ describe('历法原语工具', () => {
       expect(lunarText).toContain('三月');
       expect(lunarText).toContain('初十');
     });
+
+    it('不存在的公历日期：返回可读错误而非进位到次月', async () => {
+      const res = await client.callTool({
+        name: 'calendar_convert',
+        arguments: { direction: 'solar2lunar', year: 1990, month: 2, day: 29 },
+      });
+      expect(res.isError).toBe(true);
+      const text = (res.content as { type: string; text: string }[])[0].text;
+      expect(text).toContain('公曆日期不存在：1990 年 2 月 29 日（該月只有 28 日）');
+    });
   });
 });
