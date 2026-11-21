@@ -169,10 +169,10 @@ export function renderBaziText(
   if (dt) {
     lines.push(`公曆：${fmt(dt)}`);
     if (trueSolarTime) {
-      lines.push(`真太陽時：${fmt(trueSolarTime)}（按經度校正，四柱以此排盤）`);
+      lines.push(`真太陽時：${fmt(trueSolarTime)}（按經度校正：日柱、時柱以此排盤；年柱、月柱與起運依出生時刻對照節氣）`);
     }
     const lunarBirthday = formatLunarBirthday(trueSolarTime || dt);
-    if (lunarBirthday) lines.push(`農曆：${lunarBirthday}`);
+    if (lunarBirthday) lines.push(`農曆：${lunarBirthday}${trueSolarTime ? '（依真太陽時）' : ''}`);
   }
 
   if (chart.year && chart.month && chart.day && chart.hour) {

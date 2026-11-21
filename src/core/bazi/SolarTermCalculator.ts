@@ -10,7 +10,6 @@ import { XL0_xzb, nutB, dt_at, XL0 } from './ephemerisData';
 const rad = (180 * 3600) / Math.PI;
 const pi2 = Math.PI * 2;
 const J2000 = 2451545;
-const radd = 180 / Math.PI;
 
 // Solar terms in order
 export const SOLAR_TERMS = [
@@ -397,78 +396,4 @@ export function getAdjacentSolarTermTime(solarTermInfo: SolarTermInfo, solarTerm
       next: solarTermInfo[SOLAR_TERMS[(index + 2) % 24]] || ''
     };
   }
-}
-
-/**
- * Calculate True Solar Time
- */
-export function getTrueSolarTime(year: number, month: number, day: number, timeStr: string, longitude: number): string {
-  const curTZ = -8; // China timezone
-  const t = timeStr2hour(timeStr);
-  const jd = JD(year, month, day + t / 24);
-  const bz_zty = mingLiBaZi(jd + curTZ / 24 - J2000, longitude / radd);
-  return bz_zty;
-}
-
-function timeStr2hour(s: string): number {
-  let a, b, c;
-  s = String(s).replace(/[^0-9:\.]/g, '');
-  const parts = s.split(':');
-  if (parts.length == 1) {
-    a = parseInt(s.substr(0, 2)) || 0;
-    b = parseInt(s.substr(2, 2)) || 0;
-    c = parseInt(s.substr(4, 2)) || 0;
-  } else if (parts.length == 2) {
-    a = parseInt(parts[0]) || 0;
-    b = parseInt(parts[1]) || 0;
-    c = 0;
-  } else {
-    a = parseInt(parts[0]) || 0;
-    b = parseInt(parts[1]) || 0;
-    c = parseInt(parts[2]) || 0;
-  }
-  return a + b / 60 + c / 3600;
-}
-
-function mingLiBaZi(jd: number, J: number): string {
-  const jd2 = jd + dt_T(jd);
-  const adjustedJd = jd + pty_zty2(jd2 / 36525) + J / Math.PI / 2;
-  return jdToTimeStr(adjustedJd);
-}
-
-function pty_zty2(t: number): number {
-  const L = (1753470142 + 628331965331.8 * t + 5296.74 * t * t) / 1000000000 + Math.PI;
-  let z = [XL0_calc(0, 0, t, 5) + Math.PI, 0];
-  const E = (84381.4088 - 46.836051 * t) / rad;
-  z = llrConv(z, E);
-  const adjustedL = rad2rrad(L - z[0]);
-  return adjustedL / pi2;
-}
-
-function llrConv(JW: number[], E: number): number[] {
-  const r: number[] = [];
-  const J = JW[0], W = JW[1];
-  r[0] = Math.atan2(
-    Math.sin(J) * Math.cos(E) - Math.tan(W) * Math.sin(E),
-    Math.cos(J)
-  );
-  r[1] = Math.asin(
-    Math.cos(E) * Math.sin(W) + Math.sin(E) * Math.cos(W) * Math.sin(J)
-  );
-  r[2] = JW[2];
-  r[0] = rad2mrad(r[0]);
-  return r;
-}
-
-function rad2mrad(v: number): number {
-  v = v % (2 * Math.PI);
-  if (v < 0) return v + 2 * Math.PI;
-  return v;
-}
-
-function rad2rrad(v: number): number {
-  v = v % (2 * Math.PI);
-  if (v <= -Math.PI) return v + 2 * Math.PI;
-  if (v > Math.PI) return v - 2 * Math.PI;
-  return v;
 }

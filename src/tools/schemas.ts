@@ -31,7 +31,9 @@ export const dayField = z.number().int().min(1).max(31).describe('日 1-31');
 export const hourField = z.number().int().min(0).max(23).describe('時 0-23');
 export const minuteField = z.number().int().min(0).max(59).optional().default(0).describe('分 0-59，默認 0');
 export const genderField = z.enum(['male', 'female']).describe('性別（影響大運順逆）');
-export const longitudeField = z.number().min(-180).max(180).optional().describe('出生地經度（真太陽時校正，可選）');
+export const longitudeField = z.number().min(-180).max(180).optional().describe(
+  '八字出生地經度（可選）。提供時，日柱、時柱按出生地真太陽時排算，23:00 換日；年柱、月柱與起運按出生時刻對照節氣，不受經度影響。'
+);
 export const nameField = z.string().optional().describe('命主姓名（可選）');
 
 export const isLunarField = z.boolean().optional().default(false).describe('輸入日期是否為農曆，默認公曆');

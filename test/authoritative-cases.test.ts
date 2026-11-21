@@ -81,19 +81,19 @@ describe('边界条件', () => {
     expect(r.chart.day.stem + r.chart.day.branch).toBe('癸卯'); // lunar oracle 确认
   });
 
-  it('极端经度 +180°：真太阳时偏移 +12h（约午时）', async () => {
+  it('极端经度 +180°：真太阳时比北京时间快约 4 小时（寅时）', async () => {
     const r = await service.calculate({ year: 2000, month: 1, day: 1, hour: 0, minute: 0, gender: 'male', longitude: 180 });
     const ts = r.birthInfo.trueSolarTime;
     expect(ts).toBeDefined();
-    // 北京墙钟 = UTC载体 + 8h → 约 11:56 ≈ 午时
-    expect(ts!.getUTCHours() + 8).toBeGreaterThanOrEqual(11);
-    expect(ts!.getUTCHours() + 8).toBeLessThanOrEqual(12);
+    // 载体的 UTC 分量就是北京墙钟：00:00 + (180-120)×4 分 + 均时差（1 月初约 −3 分）≈ 03:56
+    expect(ts!.getUTCHours()).toBe(3);
+    expect(ts!.getUTCMinutes()).toBeGreaterThanOrEqual(50);
   });
 
-  it('极端经度 -180°：真太阳时偏移 -12h（跨到前一日）', async () => {
+  it('极端经度 -180°：真太阳时比北京时间慢约 20 小时（跨到前一日）', async () => {
     const r = await service.calculate({ year: 2000, month: 1, day: 1, hour: 0, minute: 0, gender: 'male', longitude: -180 });
     const ts = r.birthInfo.trueSolarTime;
-    // 北京墙钟 ≈ 前一日 11:56 → 日柱应为 1999-12-31 的干支
+    // 00:00 + (-180-120)×4 分 + 均时差 ≈ 前一日 03:56 → 日柱应为 1999-12-31 的干支
     expect(ts!.getUTCDate()).toBe(31); // UTC 日期 31 → 前一日
   });
 });

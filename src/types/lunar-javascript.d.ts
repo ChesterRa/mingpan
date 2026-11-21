@@ -263,6 +263,7 @@ declare module 'lunar-javascript' {
   export class LunarUtil {
     static GAN: string[];
     static ZHI: string[];
+    static MONTH_ZHI: string[];
     static SHENGXIAO: string[];
     static JIE_QI: string[];
     static JIE_QI_IN_USE: string[];

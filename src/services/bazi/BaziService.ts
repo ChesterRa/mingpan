@@ -433,8 +433,9 @@ export class BaziService {
    * Generate cache key from input
    */
   private generateCacheKey(input: BaziInput): string {
-    const { year, month, day, hour, minute = 0, gender = 'male', longitude = 0, options = {} } = input;
-    return `${year}-${month}-${day}-${hour}:${minute}-${gender}-${longitude}-${JSON.stringify(options)}`;
+    const { year, month, day, hour, minute = 0, gender = 'male', longitude, options = {} } = input;
+    // 未传经度（不做真太阳时）与 longitude: 0（按 0° 校正）是两种盘，不能共用缓存
+    return `${year}-${month}-${day}-${hour}:${minute}-${gender}-${longitude ?? 'none'}-${JSON.stringify(options)}`;
   }
   
   /**

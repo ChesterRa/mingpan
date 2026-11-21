@@ -22,14 +22,45 @@ import {
   getSolarTermInfo, 
   calculateSolarTerm, 
   getAdjacentSolarTermTime,
-  getTrueSolarTime,
   SOLAR_TERMS,
   SOLAR_TERM_TO_ZHI
 } from './SolarTermCalculator';
 
 // Import necessary utilities from existing code
 import { PreciseCalendar } from '../../core/calendar/calendar';
-import { Solar, Lunar } from 'lunar-javascript';
+import { Solar, Lunar, LunarUtil } from 'lunar-javascript';
+
+/** 北京墙钟载体 → lunar-javascript Solar（只读 getUTC* 分量） */
+function toSolar(clock: Date): Solar {
+  return Solar.fromYmdHms(
+    clock.getUTCFullYear(),
+    clock.getUTCMonth() + 1,
+    clock.getUTCDate(),
+    clock.getUTCHours(),
+    clock.getUTCMinutes(),
+    clock.getUTCSeconds()
+  );
+}
+
+// LunarUtil.GAN / ZHI / MONTH_ZHI 都是 1 起的表（下标 0 为空串），MONTH_ZHI 从寅起。
+
+/** 命宫：同 lunar-javascript EightChar.getMingGong（月支、时支按寅起序号；年干按立春）。 */
+function getMingGong(yearStem: string, monthBranch: string, hourBranch: string): string {
+  const sum = LunarUtil.MONTH_ZHI.indexOf(monthBranch) + LunarUtil.MONTH_ZHI.indexOf(hourBranch);
+  const offset = (sum >= 14 ? 26 : 14) - sum;
+  let ganIndex = LunarUtil.GAN.indexOf(yearStem) * 2 + offset;
+  while (ganIndex > 10) {
+    ganIndex -= 10;
+  }
+  return LunarUtil.GAN[ganIndex] + LunarUtil.MONTH_ZHI[offset];
+}
+
+/** 胎元：同 lunar-javascript EightChar.getTaiYuan（月干进一位，月支进三位）。 */
+function getTaiYuan(monthStem: string, monthBranch: string): string {
+  const gan = (LunarUtil.GAN.indexOf(monthStem) % 10) + 1;
+  const zhi = ((LunarUtil.ZHI.indexOf(monthBranch) + 2) % 12) + 1;
+  return LunarUtil.GAN[gan] + LunarUtil.ZHI[zhi];
+}
 
 // Define CalendarDate interface
 interface CalendarDate {
@@ -59,8 +90,9 @@ export class BaziCore {
    * Calculates the four pillars based on birth information
    */
   async calculate(input: BaziCoreInput): Promise<BaziCoreResult> {
-    // Step 1: 构造北京墙钟载体（Date.UTC 构造 + getUTC* 读取，与宿主时区无关）
-    let birthDate = new Date(
+    // Step 1: 出生时刻——北京墙钟载体（Date.UTC 构造 + getUTC* 读取，与宿主时区无关）。
+    // lunar-javascript 的节气表同为北京时间，年柱（立春）、月柱（节）与起运都拿它对照节气。
+    const birthInstant = new Date(
       Date.UTC(
         input.year,
         input.month - 1,
@@ -69,84 +101,58 @@ export class BaziCore {
         input.minute || 0
       )
     );
-    
-    // Step 2: Apply true solar time if longitude provided
-    let trueSolarTime: Date | undefined;
-    let trueSolarTimeStr: string | undefined;
-    if (input.longitude !== undefined) {
-      trueSolarTimeStr = getTrueSolarTime(
-        input.year,
-        input.month,
-        input.day,
-        `${input.hour}:${input.minute || 0}:0`,
-        input.longitude
-      );
-      // Parse true solar time string back to adjust birth date
-      trueSolarTime = TrueSolarTime.adjust(birthDate, input.longitude);
-      birthDate = trueSolarTime;
-    }
-    
-    // Step 3: Calculate solar terms using lunar-javascript
-    const solar = Solar.fromYmdHms(
-      birthDate.getUTCFullYear(),
-      birthDate.getUTCMonth() + 1,
-      birthDate.getUTCDate(),
-      birthDate.getUTCHours(),
-      birthDate.getUTCMinutes(),
-      birthDate.getUTCSeconds()
-    );
-    const lunar = solar.getLunar();
-    // Get the previous Jie to determine the current month
-    const prevJie = lunar.getPrevJie();
+
+    // Step 2: 当地时钟——提供经度时为出生地真太阳时，只决定日柱、时柱（含子初换日）与农历日期。
+    // 口径同寿星万年历 mingLiBaZi（taro-bazi src/utils/solarTerm.ts 保留的原写法）：年、月柱取
+    // 出生时刻的太阳视黄经，与经度无关；只有日、时柱取真太阳时。拿真太阳时去比北京时间的
+    // 节气表是两种钟混比，节气一侧会翻错年柱、月柱与起运（issue #3）。
+    const trueSolarTime = input.longitude !== undefined
+      ? TrueSolarTime.adjust(birthInstant, input.longitude)
+      : undefined;
+    const localClock = trueSolarTime ?? birthInstant;
+
+    // Step 3: 节界——出生时刻对照节气
+    const instantLunar = toSolar(birthInstant).getLunar();
+    const prevJie = instantLunar.getPrevJie();
     const solarTerm = prevJie ? prevJie.getName() : '立春'; // Default to LiChun if no term found
-    
-    // Calculate if it's current month solar term
-    const monthZhi = SOLAR_TERM_TO_ZHI[solarTerm] || '卯';
     const isCurrentMonthSolarTerm = true; // Simplified for now
-    
+
     // Get adjacent solar term times (simplified)
     const adjacentSolarTermTime = {
       previous: '',
       next: ''
     };
-    
-    // Step 4: Calculate four pillars with solar term consideration
-    // 注意：一律使用（可能的真太阳时）校正后的 birthDate 分量，
-    // 与 Step 3 的节气月柱同源。此前误传 input.* 原始分量，
-    // 导致 longitude 校正只影响年/月柱而日/时柱不校正（v0.1.0 起的缺陷）。
+
+    // Step 4: 四柱——年柱、月柱随出生时刻（Step 3），日柱、时柱随当地时钟
     const chart = this.calculateHoroscope(
-      birthDate.getUTCFullYear(),
-      birthDate.getUTCMonth() + 1,
-      birthDate.getUTCDate(),
-      birthDate.getUTCHours(),
+      localClock.getUTCFullYear(),
+      localClock.getUTCMonth() + 1,
+      localClock.getUTCDate(),
+      localClock.getUTCHours(),
       solarTerm,
       isCurrentMonthSolarTerm,
-      lunar
+      instantLunar
     );
-    
-    // Step 5: Get lunar date (already calculated above)
+
+    // Step 5: 农历日期按当地日期，与日柱同源
+    const localSolar = toSolar(localClock);
+    const lunar = localSolar.getLunar();
     const rawMonth = lunar.getMonth();
     const lunarDate: LunarDate = {
       year: lunar.getYear(),
       month: Math.abs(rawMonth),
       day: lunar.getDay(),
-      hour: solar.getHour(),
+      hour: localSolar.getHour(),
       isLeapMonth: rawMonth < 0,
       monthName: lunar.getMonthInChinese(),
       dayName: lunar.getDayInChinese()
     };
-    
-    // Step 5.5: 命宫/胎元（古典法：命宫依《三命通会》子平起法，胎元依《渊海子平》；
-    // 实现取 lunar-javascript，已与其测试向量及典籍手工推演逐例核对）
-    let mingGong: string | undefined;
-    let taiYuan: string | undefined;
-    try {
-      const eightCharForGong = lunar.getEightChar();
-      mingGong = eightCharForGong.getMingGong();
-      taiYuan = eightCharForGong.getTaiYuan();
-    } catch {
-      // 历法边界异常时容忍缺省
-    }
+
+    // Step 5.5: 命宫/胎元（古典法：命宫依《三命通会》子平起法，胎元依《渊海子平》）。
+    // 公式同 lunar-javascript EightChar.getMingGong/getTaiYuan，输入取已排定的四柱：
+    // 年干、月柱随出生时刻，时支随当地时钟；不带经度时与 lunar-javascript 逐例一致（见测试）。
+    const mingGong = getMingGong(chart.year.stem, chart.month.branch, chart.hour.branch);
+    const taiYuan = getTaiYuan(chart.month.stem, chart.month.branch);
 
     // Step 6: Calculate derived information
     const dayMasterElement = this.getStemElement(chart.day.stem);
@@ -161,7 +167,7 @@ export class BaziCore {
     return {
       chart,
       birthInfo: {
-        solar: birthDate,
+        solar: birthInstant,
         lunar: lunarDate,
         trueSolarTime,
         solarTerm,
