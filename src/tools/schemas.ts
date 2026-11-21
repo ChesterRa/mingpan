@@ -53,13 +53,15 @@ export const birthTimeFields = {
   timezone: timezoneField,
 };
 
-/** 完整出生信息字段（含性別與可選經度/姓名） */
-export const baseBirthInfoFields = {
+/** 八字與紫微共用的出生資料 */
+export const birthProfileFields = {
   ...birthTimeFields,
   gender: genderField,
-  longitude: longitudeField,
   name: nameField,
 };
+
+/** 八字另接受出生地經度 */
+export const baseBirthInfoFields = { ...birthProfileFields, longitude: longitudeField };
 
 // ============================================
 // 出生信息歸一化

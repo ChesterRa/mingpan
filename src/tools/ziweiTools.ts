@@ -27,7 +27,7 @@ import {
   ZiweiDailyInfo,
 } from '../output/listTextRenderer';
 import {
-  baseBirthInfoFields,
+  birthProfileFields,
   normalizeBirthInfo,
   textResult,
   timezoneNote,
@@ -73,7 +73,7 @@ timezone: "Asia/Shanghai"（未傳時輸出會附提示）。
 
 輸出為結構化文本，便於 AI 分析解讀。`,
     inputSchema: {
-      ...baseBirthInfoFields,
+      ...birthProfileFields,
       detail: detailField,
       targetYear: z.number().int().optional().describe('Calculate yearly fortune for this specific year'),
       includeDecades: z.boolean().optional().default(true).describe('Include decade fortune (大限)'),
@@ -120,7 +120,7 @@ timezone: "Asia/Shanghai"（未傳時輸出會附提示）。
 
 用於了解人生各階段的運勢大框架。`,
     inputSchema: {
-      ...baseBirthInfoFields,
+      ...birthProfileFields,
       count: countField,
     },
   }, async (args) => textResult('ziwei_daxian', async () => {
@@ -184,7 +184,7 @@ timezone: "Asia/Shanghai"（未傳時輸出會附提示）。
 
 層級順序：大限 > 小限 > 流年 > 流月 > 流日`,
     inputSchema: {
-      ...baseBirthInfoFields,
+      ...birthProfileFields,
       startAge: z.number().int().min(1).max(120).describe('Start age (nominal age) for the range'),
       endAge: z.number().int().min(1).max(120).describe('End age (nominal age) for the range'),
     },
@@ -259,7 +259,7 @@ timezone: "Asia/Shanghai"（未傳時輸出會附提示）。
 
 用於分析多年運勢趨勢。`,
     inputSchema: {
-      ...baseBirthInfoFields,
+      ...birthProfileFields,
       startYear: z.number().int().min(1900).max(2100).describe('Start year for the range'),
       endYear: z.number().int().min(1900).max(2100).describe('End year for the range'),
     },
@@ -323,7 +323,7 @@ timezone: "Asia/Shanghai"（未傳時輸出會附提示）。
 
 用於規劃年度活動時機。`,
     inputSchema: {
-      ...baseBirthInfoFields,
+      ...birthProfileFields,
       lunarYear: z.number().int().min(1900).max(2100).describe('The lunar year (Gregorian year) to query'),
     },
   }, async (args) => textResult('ziwei_liuyue', async () => {
@@ -426,7 +426,7 @@ timezone: "Asia/Shanghai"（未傳時輸出會附提示）。
 
 用於精細的日期選擇。`,
     inputSchema: {
-      ...baseBirthInfoFields,
+      ...birthProfileFields,
       lunarYear: z.number().int().min(1900).max(2100).describe('The lunar year (Gregorian year)'),
       lunarMonth: z.number().int().min(-12).max(12).describe('Lunar month (1-12, use negative for leap month, e.g. -6 for leap 6th month)'),
     },

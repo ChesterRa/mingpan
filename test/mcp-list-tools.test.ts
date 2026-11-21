@@ -72,6 +72,27 @@ describe('列表工具输出契约（MCP 层）', () => {
 
   // ============= 紫微列表 =============
 
+  it('tools/list：只有八字工具聲明出生地經度', async () => {
+    const { tools } = await client.listTools();
+    const longitudeTools = tools
+      .filter(tool => Object.hasOwn(tool.inputSchema.properties ?? {}, 'longitude'))
+      .map(tool => tool.name)
+      .sort();
+    expect(longitudeTools).toEqual(['bazi_basic', 'bazi_dayun', 'bazi_liunian', 'bazi_liuri', 'bazi_liuyue']);
+  });
+
+  it.each([
+    ['ziwei_basic', {}],
+    ['ziwei_daxian', {}],
+    ['ziwei_xiaoxian', { startAge: 2, endAge: 3 }],
+    ['ziwei_liunian', { startYear: 2025, endYear: 2026 }],
+    ['ziwei_liuyue', { lunarYear: 2025 }],
+    ['ziwei_liuri', { lunarYear: 2025, lunarMonth: 1 }],
+  ] as const)('%s：舊客戶端附帶經度時輸出相同', async (name, options) => {
+    const args = { ...BIRTH, ...options };
+    expect(await call(name, { ...args, longitude: 105 })).toBe(await call(name, args));
+  });
+
   it('ziwei_daxian：大限表（木三局 3 岁起，命宫始）', async () => {
     const t = await call('ziwei_daxian', BIRTH);
     expect(t).toContain('3-12'); // 木三局首限 3-12 岁（金样本已知）
