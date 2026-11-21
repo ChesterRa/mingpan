@@ -169,6 +169,19 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
     expect(yongshen).not.toMatch(/求財|訴訟|考試|置業|孕產|尋人/);
   });
 
+  // 2026 年立春為北京標準時 02-04 04:02:08，交節當小時內月建由丑轉寅。
+  it.each([
+    [4, 1, '丑'], [4, 3, '寅'], [4, 59, '寅'], [5, 0, '寅'],
+  ] as const)('六爻交節月建：%i 時 %i 分為 %s 月', async (hour, minute, monthBranch) => {
+    const res = await client.callTool({
+      name: 'liuyao_basic',
+      arguments: { year: 2026, month: 2, day: 4, hour, minute, yaoValues: [7, 8, 9, 6, 7, 8] },
+    });
+    expect(res.isError).toBeFalsy();
+    const text = (res.content as { type: string; text: string }[])[0].text;
+    expect(text).toContain(`**月建**：${monthBranch}月`);
+  });
+
   it('參數校驗：非法爻值應被 schema 拒絕', async () => {
     const res = await client.callTool({
       name: 'liuyao_basic',

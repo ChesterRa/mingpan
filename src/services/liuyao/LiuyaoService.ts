@@ -37,7 +37,7 @@ import {
   NAJIA_TABLE,
   DIZHI_WUXING,
 } from './data/guagong';
-import { normalizeBirthDateTime } from '../../utils/timeNormalization';
+import { normalizeBirthDateTime, type WallClock } from '../../utils/timeNormalization';
 
 export class LiuyaoService {
   private config: LiuyaoServiceConfig;
@@ -59,16 +59,12 @@ export class LiuyaoService {
       month: input.month,
       day: input.day,
       hour: input.hour,
+      minute: input.minute,
       isLunar: input.isLunar,
     });
 
     // 2. 獲取時間信息
-    const timeInfo = this.calculateTimeInfo(
-      normalizedTime.year,
-      normalizedTime.month,
-      normalizedTime.day,
-      normalizedTime.hour
-    );
+    const timeInfo = this.calculateTimeInfo(normalizedTime);
 
     // 3. 計算本卦
     const { upper: benUpper, lower: benLower } = NajiaCalculator.getGuaFromYaoValues(input.yaoValues);
@@ -159,11 +155,11 @@ export class LiuyaoService {
   /**
    * 計算時間信息
    */
-  private calculateTimeInfo(year: number, month: number, day: number, hour: number): TimeInfo {
-    const solar = Solar.fromYmdHms(year, month, day, hour, 0, 0);
+  private calculateTimeInfo({ year, month, day, hour, minute }: WallClock): TimeInfo {
+    const solar = Solar.fromYmdHms(year, month, day, hour, minute, 0);
     const lunar = solar.getLunar();
     const eightChar = lunar.getEightChar();
-      eightChar.setSect(1); // 子初换日，全项目统一口径
+    eightChar.setSect(1); // 子初换日，全项目统一口径
 
     const yearGanZhi = eightChar.getYear();
     const monthGanZhi = eightChar.getMonth();

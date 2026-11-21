@@ -74,6 +74,7 @@ export function registerDivinationTools(server: McpServer): void {
       month: normalized.month,
       day: normalized.day,
       hour: normalized.hour,
+      minute: normalized.minute,
       isLunar: false,
     });
 

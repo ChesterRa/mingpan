@@ -52,11 +52,12 @@ export interface LiuyaoInput {
   /** 六個爻值（自下而上，初爻到上爻） */
   yaoValues: [YaoValue, YaoValue, YaoValue, YaoValue, YaoValue, YaoValue];
   
-  /** 起卦時間（用於六神、旬空計算） */
+  /** 起卦時間（用於月建、六神、旬空等計算） */
   year: number;
   month: number;
   day: number;
   hour: number;
+  minute?: number;
   
   /** 是否為農曆輸入，默認 false */
   isLunar?: boolean;
