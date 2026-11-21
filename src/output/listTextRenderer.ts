@@ -159,6 +159,8 @@ const SOLAR_TERM_MONTHS: { [key: number]: { term: string; nextTerm: string } } =
  */
 export interface BaziBaseHeaderOptions {
   name?: string;
+  /** 提供經度時的真太陽時（北京牆鐘載體）；農曆生日與日柱、時柱同按此計，與 bazi_basic 一致 */
+  trueSolarTime?: Date;
   birthYear: number;
   birthMonth: number;
   birthDay: number;
@@ -205,13 +207,16 @@ function renderBaziBaseHeader(options: BaziBaseHeaderOptions): string[] {
   const pad = (n: number) => String(n).padStart(2, '0');
   const dateTimeStr = `${options.birthYear}-${pad(options.birthMonth)}-${pad(options.birthDay)} ${pad(options.birthHour)}:${pad(options.birthMinute || 0)}:00`;
 
-  const lunarBirthday = formatLunarBirthday(options.birthYear, options.birthMonth, options.birthDay, options.birthHour);
+  const solarClock = options.trueSolarTime;
+  const lunarBirthday = solarClock
+    ? formatLunarBirthday(solarClock.getUTCFullYear(), solarClock.getUTCMonth() + 1, solarClock.getUTCDate(), solarClock.getUTCHours())
+    : formatLunarBirthday(options.birthYear, options.birthMonth, options.birthDay, options.birthHour);
 
   lines.push('=== 命主資料 ===');
   lines.push(`性別：${genderText}`);
   lines.push(`公曆：${dateTimeStr}`);
   if (lunarBirthday) {
-    lines.push(`農曆：${lunarBirthday}`);
+    lines.push(`農曆：${lunarBirthday}${solarClock ? '（依真太陽時）' : ''}`);
   }
   lines.push('');
 
@@ -279,6 +284,8 @@ function formatMutagenLineForHeader(label: string, info?: any): string {
 
 export interface BaziListOptions {
   name?: string;
+  /** 提供經度時的真太陽時（北京牆鐘載體）；農曆生日與日柱、時柱同按此計，與 bazi_basic 一致 */
+  trueSolarTime?: Date;
   birthYear: number;
   birthMonth: number;
   birthDay: number;
@@ -307,29 +314,11 @@ export function renderBaziDaYunList(
 ): string {
   const lines: string[] = [];
 
-  if (options.yearPillar && options.monthPillar && options.dayPillar && options.hourPillar) {
-    lines.push(...renderBaziBaseHeader(options));
-  } else {
-    const genderText = options.gender === 'male' ? '男' : '女';
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const dateTimeStr = `${options.birthYear}-${pad(options.birthMonth)}-${pad(options.birthDay)} ${pad(options.birthHour)}:${pad(options.birthMinute || 0)}:00`;
-    const lunarBirthday = formatLunarBirthday(options.birthYear, options.birthMonth, options.birthDay, options.birthHour);
-
-    lines.push('=== 命主資料 ===');
-    lines.push(`性別：${genderText}`);
-    lines.push(`公曆：${dateTimeStr}`);
-    if (lunarBirthday) {
-      lines.push(`農曆：${lunarBirthday}`);
-    }
-    lines.push('');
-    lines.push('=== 八字命盤 ===');
-    lines.push(`日主：${options.dayMaster}`);
-    lines.push('');
-  }
+  lines.push(...renderBaziBaseHeader(options));
 
   lines.push('=== 大運資訊 ===');
   lines.push(`大運方向：${options.direction}`);
-  lines.push(`起運年齡：${options.startAge}周歲（${options.startYear}年起運）`);
+  lines.push(`起運年齡：${options.startAge}虛歲（${options.startYear}年起運）`);
   lines.push('');
 
   lines.push('序號 | 大運干支 | 起止虛歲 | 起止公曆年');
@@ -362,25 +351,7 @@ export function renderBaziLiuNianList(
 ): string {
   const lines: string[] = [];
 
-  if (options.yearPillar && options.monthPillar && options.dayPillar && options.hourPillar) {
-    lines.push(...renderBaziBaseHeader(options));
-  } else {
-    const genderText = options.gender === 'male' ? '男' : '女';
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const dateTimeStr = `${options.birthYear}-${pad(options.birthMonth)}-${pad(options.birthDay)} ${pad(options.birthHour)}:${pad(options.birthMinute || 0)}:00`;
-    const lunarBirthday = formatLunarBirthday(options.birthYear, options.birthMonth, options.birthDay, options.birthHour);
-
-    lines.push('=== 命主資料 ===');
-    lines.push(`性別：${genderText}`);
-    lines.push(`公曆：${dateTimeStr}`);
-    if (lunarBirthday) {
-      lines.push(`農曆：${lunarBirthday}`);
-    }
-    lines.push('');
-    lines.push('=== 八字命盤 ===');
-    lines.push(`日主：${options.dayMaster}`);
-    lines.push('');
-  }
+  lines.push(...renderBaziBaseHeader(options));
 
   lines.push('=== 流年資訊 ===');
   lines.push(`查詢範圍：${options.startYear}-${options.endYear}年`);
@@ -425,25 +396,7 @@ export function renderBaziLiuYueList(
 ): string {
   const lines: string[] = [];
 
-  if (options.yearPillar && options.monthPillar && options.dayPillar && options.hourPillar) {
-    lines.push(...renderBaziBaseHeader(options));
-  } else {
-    const genderText = options.gender === 'male' ? '男' : '女';
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const dateTimeStr = `${options.birthYear}-${pad(options.birthMonth)}-${pad(options.birthDay)} ${pad(options.birthHour)}:${pad(options.birthMinute || 0)}:00`;
-    const lunarBirthday = formatLunarBirthday(options.birthYear, options.birthMonth, options.birthDay, options.birthHour);
-
-    lines.push('=== 命主資料 ===');
-    lines.push(`性別：${genderText}`);
-    lines.push(`公曆：${dateTimeStr}`);
-    if (lunarBirthday) {
-      lines.push(`農曆：${lunarBirthday}`);
-    }
-    lines.push('');
-    lines.push('=== 八字命盤 ===');
-    lines.push(`日主：${options.dayMaster}`);
-    lines.push('');
-  }
+  lines.push(...renderBaziBaseHeader(options));
 
   if (options.currentDaYun) {
     lines.push('=== 大運資訊 ===');
@@ -504,25 +457,7 @@ export function renderBaziLiuRiList(
 ): string {
   const lines: string[] = [];
 
-  if (options.yearPillar && options.monthPillar && options.dayPillar && options.hourPillar) {
-    lines.push(...renderBaziBaseHeader(options));
-  } else {
-    const genderText = options.gender === 'male' ? '男' : '女';
-    const pad = (n: number) => String(n).padStart(2, '0');
-    const dateTimeStr = `${options.birthYear}-${pad(options.birthMonth)}-${pad(options.birthDay)} ${pad(options.birthHour)}:${pad(options.birthMinute || 0)}:00`;
-    const lunarBirthday = formatLunarBirthday(options.birthYear, options.birthMonth, options.birthDay, options.birthHour);
-
-    lines.push('=== 命主資料 ===');
-    lines.push(`性別：${genderText}`);
-    lines.push(`公曆：${dateTimeStr}`);
-    if (lunarBirthday) {
-      lines.push(`農曆：${lunarBirthday}`);
-    }
-    lines.push('');
-    lines.push('=== 八字命盤 ===');
-    lines.push(`日主：${options.dayMaster}`);
-    lines.push('');
-  }
+  lines.push(...renderBaziBaseHeader(options));
 
   if (options.currentDaYun) {
     lines.push('=== 大運資訊 ===');

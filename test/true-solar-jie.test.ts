@@ -205,12 +205,33 @@ describe('MCP 出口：bazi_basic / bazi_dayun', () => {
     expect(out).not.toContain('四柱以此排盤');
   });
 
+  it('五個八字出口的農曆生日一致：有經度時依真太陽時並註明', async () => {
+    // 2026-02-04 04:03 北京時間；經度 0° 的真太陽時約前一日 19:49（戌時）
+    const birth = { year: 2026, month: 2, day: 4, hour: 4, minute: 3, gender: 'male' };
+    const tools: Array<[string, Record<string, unknown>]> = [
+      ['bazi_basic', {}],
+      ['bazi_dayun', { count: 2 }],
+      ['bazi_liunian', { startYear: 2030, endYear: 2030 }],
+      ['bazi_liuyue', { ganzhiYear: 2030 }],
+      ['bazi_liuri', { ganzhiYear: 2030, ganzhiMonth: 1 }],
+    ];
+    const lunarLine = (t: string) => t.split('\n').find((l) => l.startsWith('農曆：'));
+    for (const [name, extra] of tools) {
+      const withLon = await text(name, { ...birth, ...extra, longitude: 0 });
+      expect(lunarLine(withLon), name).toBe('農曆：乙巳年臘月十六戌時（依真太陽時）');
+      expect(withLon, name).toMatch(/時柱：壬戌/);
+      const without = await text(name, { ...birth, ...extra });
+      expect(lunarLine(without), name).toBe('農曆：乙巳年臘月十七寅時');
+    }
+  });
+
   it('白露後約5分·重慶：大運列表與起運不隨經度改變', async () => {
     const args = { year: 2025, month: 9, day: 7, hour: 16, minute: 56, gender: 'male', timezone: 'Asia/Shanghai', count: 8 };
     const without = await text('bazi_dayun', args);
     const withLon = await text('bazi_dayun', { ...args, longitude: 106.55 });
     const luckLines = (t: string) => t.split('\n').filter((l) => /起運|大運方向|^\s*\d|歲/.test(l));
-    expect(without).toContain('起運年齡：1周歲（2025年起運）');
+    // 起運歲數 = 交運公曆年 − 出生公曆年 + 1（虛歲）；本例出生約 8 小時後即交運
+    expect(without).toContain('起運年齡：1虛歲（2025年起運）');
     expect(luckLines(withLon)).toEqual(luckLines(without));
     expect(withLon).toContain('月柱：乙酉');
   });
