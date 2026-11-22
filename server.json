@@ -1,0 +1,28 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ChesterRa/mingpan",
+  "title": "Mingpan",
+  "description": "Deterministic Chinese metaphysics charts and calendar calculations for AI assistants.",
+  "repository": {
+    "url": "https://github.com/ChesterRa/mingpan",
+    "source": "github"
+  },
+  "websiteUrl": "https://mingpan.bzwai.com",
+  "version": "0.1.9",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mingpan",
+      "version": "0.1.9",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mingpan.bzwai.com/mcp"
+    }
+  ]
+}
