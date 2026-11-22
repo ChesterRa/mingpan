@@ -18,7 +18,8 @@ import { normalizeJieQiName } from '../services/daliuren/data/constants';
 import { DaYun, LiuNian, LiuYueInfo, LiuRiInfo } from '../services/bazi/types';
 import { DecadeInfo, YearlyInfo, MinorLimitInfo, PALACE_NAMES, MutagenInfo } from '../services/ziwei/types';
 import { MonthlyInfo } from '../services/ziwei/calculators/MonthlyCalculator';
-import { Lunar, Solar } from 'lunar-javascript';
+import { formatLunarBirthday, getLunarDayName, LUNAR_MONTH_NAMES } from './lunarDateText';
+import { wallParts } from '../utils/wallTime';
 import { MutagenCore } from '../core/ziwei/MutagenCore';
 
 // ==================== 輔助函數 ====================
@@ -58,82 +59,6 @@ function getGanzhi(year: number): string {
   const branchIndex = ((yearDiff % 12) + 12) % 12;
 
   return STEMS[stemIndex] + BRANCHES[branchIndex];
-}
-
-/**
- * 農曆月份名稱
- */
-const LUNAR_MONTH_NAMES = [
-  '', '正月', '二月', '三月', '四月', '五月', '六月',
-  '七月', '八月', '九月', '十月', '冬月', '臘月'
-];
-
-/**
- * 農曆日期名稱
- */
-function getLunarDayName(day: number): string {
-  const DAYS1 = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十'];
-  const DAYS2 = ['十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十'];
-  const DAYS3 = ['廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
-
-  if (day <= 10) return DAYS1[day - 1];
-  if (day <= 20) return DAYS2[day - 11];
-  return DAYS3[day - 21];
-}
-
-/**
- * 時辰名稱映射（小時 -> 時辰）
- */
-const HOUR_TO_SHICHEN: Record<number, string> = {
-  23: '子時', 0: '子時',
-  1: '丑時', 2: '丑時',
-  3: '寅時', 4: '寅時',
-  5: '卯時', 6: '卯時',
-  7: '辰時', 8: '辰時',
-  9: '巳時', 10: '巳時',
-  11: '午時', 12: '午時',
-  13: '未時', 14: '未時',
-  15: '申時', 16: '申時',
-  17: '酉時', 18: '酉時',
-  19: '戌時', 20: '戌時',
-  21: '亥時', 22: '亥時'
-};
-
-/**
- * 獲取時辰名稱
- */
-function getShichenName(hour: number): string {
-  return HOUR_TO_SHICHEN[hour] || '未知時';
-}
-
-/**
- * 格式化農曆生日信息
- * 格式：干支年+農曆月+農曆日+時辰（如：乙丑年正月廿三午時）
- */
-function formatLunarBirthday(
-  birthYear: number,
-  birthMonth: number,
-  birthDay: number,
-  birthHour: number
-): string {
-  try {
-    const solar = Solar.fromYmd(birthYear, birthMonth, birthDay);
-    const lunar = solar.getLunar();
-    
-    const yearGanzhi = lunar.getYearInGanZhi();
-    const lunarMonth = lunar.getMonth();
-    const lunarDay = lunar.getDay();
-    const isLeapMonth = lunar.getMonth() < 0;
-    
-    const monthName = LUNAR_MONTH_NAMES[Math.abs(lunarMonth)] || `${Math.abs(lunarMonth)}月`;
-    const leapPrefix = isLeapMonth ? '閏' : '';
-    const dayName = getLunarDayName(lunarDay);
-    const shichen = getShichenName(birthHour);
-    
-    return `${yearGanzhi}年${leapPrefix}${monthName}${dayName}${shichen}`;
-  } catch (e) {
-    return '';
-  }
 }
 
 /**
@@ -210,9 +135,12 @@ function renderBaziBaseHeader(options: BaziBaseHeaderOptions): string[] {
   const dateTimeStr = `${options.birthYear}-${pad(options.birthMonth)}-${pad(options.birthDay)} ${pad(options.birthHour)}:${pad(options.birthMinute || 0)}:00`;
 
   const solarClock = options.trueSolarTime;
-  const lunarBirthday = solarClock
-    ? formatLunarBirthday(solarClock.getUTCFullYear(), solarClock.getUTCMonth() + 1, solarClock.getUTCDate(), solarClock.getUTCHours())
-    : formatLunarBirthday(options.birthYear, options.birthMonth, options.birthDay, options.birthHour);
+  const lunarBirthday = formatLunarBirthday(solarClock ? wallParts(solarClock) : {
+    year: options.birthYear,
+    month: options.birthMonth,
+    day: options.birthDay,
+    hour: options.birthHour,
+  });
 
   lines.push('=== 命主資料 ===');
   lines.push(`性別：${genderText}`);
@@ -243,7 +171,12 @@ function renderZiweiBaseHeader(options: ZiweiBaseHeaderOptions): string[] {
   const pad = (n: number) => String(n).padStart(2, '0');
   const dateTimeStr = `${options.birthYear}-${pad(options.birthMonth)}-${pad(options.birthDay)} ${pad(options.birthHour)}:${pad(options.birthMinute || 0)}:00`;
 
-  const lunarBirthday = formatLunarBirthday(options.birthYear, options.birthMonth, options.birthDay, options.birthHour);
+  const lunarBirthday = formatLunarBirthday({
+    year: options.birthYear,
+    month: options.birthMonth,
+    day: options.birthDay,
+    hour: options.birthHour,
+  });
 
   lines.push('=== 命主資料 ===');
   lines.push(`性別：${genderText}`);

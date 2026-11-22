@@ -2,7 +2,8 @@ import { formatChartLabel } from './chartLabels';
 import { BaziResult } from '../services/bazi/types';
 import { ZiweiResult, PALACE_NAMES, CompleteMutagenInfo } from '../services/ziwei/types';
 import { FortuneQuery } from '../shared/types';
-import { Lunar, Solar } from 'lunar-javascript';
+import { formatLunarBirthday } from './lunarDateText';
+import { wallParts } from '../utils/wallTime';
 
 export type FortuneTextOptions = {
   detail?: 'simple' | 'standard' | 'detailed';
@@ -16,48 +17,6 @@ export type ZiweiTimeContext = {
   monthly?: { lunarLabel?: string; palaceName?: string; palaceIndex?: number };
   daily?: { date?: string; palaceName?: string; palaceIndex?: number };
 };
-
-const LUNAR_MONTH_NAMES: Record<number, string> = {
-  1: '正月', 2: '二月', 3: '三月', 4: '四月', 5: '五月', 6: '六月',
-  7: '七月', 8: '八月', 9: '九月', 10: '十月', 11: '冬月', 12: '臘月'
-};
-
-const HOUR_TO_SHICHEN: Record<number, string> = {
-  23: '子時', 0: '子時', 1: '丑時', 2: '丑時', 3: '寅時', 4: '寅時',
-  5: '卯時', 6: '卯時', 7: '辰時', 8: '辰時', 9: '巳時', 10: '巳時',
-  11: '午時', 12: '午時', 13: '未時', 14: '未時', 15: '申時', 16: '申時',
-  17: '酉時', 18: '酉時', 19: '戌時', 20: '戌時', 21: '亥時', 22: '亥時'
-};
-
-function getLunarDayName(day: number): string {
-  const DAYS1 = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十'];
-  const DAYS2 = ['十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十'];
-  const DAYS3 = ['廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
-  if (day <= 10) return DAYS1[day - 1];
-  if (day <= 20) return DAYS2[day - 11];
-  return DAYS3[day - 21];
-}
-
-function formatLunarBirthday(birthDate: Date): string {
-  try {
-    const solar = Solar.fromYmd(birthDate.getUTCFullYear(), birthDate.getUTCMonth() + 1, birthDate.getUTCDate());
-    const lunar = solar.getLunar();
-    
-    const yearGanzhi = lunar.getYearInGanZhi();
-    const lunarMonth = lunar.getMonth();
-    const lunarDay = lunar.getDay();
-    const isLeapMonth = lunar.getMonth() < 0;
-    
-    const monthName = LUNAR_MONTH_NAMES[Math.abs(lunarMonth)] || `${Math.abs(lunarMonth)}月`;
-    const leapPrefix = isLeapMonth ? '閏' : '';
-    const dayName = getLunarDayName(lunarDay);
-    const shichen = HOUR_TO_SHICHEN[birthDate.getUTCHours()] || '未知時';
-    
-    return `${yearGanzhi}年${leapPrefix}${monthName}${dayName}${shichen}`;
-  } catch (e) {
-    return '';
-  }
-}
 
 export function renderFortuneText(
   params: {
@@ -172,7 +131,7 @@ export function renderBaziText(
     if (trueSolarTime) {
       lines.push(`真太陽時：${fmt(trueSolarTime)}（按經度校正：日柱、時柱以此排盤；年柱、月柱與起運依出生時刻對照節氣）`);
     }
-    const lunarBirthday = formatLunarBirthday(trueSolarTime || dt);
+    const lunarBirthday = formatLunarBirthday(wallParts(trueSolarTime || dt));
     if (lunarBirthday) lines.push(`農曆：${lunarBirthday}${trueSolarTime ? '（依真太陽時）' : ''}`);
   }
 
@@ -290,7 +249,7 @@ export function renderZiweiText(
   lines.push(`性別：${genderText}`);
   if (birthDate) {
     lines.push(`公曆：${fmt(birthDate)}`);
-    const lunarBirthday = formatLunarBirthday(birthDate);
+    const lunarBirthday = formatLunarBirthday(wallParts(birthDate));
     if (lunarBirthday) {
       lines.push(`農曆：${lunarBirthday}`);
     }

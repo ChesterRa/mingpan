@@ -20,7 +20,7 @@ export interface WallParts {
 }
 
 /** 读取载体的北京墙钟分量 */
-function wallParts(date: Date): WallParts {
+export function wallParts(date: Date): WallParts {
   return {
     year: date.getUTCFullYear(),
     month: date.getUTCMonth() + 1,
