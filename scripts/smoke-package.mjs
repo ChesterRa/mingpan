@@ -150,7 +150,7 @@ try {
     ? join(consumer, installedRoot, manifest.bin.mingpan)
     : join(consumer, "node_modules", ".bin", "mingpan");
   const { stdout } = await run(process.execPath, [
-    join(root, "scripts", "smoke-stdio.mjs"), join(consumer, installedRoot), bin,
+    join(root, "scripts", "smoke-stdio.mjs"), join(consumer, installedRoot), bin, "--compare-timezones",
   ]);
   process.stdout.write(stdout);
   console.log(`Verified ${pack.filename}: ${packedFiles.size} files, ${bundledPaths.length} bundled dependencies`);

@@ -46,8 +46,8 @@ export class MonthlyCalculator {
         
         const monthly = horoscope.monthly;
         const palaceIndex = monthly.index !== undefined ? monthly.index : 0;
-        const startDate = new Date(year, monthIndex, 1);
-        const endDate = new Date(year, monthIndex + 1, 0);
+        const startDate = new Date(Date.UTC(year, monthIndex, 1));
+        const endDate = new Date(Date.UTC(year, monthIndex + 1, 0));
         
         return {
           year,
@@ -97,8 +97,8 @@ export class MonthlyCalculator {
         palaceIndex: palaceIndex !== -1 ? palaceIndex : 0,
         mutagen: monthly.mutagen || [],
         palaceNames: monthly.palaceNames || [],
-        startDate: new Date(firstDay.getYear(), firstDay.getMonth() - 1, firstDay.getDay()),
-        endDate: new Date(lastDay.getYear(), lastDay.getMonth() - 1, lastDay.getDay())
+        startDate: new Date(Date.UTC(firstDay.getYear(), firstDay.getMonth() - 1, firstDay.getDay())),
+        endDate: new Date(Date.UTC(lastDay.getYear(), lastDay.getMonth() - 1, lastDay.getDay()))
       };
     } catch (error) {
       console.error('计算流月失败:', error);
