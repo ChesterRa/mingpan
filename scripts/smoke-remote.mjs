@@ -29,17 +29,11 @@ try {
 
   const result = await client.callTool({
     name: "ziwei_basic",
-    arguments: {
-      year: 1992,
-      month: 12,
-      day: 24,
-      hour: 9,
-      minute: 16,
-      gender: "female",
-    },
+    arguments: { year: 2001, month: 3, day: 15, hour: 10, minute: 20, gender: "male" },
   });
-  if (result.isError || !result.content.some((item) => item.type === "text" && item.text.includes("命宮"))) {
-    throw new Error("ziwei_basic smoke call returned an invalid result");
+  if (result.isError || !result.content.some((item) =>
+    item.type === "text" && /^.酉 本命[^\n]*太陰\(旺\)/mu.test(item.text))) {
+    throw new Error("ziwei_basic smoke did not use the corrected You palace brightness");
   }
 
   const meihua = await client.callTool({

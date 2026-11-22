@@ -38,6 +38,15 @@ try {
     throw new Error("bazi_basic stdio smoke call returned an invalid result");
   }
 
+  const ziwei = await client.callTool({
+    name: "ziwei_basic",
+    arguments: { year: 2001, month: 3, day: 15, hour: 10, minute: 20, gender: "male" },
+  });
+  if (ziwei.isError || !ziwei.content.some((item) =>
+    item.type === "text" && /^.酉 本命[^\n]*太陰\(旺\)/mu.test(item.text))) {
+    throw new Error("ziwei_basic stdio smoke did not use the corrected You palace brightness");
+  }
+
   const meihua = await client.callTool({
     name: "meihua_basic",
     arguments: { method: "number", upperNumber: 7, lowerNumber: 4, yaoNumber: 1 },

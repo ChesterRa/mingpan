@@ -93,6 +93,16 @@ describe('列表工具输出契约（MCP 层）', () => {
     expect(await call(name, { ...args, longitude: 105 })).toBe(await call(name, args));
   });
 
+  it.each([
+    [{ year: 2001, month: 3, day: 15, hour: 10, minute: 20 }, '太陰(旺)'],
+    [{ year: 2023, month: 3, day: 22, hour: 0 }, '七殺(旺)'],
+    [{ year: 2020, month: 9, day: 6, hour: 13 }, '太陽(平)'],
+  ] as const)('ziwei_basic：在酉宮套用修正後的亮度 %j %s', async (birth, star) => {
+    const text = await call('ziwei_basic', { ...birth, gender: 'male' });
+    const youPalace = text.split('\n').find(line => /^.酉 本命/u.test(line));
+    expect(youPalace).toContain(star);
+  });
+
   it('ziwei_daxian：大限表（木三局 3 岁起，命宫始）', async () => {
     const t = await call('ziwei_daxian', BIRTH);
     expect(t).toContain('3-12'); // 木三局首限 3-12 岁（金样本已知）

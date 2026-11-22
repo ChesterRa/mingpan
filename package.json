@@ -56,7 +56,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",
-    "iztro": "2.6.0",
+    "iztro": "2.6.5",
     "lunar-javascript": "1.7.7",
     "zod": "4.4.3"
   },
