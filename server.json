@@ -8,12 +8,12 @@
     "source": "github"
   },
   "websiteUrl": "https://mingpan.bzwai.com",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "mingpan",
-      "version": "0.1.9",
+      "version": "0.1.10",
       "transport": {
         "type": "stdio"
       }

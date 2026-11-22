@@ -1,7 +1,7 @@
 {
   "endpoint": "https://mingpan.bzwai.com/mcp",
   "protocol": "modern",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "toolCount": 18,
   "fictional": true,
   "input": {

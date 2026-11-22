@@ -21,6 +21,8 @@ For local development or data that must remain on-device, the stdio package rema
 LLMs are unreliable at the computational half of Chinese divination: deriving ganzhi pillars from solar terms, converting between lunar and solar calendars, adjusting for timezones and true solar time. They hallucinate these values. Mingpan is the deterministic other half:
 
 - **Deterministic-only output policy.** Every value a tool returns — four pillars, hidden stems, ten gods, na yin, life palace, palaces & stars, mutagens, hexagram lines — is a verifiable fact from classical lookup tables. Fortune scores, auspiciousness labels, and interpretive judgments are deliberately excluded: those belong to your AI.
+- **Traditional Chinese results.** Qimen accepts both Simplified and Traditional option values.
+- **Same dependencies as the hosted service.** Each npm release bundles the runtime dependencies locked for the hosted Worker of the same version.
 - **Correctness discipline.** Tests cover minute-level LiChun (Start of Spring) boundaries, golden cases from historical records and classical texts, all 384 MeiHua line changes and 64 nuclear hexagrams, MCP boundaries, and localized project-site contracts.
 - **Timezone & true-solar-time aware.** IANA timezone input with historical DST handling; without a `timezone`, input is read as Beijing standard time (UTC+8). Pass a Gregorian date with `Asia/Shanghai` for clock times recorded during China's 1986–1991 summer time; lunar dates are never timezone-converted. From v0.1.9, such an input is flagged at the top of the output whenever no timezone conversion was applied (pillars unchanged). In BaZi, supplying `longitude` uses local apparent solar time for the day and hour pillars, including the 23:00 day boundary. The year and month pillars and the start of the first luck cycle are determined by the birth instant relative to the solar terms, independently of longitude. Zi Wei uses the normalized Beijing time. CI enforces cross-timezone reproducibility.
 - **Hardened official service.** The stateless remote service does not store, cache, or log birth inputs or chart results, and enforces Host/Origin validation, request-size limits, and rate limiting.
@@ -69,7 +71,8 @@ Lines are numbered 1–6 from bottom to top. The changed hexagram flips the movi
 ## Documentation
 
 - [README（简体中文 · authoritative）](README.md) — full parameter reference, calendar conventions, version history
+- [v0.1.10 release notes (Chinese)](docs/release-notes-0.1.10.md)
 - [v0.1.9 release notes (Chinese)](docs/release-notes-0.1.9.md)
 - [v0.1.8 release notes (Chinese)](docs/release-notes-0.1.8.md)
 
-Apache-2.0 · This is a condensed edition; the Chinese README is the single source of truth. Last synced: **v0.1.9**
+Apache-2.0 · This is a condensed edition; the Chinese README is the single source of truth. Last synced: **v0.1.10**

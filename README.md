@@ -2,7 +2,7 @@
 
 **简体中文（主文档）** | [English](README.en.md) | [日本語](README.ja.md)
 
-[![Version](https://img.shields.io/badge/version-0.1.9-blue.svg)](https://github.com/ChesterRa/mingpan)
+[![Version](https://img.shields.io/badge/version-0.1.10-blue.svg)](https://github.com/ChesterRa/mingpan)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 **命盘（Mingpan）** 是一个开源的中华传统术数 MCP 计算引擎，为 AI 应用提供命理排盘与占卜起卦能力。BaziWei 同时维护可直接使用的官方远程服务。
@@ -26,7 +26,8 @@ https://mingpan.bzwai.com/mcp
 ## 特性
 
 -  **MCP 原生**：无缝集成 Claude Desktop 及 Claude Code
-- 🌏 **中文输出**：以简体为主，术语保持传统
+- 🌏 **中文输出**：排盘与历法结果采用繁体标签，奇门选项接受简体和繁体
+- 📦 **与官方服务同一组依赖**：npm 包内置与同版本官方 Worker 相同的锁定运行依赖
 - 📊 **结构化文本**：便于 AI 理解与分析的格式
 - 🕐 **多时区支持**：海外出生/起卦时间自动换算为北京时间排盘
 
@@ -224,8 +225,8 @@ claude mcp add mingpan -- npx -y mingpan
 | minute       | number  |      | 分钟（0-59），默认 0 |
 | isLunar      | boolean |      | 是否为农历输入，默认 false |
 | timezone     | string  |      | IANA 时区名，默认北京标准时（UTC+8） |
-| panType      | string  |      | `时盘` / `日盘` / `月盘` / `年盘`，默认 `时盘` |
-| panStyle     | string  |      | `转盘` / `飞盘`，默认 `转盘` |
+| panType      | string  |      | `時盤` / `日盤` / `月盤` / `年盤`，默认时盘，简繁均可 |
+| panStyle     | string  |      | `轉盤` / `飛盤`，默认转盘，简繁均可 |
 | zhiRunMethod | string  |      | `chaibu`（拆补法）/ `maoshan`（茅山法），默认 `chaibu` |
 
 ## 月份基准说明
@@ -274,6 +275,7 @@ npm run dev  # 监听变化
 
 | 版本 | 说明 |
 | ---- | ---- |
+| [0.1.10](docs/release-notes-0.1.10.md) | npm 包内置与官方 Worker 相同的锁定运行依赖。修正紫微酉宫亮度、流月日期，统一繁体输出标签并准备 MCP Registry 描述。 |
 | [0.1.9](docs/release-notes-0.1.9.md) | 修正八字交节与起运、六爻交节分钟；移除紫微工具未使用的经度参数，补充历史夏令时提示与公历日期校验 |
 | [0.1.8](docs/release-notes-0.1.8.md) | **梅花正确性修复**：统一八卦爻序与反向映射，纠正变卦和互卦；独立位运算穷举 384 种变卦与 64 种互卦，补齐 MCP、HTTP 与构建后 stdio 回归；感谢 [@1270643866](https://github.com/1270643866) 的详细报告 |
 | 0.1.7 | **官方托管服务**：`mingpan.bzwai.com` 产品站与 `/mcp` 同仓、同版本、同一 Worker 发布；生产域名、无状态隐私边界、Host/Origin、请求体、限流与现代 MCP 协议烟雾测试完成收口；测试 300 |
