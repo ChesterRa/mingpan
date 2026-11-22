@@ -74,6 +74,14 @@ MCP_ENDPOINT=https://mingpan.bzwai.com/mcp npm run smoke:remote
 
 ## GitHub Actions
 
+npm 发布使用 `release.yml`。构建后运行 `npm run smoke:package -- <输出目录>`：在
+临时目录按 `package-lock.json` 的生产部分安装运行依赖，在发布用的 `package.json`
+中声明 `bundleDependencies`，把这些依赖打入包内并检查文件清单；再用只提供本包的
+模拟注册表全新安装该 tarball，确认依赖全部来自包内、版本与锁一致，并测试实际
+stdio 可执行入口。工作流发布通过验证的同一份 tarball。npm 12 不再读取依赖包内的
+`npm-shrinkwrap.json`，所以锁定的依赖随包附带，而不是只附带锁文件。开发与 Worker
+构建仍使用仓库的 `package.json` 与 `package-lock.json`，两者都不声明打包。
+
 仓库的 `deploy-worker.yml` 仅在 `v*` tag 或手动触发时运行，不设定时任务。
 配置以下仓库 secrets：
 

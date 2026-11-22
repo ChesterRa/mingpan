@@ -26,10 +26,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "prepare": "npm run build",
-    "check": "npm run build && npm test && npm run smoke:stdio",
+    "check": "npm run build && npm test && npm run smoke:package",
     "deploy:worker:dry-run": "wrangler deploy --dry-run",
     "deploy:worker": "npm run check && npm run deploy:worker:dry-run && wrangler deploy",
     "smoke:stdio": "node scripts/smoke-stdio.mjs",
+    "smoke:package": "node scripts/smoke-package.mjs",
     "smoke:remote": "node scripts/smoke-remote.mjs",
     "verify:release-version": "node scripts/verify-release-version.mjs"
   },
@@ -54,10 +55,10 @@
   "author": "ChesterRa",
   "license": "Apache-2.0",
   "dependencies": {
-    "@modelcontextprotocol/server": "^2.0.0",
-    "iztro": "^2.6.0",
-    "lunar-javascript": "^1.7.7",
-    "zod": "^4.4.3"
+    "@modelcontextprotocol/server": "2.0.0",
+    "iztro": "2.6.0",
+    "lunar-javascript": "1.7.7",
+    "zod": "4.4.3"
   },
   "devDependencies": {
     "@modelcontextprotocol/client": "^2.0.0",

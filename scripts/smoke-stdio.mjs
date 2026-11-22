@@ -4,11 +4,13 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/client";
 import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 
-const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const rootDir = process.argv[2]
+  ? path.resolve(process.argv[2])
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = JSON.parse(await readFile(path.join(rootDir, "package.json"), "utf8"));
 const transport = new StdioClientTransport({
   command: process.execPath,
-  args: [path.join(rootDir, "dist", "index.js")],
+  args: [process.argv[3] ? path.resolve(process.argv[3]) : path.join(rootDir, manifest.bin.mingpan)],
   cwd: rootDir,
   stderr: "pipe",
 });
