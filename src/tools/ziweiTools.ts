@@ -68,8 +68,8 @@ export function registerZiweiTools(server: McpServer): void {
 - 本命四化（化祿/權/科/忌）
 
 時區說明：默認按北京標準時（UTC+8）排盤；海外出生者請提供 timezone 參數；
-中國大陸 1986–1991 年夏令時期間記錄的鐘錶時間請傳
-timezone: "Asia/Shanghai"（未傳時輸出會附提示）。
+中國大陸 1986–1991 年夏令時期間記錄的鐘錶時間請以公曆日期傳
+timezone: "Asia/Shanghai"（農曆輸入不做時區換算；未做換算時輸出會附提示）。
 
 輸出為結構化文本，便於 AI 分析解讀。`,
     inputSchema: {

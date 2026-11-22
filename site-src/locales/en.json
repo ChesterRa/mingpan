@@ -36,7 +36,7 @@
     "checks": [
       "Stateless calculation with no chart database",
       "Open source and inspectable calculation conventions",
-      "Timezone and longitude-based true solar time support"
+      "Timezone support, with longitude-based true solar time for BaZi"
     ]
   },
   "statsLabel": "Mingpan at a glance",

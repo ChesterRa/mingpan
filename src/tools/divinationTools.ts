@@ -57,7 +57,7 @@ export function registerDivinationTools(server: McpServer): void {
 
 輸入順序：自下而上（初爻到上爻）
 起卦時間默認按北京標準時（UTC+8），可提供 timezone 換算；
-1986–1991 年夏令時期間的鐘錶時間請傳 Asia/Shanghai。
+1986–1991 年夏令時期間的鐘錶時間請以公曆日期傳 Asia/Shanghai（農曆輸入不做時區換算）。
 
 輸出為 Markdown 格式，便於 AI 分析解讀。`,
     inputSchema: {

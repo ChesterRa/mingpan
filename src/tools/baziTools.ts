@@ -69,7 +69,8 @@ export function registerBaziTools(server: McpServer, options: BaziToolOptions = 
 
 時區說明：默認按北京標準時（UTC+8）排盤；海外出生者請提供 timezone 參數，
 系統將換算為北京時間後計算；中國大陸 1986–1991 年夏令時期間記錄的
-鐘錶時間請傳 timezone: "Asia/Shanghai"（未傳時輸出會附提示）；
+鐘錶時間請以公曆日期傳 timezone: "Asia/Shanghai"（農曆輸入不做時區換算；
+未做換算時輸出會附提示）；
 可提供 longitude（出生地經度）做真太陽時校正：日柱、時柱（含 23:00 換日）依真太陽時；年柱、月柱與起運依出生時刻對照節氣，不受經度影響。
 
 定位說明：本工具只負責確定性排盤（干支、藏干、十神）。

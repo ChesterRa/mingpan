@@ -2,7 +2,7 @@
 
 **简体中文（主文档）** | [English](README.en.md) | [日本語](README.ja.md)
 
-[![Version](https://img.shields.io/badge/version-0.1.8-blue.svg)](https://github.com/ChesterRa/mingpan)
+[![Version](https://img.shields.io/badge/version-0.1.9-blue.svg)](https://github.com/ChesterRa/mingpan)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 **命盘（Mingpan）** 是一个开源的中华传统术数 MCP 计算引擎，为 AI 应用提供命理排盘与占卜起卦能力。BaziWei 同时维护可直接使用的官方远程服务。
@@ -204,7 +204,7 @@ claude mcp add mingpan -- npx -y mingpan
 - 未提供 `timezone` 时，输入时间按**北京标准时（UTC+8）**排盘，不扣除夏令时
 - 海外出生/起卦时提供 `timezone` 参数，系统将当地墙钟时间换算为北京时间后计算
 - 提供 `timezone` 时按 IANA 时区数据库换算，正确处理各国历史夏令时
-- 中国大陆 1986–1991 年夏令时期间记录的钟表时间，请传 `timezone: "Asia/Shanghai"`；未传 `timezone` 且输入落在这六年的夏令时（含切换日重复或跳过的一小时）时，0.1.9 起输出开头会附提示，说明对应的标准时或该时刻当日不存在；四柱照常按输入排出，输入已是标准时可忽略提示
+- 中国大陆 1986–1991 年夏令时期间记录的钟表时间，请用公历日期并传 `timezone: "Asia/Shanghai"`；农历输入不做时区换算，传了 `timezone` 也不使用。没有做时区换算且输入落在这六年的夏令时（含切换日重复或跳过的一小时）时，0.1.9 起输出开头会附提示，说明对应的标准时或该时刻当日不存在；需要重排时，农历输入的提示会说明如何改用公历；四柱照常按输入排出，输入已是标准时可忽略提示
 - 八字提供 `longitude` 时，日柱、时柱按出生地真太阳时排算，23:00 换日。年柱、月柱与起运按出生时刻对照节气，不受经度影响。
 - 紫微按换算后的北京时间排盘，不使用出生地经度。
 
@@ -274,6 +274,7 @@ npm run dev  # 监听变化
 
 | 版本 | 说明 |
 | ---- | ---- |
+| [0.1.9](docs/release-notes-0.1.9.md) | 修正八字交节与起运、六爻交节分钟；移除紫微工具未使用的经度参数，补充历史夏令时提示与公历日期校验 |
 | [0.1.8](docs/release-notes-0.1.8.md) | **梅花正确性修复**：统一八卦爻序与反向映射，纠正变卦和互卦；独立位运算穷举 384 种变卦与 64 种互卦，补齐 MCP、HTTP 与构建后 stdio 回归；感谢 [@1270643866](https://github.com/1270643866) 的详细报告 |
 | 0.1.7 | **官方托管服务**：`mingpan.bzwai.com` 产品站与 `/mcp` 同仓、同版本、同一 Worker 发布；生产域名、无状态隐私边界、Host/Origin、请求体、限流与现代 MCP 协议烟雾测试完成收口；测试 300 |
 | 0.1.6 | **MCP SDK v2 迁移**（2026-07-28 无状态协议，原生支持 Cloudflare Workers，向后兼容旧客户端）；远程 HTTP 入口从 50 行简化为 20 行（createMcpHandler）；Workers 打包 gzip 638→606KB；测试 288 |

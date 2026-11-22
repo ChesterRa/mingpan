@@ -203,7 +203,7 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
     expect(text).toContain('阴遁3局');
   });
 
-  describe('北京夏令時提示（未傳 timezone）', () => {
+  describe('北京夏令時提示（未做時區換算）', () => {
     // 1988 年夏令時為 4/17–9/11：7/15 在窗口內，11/15 為窗口外對照
     const inDst = { year: 1988, month: 7, day: 15, hour: 15 };
     const control = { year: 1988, month: 11, day: 15, hour: 15 };
@@ -275,12 +275,60 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
       expect(skipped).toContain('若輸入已是標準時，可忽略本提示');
     });
 
-    it('農曆輸入未傳 timezone 時按換算後的公曆時間提示；傳了 timezone 則不提示', async () => {
+    it('農曆輸入不做時區換算：未傳 timezone 時提示改用公曆重排', async () => {
       // 農曆 1988 年六月初二 = 公曆 1988-07-15
       const lunar = { year: 1988, month: 6, day: 2, hour: 15, minute: 30, isLunar: true, gender: 'male' };
-      expect(await callText('bazi_basic', lunar)).toContain('> 注：公曆 1988-07-15 15:30 落在 1988 年北京夏令時期間');
-      // 農曆輸入會忽略 timezone，但調用方已聲明時區，提示不應與其聲明相左
-      expect(await callText('bazi_basic', { ...lunar, timezone: 'America/New_York' })).not.toContain('夏令時');
+      const text = await callText('bazi_basic', lunar);
+      expect(text.startsWith('> 注：公曆 1988-07-15 15:30 落在 1988 年北京夏令時期間')).toBe(true);
+      expect(text).toContain('請以公曆 1988-07-15 15:30（isLunar: false）加傳 timezone: "Asia/Shanghai" 重新排盤');
+      expect(text).toContain('時柱：丙申'); // 四柱仍按輸入時間
+    });
+
+    it('農曆輸入傳了 timezone 也不換算：照常提示並寫明未使用該 timezone', async () => {
+      const lunar = { year: 1988, month: 6, day: 2, hour: 15, minute: 30, isLunar: true, gender: 'male' };
+      for (const timezone of ['Asia/Shanghai', 'America/New_York']) {
+        const text = await callText('bazi_basic', { ...lunar, timezone });
+        expect(text.startsWith(
+          '> 注：農曆輸入不做時區換算，本次未使用所傳的 timezone，如需換算請改用公曆日期（isLunar: false）。公曆 1988-07-15 15:30 落在 1988 年北京夏令時期間'
+        )).toBe(true);
+        if (timezone !== 'Asia/Shanghai') expect(text).not.toContain(timezone); // 不回顯所傳值（上海出現在固定的重排建議裡）
+        expect(text).toContain('若此為中國大陸當時的鐘錶時間，請以公曆 1988-07-15 15:30（isLunar: false）加傳 timezone: "Asia/Shanghai"');
+        expect(text).toContain('時柱：丙申'); // 與未傳 timezone 相同，timezone 未被使用
+      }
+      // 農曆輸入不校驗 timezone：任意字串都不得進入提示正文
+      const odd = await callText('bazi_basic', { ...lunar, timezone: 'Not/AZone\n# injected' });
+      expect(odd).toContain('本次未使用所傳的 timezone');
+      expect(odd).not.toContain('injected');
+      // 照提示改用公曆並傳 Asia/Shanghai：扣除夏令時，不再提示
+      const converted = await callText('bazi_basic', {
+        year: 1988, month: 7, day: 15, hour: 15, minute: 30, gender: 'male', timezone: 'Asia/Shanghai',
+      });
+      expect(converted).not.toContain('夏令時');
+      expect(converted).toContain('時柱：乙未');
+    });
+
+    it('農曆輸入落在切換日：回撥時段仍指向 Etc/GMT-9，撥快時段不建議換算', async () => {
+      // 農曆 1988 年八月初一 = 公曆 1988-09-11（結束日）；三月初二 = 1988-04-17（開始日）
+      const repeated = await callText('bazi_basic', {
+        year: 1988, month: 8, day: 1, hour: 1, minute: 30, isLunar: true, gender: 'female', timezone: 'Asia/Shanghai',
+      });
+      expect(repeated).toContain('本次未使用所傳的 timezone');
+      expect(repeated).toContain('若此為中國大陸當時的鐘錶時間且為第一次（夏令時），對應北京標準時 1988-09-11 00:30，請以公曆 1988-09-11 01:30（isLunar: false）加傳 timezone: "Etc/GMT-9"（固定 UTC+9）重新排盤');
+
+      const skipped = await callText('bazi_basic', {
+        year: 1988, month: 3, day: 2, hour: 2, minute: 30, isLunar: true, gender: 'female', timezone: 'Asia/Shanghai',
+      });
+      expect(skipped.startsWith('> 注：農曆輸入不做時區換算，本次未使用所傳的 timezone。公曆 1988-04-17 02:30 落在')).toBe(true);
+      expect(skipped).not.toContain('如需換算');
+      expect(skipped).toContain('若此為中國大陸當時的鐘錶時間，當日鐘錶上不存在此時間');
+    });
+
+    it('梅花 time 模式只取時辰：農曆輸入傳 timezone 時同樣提示', async () => {
+      const text = await callText('meihua_basic', {
+        method: 'time', year: 1988, month: 6, day: 2, hour: 15, isLunar: true, timezone: 'Asia/Shanghai',
+      });
+      expect(text).toContain('本次未使用所傳的 timezone');
+      expect(text).toContain('公曆 1988-07-15 15:00 落在 1988 年北京夏令時期間'); // 梅花 time 模式只收時辰，提示按整點
     });
   });
 });

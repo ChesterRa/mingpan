@@ -249,18 +249,27 @@ describe('HTTP 入口（Streamable HTTP 无状态）', () => {
       params: { name: 'ziwei_xiaoxian', arguments: { ...args, startAge: 1, endAge: 6 } },
     });
 
+    // 每次調用都必須是成功的真實命盤：JSON-RPC 報錯或工具報錯時取不到正文，比較會失去意義
+    const chartText = (response: { json?: any }): string => {
+      const result = response.json?.result;
+      expect(response.json?.error).toBeUndefined();
+      expect(result).toBeDefined();
+      expect(result.isError).not.toBe(true);
+      const text = result.content?.[0]?.text;
+      expect(typeof text).toBe('string');
+      expect(text).toContain('=== 命主資料 ===');
+      return text;
+    };
+
     const expected: string[] = [];
     for (const [index, args] of cases.entries()) {
-      const result = (await call(20 + index, args)).json?.result;
-      expect(result?.isError).toBeFalsy(); // 必须是真实命盘；两条参数报错文本相同也会让比较通过
-      expected.push(result?.content?.[0]?.text);
+      expected.push(chartText(await call(20 + index, args)));
     }
     expect(expected[0]).not.toBe(expected[1]);
 
     const concurrent = await Promise.all(
       cases.map((args, index) => call(30 + index, args))
     );
-    expect(concurrent.map((result) => result.json?.result?.content?.[0]?.text))
-      .toEqual(expected);
+    expect(concurrent.map(chartText)).toEqual(expected);
   });
 });

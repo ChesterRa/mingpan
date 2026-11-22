@@ -45,6 +45,18 @@ try {
     throw new Error("meihua_basic stdio smoke returned incorrect changed/nuclear hexagrams (issue #2)");
   }
 
+  const jie = await client.callTool({
+    name: "bazi_basic",
+    arguments: {
+      // 合成例：1990 立秋（北京標準時 08-08 02:45:32）後約 5 分，夏令時牆鐘 03:50
+      year: 1990, month: 8, day: 8, hour: 3, minute: 50,
+      gender: "female", timezone: "Asia/Shanghai", longitude: 106.55,
+    },
+  });
+  if (jie.isError || !jie.content.some((item) => item.type === "text" && item.text.includes("月柱：甲申"))) {
+    throw new Error("bazi_basic smoke compared true solar time with the jie table (issue #3)");
+  }
+
   console.log(`stdio smoke passed: mingpan v${manifest.version} (${tools.length} tools)`);
 } finally {
   await client.close();
