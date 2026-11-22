@@ -8,7 +8,7 @@
  */
 
 import type { DaliurenResult } from '../services/daliuren/types';
-import { TIAN_JIANG_FULL, YUE_JIANG_MAP } from '../services/daliuren/data/constants';
+import { TIAN_JIANG_FULL, normalizeJieQiName } from '../services/daliuren/data/constants';
 
 /**
  * 渲染大六壬盤面為 Markdown 文本
@@ -21,7 +21,7 @@ export function renderDaliurenText(result: DaliurenResult): string {
   lines.push('');
   
   // 基本信息
-  lines.push(`**節氣**：${result.basicInfo.jieqi} | **農曆**：${result.basicInfo.lunarMonth}`);
+  lines.push(`**節氣**：${normalizeJieQiName(result.basicInfo.jieqi)} | **農曆**：${result.basicInfo.lunarMonth}`);
   lines.push(`**日干支**：${result.basicInfo.dayGanZhi}日 | **時干支**：${result.basicInfo.hourGanZhi}時 | **${result.basicInfo.dayNight}占**`);
   lines.push(`**月將**：${result.tianDiPan.yueJiang}（${result.tianDiPan.yueJiangName}）`);
   lines.push('');

@@ -200,7 +200,7 @@ describe('HTTP 入口（Streamable HTTP 无状态）', () => {
     expect(call.json?.result?.isError).toBeFalsy();
     const text = call.json.result.content[0].text;
     // 金样本锚点（与 stdio 形态同一套渲染器）
-    expect(text).toContain('年柱：壬申（剑锋金）');
+    expect(text).toContain('年柱：壬申（劍鋒金）');
     expect(text).toContain('命宮：己酉　胎元：乙未');
     expect(text).toContain('藏干十神（※本氣）：年申[庚食神※ 壬偏財 戊比肩]');
   });
@@ -210,7 +210,7 @@ describe('HTTP 入口（Streamable HTTP 无状态）', () => {
       jsonrpc: '2.0', id: 4, method: 'tools/call',
       params: { name: 'qimen_basic', arguments: { year: 2024, month: 6, day: 21, hour: 10 } },
     });
-    expect(call.json?.result?.content[0].text).toContain('阴遁3局');
+    expect(call.json?.result?.content[0].text).toContain('陰遁3局');
   });
 
   it('timezone 参数经 HTTP 生效（纽约换算）', async () => {

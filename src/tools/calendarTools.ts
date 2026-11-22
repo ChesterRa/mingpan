@@ -8,6 +8,8 @@
  * 两者完全满足输出准入三条件（确定/权威/AI 不易获知）。
  */
 
+import { normalizeJieQiName } from '../services/daliuren/data/constants';
+import { formatChartLabel } from '../output/chartLabels';
 import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { Lunar, Solar } from 'lunar-javascript';
@@ -69,7 +71,7 @@ export function registerCalendarTools(server: McpServer): void {
     for (const t of terms) {
       const s = t.solar;
       const pad = (n: number) => String(n).padStart(2, '0');
-      lines.push(`| ${t.name} | ${s.getYear()}-${pad(s.getMonth())}-${pad(s.getDay())} ${pad(s.getHour())}:${pad(s.getMinute())}:${pad(s.getSecond())} |`);
+      lines.push(`| ${normalizeJieQiName(t.name)} | ${s.getYear()}-${pad(s.getMonth())}-${pad(s.getDay())} ${pad(s.getHour())}:${pad(s.getMinute())}:${pad(s.getSecond())} |`);
     }
     lines.push('');
     return lines.join('\n');
@@ -105,21 +107,21 @@ export function registerCalendarTools(server: McpServer): void {
       lines.push(`## 公曆 → 農曆`);
       lines.push('');
       lines.push(`**公曆**：${args.year} 年 ${args.month} 月 ${args.day} 日`);
-      lines.push(`**農曆**：${lunar.getYearInChinese()}年 ${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}日`); // getMonthInChinese 闰月自带「闰」前缀
+      lines.push(`**農曆**：${lunar.getYearInChinese()}年 ${formatChartLabel(lunar.getMonthInChinese())}月${lunar.getDayInChinese()}日`); // getMonthInChinese 闰月自带「闰」前缀
       lines.push('');
       lines.push(`**干支**：${lunar.getYearInGanZhiByLiChun()}年 ${lunar.getMonthInGanZhi()}月 ${lunar.getDayInGanZhi()}日`);
-      lines.push(`**生肖**：${lunar.getYearShengXiao()}`);
+      lines.push(`**生肖**：${formatChartLabel(lunar.getYearShengXiao())}`);
     } else {
       const monthArg = args.isLeapMonth ? -args.month : args.month;
       const lunar = Lunar.fromYmd(args.year, monthArg, args.day);
       const solar = lunar.getSolar();
       lines.push(`## 農曆 → 公曆`);
       lines.push('');
-      lines.push(`**農曆**：${lunar.getYearInChinese()}年 ${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}日`);
+      lines.push(`**農曆**：${lunar.getYearInChinese()}年 ${formatChartLabel(lunar.getMonthInChinese())}月${lunar.getDayInChinese()}日`);
       lines.push(`**公曆**：${solar.getYear()} 年 ${solar.getMonth()} 月 ${solar.getDay()} 日`);
       lines.push('');
       lines.push(`**干支**：${lunar.getYearInGanZhiByLiChun()}年 ${lunar.getMonthInGanZhi()}月 ${lunar.getDayInGanZhi()}日`);
-      lines.push(`**生肖**：${lunar.getYearShengXiao()}`);
+      lines.push(`**生肖**：${formatChartLabel(lunar.getYearShengXiao())}`);
     }
     lines.push('');
     return lines.join('\n');

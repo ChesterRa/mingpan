@@ -328,7 +328,7 @@ describe('QimenService 端到端', () => {
   it('文本渲染：輸出 Markdown 九宮格', () => {
     const r = service.calculate({ year: 2024, month: 6, day: 21, hour: 10 });
     const text = renderQimenText(r);
-    expect(text).toContain('阴遁3局');
+    expect(text).toContain('陰遁3局');
     expect(text).toContain('值符');
     expect(text.length).toBeGreaterThan(200);
   });

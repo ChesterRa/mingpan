@@ -148,7 +148,7 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
     expect(text).toContain('公曆日期不存在：1988 年 4 月 31 日（該月只有 30 日）');
   });
 
-  it('奇門描述列出的參數取值與 schema 枚舉逐字一致（照描述填寫不被拒絕）', async () => {
+  it('奇門工具說明採用繁體名稱，schema 保留原有簡體參數', async () => {
     const { tools } = await client.listTools();
     const tool = (name: string) => tools.find(t => t.name === name)!;
     const enumOf = (name: string, prop: string) =>
@@ -156,17 +156,50 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
 
     const yongshen = tool('qimen_yongshen').description ?? '';
     const shiLeiLine = yongshen.split('\n').find(line => line.endsWith('、其他'));
-    expect(shiLeiLine?.split('、')).toEqual(enumOf('qimen_yongshen', 'shiLei'));
+    const labels = shiLeiLine?.split('、') ?? [];
+    expect(labels).toHaveLength(14);
+    expect(labels).toContain('求財');
+    expect(enumOf('qimen_yongshen', 'shiLei')).toEqual(expect.arrayContaining([...labels, '求财']));
 
     const basic = tool('qimen_basic').description ?? '';
-    for (const prop of ['panType', 'panStyle', 'zhiRunMethod']) {
-      const values = enumOf('qimen_basic', prop);
-      expect(values.length).toBeGreaterThan(0);
-      for (const value of values) expect(basic).toContain(value);
+    const labelsByProperty = {
+      panType: ['時盤', '日盤', '月盤', '年盤'],
+      panStyle: ['轉盤', '飛盤'],
+      zhiRunMethod: ['chaibu', 'maoshan'],
+    };
+    for (const [property, labels] of Object.entries(labelsByProperty)) {
+      expect(enumOf('qimen_basic', property)).toEqual(expect.arrayContaining(labels));
+      for (const label of labels) expect(basic).toContain(label);
     }
-    // 繁體寫法不是合法取值，不應出現在描述裡誤導調用方
-    expect(basic).not.toMatch(/時盤|日盤|月盤|年盤|轉盤|飛盤/);
-    expect(yongshen).not.toMatch(/求財|訴訟|考試|置業|孕產|尋人/);
+    expect(enumOf('qimen_basic', 'panType')).toEqual(expect.arrayContaining(['时盘', '日盘', '月盘', '年盘']));
+    expect(enumOf('qimen_basic', 'panStyle')).toEqual(expect.arrayContaining(['转盘', '飞盘']));
+  });
+
+  it.each([
+    ['panType', '時盤', '时盘'],
+    ['panType', '日盤', '日盘'],
+    ['panType', '月盤', '月盘'],
+    ['panType', '年盤', '年盘'],
+    ['panStyle', '轉盤', '转盘'],
+    ['panStyle', '飛盤', '飞盘'],
+    ['shiLei', '求財', '求财'],
+    ['shiLei', '訴訟', '诉讼'],
+    ['shiLei', '考試', '考试'],
+    ['shiLei', '置業', '置业'],
+    ['shiLei', '孕產', '孕产'],
+    ['shiLei', '尋人', '寻人'],
+  ])('奇門 %s 的 %s 與 %s 排盤結果完全相同', async (key, traditional, simplified) => {
+    const name = key === 'shiLei' ? 'qimen_yongshen' : 'qimen_basic';
+    const args = { year: 2024, month: 6, day: 21, hour: 10 };
+    const withTraditional = await client.callTool({ name, arguments: { ...args, [key]: traditional } });
+    const withSimplified = await client.callTool({ name, arguments: { ...args, [key]: simplified } });
+    expect(withTraditional.isError).toBeFalsy();
+    expect(withSimplified.isError).toBeFalsy();
+    expect(withTraditional.content).toEqual(withSimplified.content);
+    if (key === 'shiLei') {
+      const text = (withTraditional.content as { type: string; text: string }[])[0].text;
+      expect(text).toContain(`**事類**：${traditional}`);
+    }
   });
 
   // 2026 年立春為北京標準時 02-04 04:02:08，交節當小時內月建由丑轉寅。
@@ -200,7 +233,22 @@ describe('MCP 服務器（InMemoryTransport 集成）', () => {
     });
     expect(res.isError).toBeFalsy();
     const text = (res.content as { type: string; text: string }[])[0].text;
-    expect(text).toContain('阴遁3局');
+    expect(text).toContain('陰遁3局');
+  });
+
+  // 合成例：農曆十二月由 lunar-javascript 輸出「腊」，納音霹靂火含「雳」，兩者都要轉為繁體。
+  it.each([
+    ['calendar_convert', { direction: 'solar2lunar', year: 2025, month: 1, day: 15 }, '臘月十六'],
+    ['calendar_convert', { direction: 'lunar2solar', year: 2024, month: 12, day: 16 }, '臘月十六'],
+    ['qimen_basic', { year: 2026, month: 1, day: 20, hour: 10 }, '臘月初二'],
+    ['meihua_basic', { method: 'time', year: 2026, month: 1, day: 20, hour: 10 }, '臘月初二'],
+    ['bazi_basic', { year: 1984, month: 2, day: 24, hour: 6, minute: 10, gender: 'male' }, '日柱：戊子（霹靂火）'],
+  ] as const)('%s 的臘月與霹靂火採用繁體字形', async (name, args, expected) => {
+    const res = await client.callTool({ name, arguments: args });
+    expect(res.isError).toBeFalsy();
+    const text = (res.content as { type: string; text: string }[])[0].text;
+    expect(text).toContain(expected);
+    expect(text).not.toMatch(/[腊雳]/u);
   });
 
   describe('北京夏令時提示（未做時區換算）', () => {

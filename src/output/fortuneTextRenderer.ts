@@ -1,3 +1,4 @@
+import { formatChartLabel } from './chartLabels';
 import { BaziResult } from '../services/bazi/types';
 import { ZiweiResult, PALACE_NAMES, CompleteMutagenInfo } from '../services/ziwei/types';
 import { FortuneQuery } from '../shared/types';
@@ -178,7 +179,7 @@ export function renderBaziText(
   if (chart.year && chart.month && chart.day && chart.hour) {
     lines.push('');
     lines.push('=== 八字命盤 ===');
-    const p2n = (p: any) => p.naYin ? `（${p.naYin}）` : '';
+    const p2n = (p: any) => p.naYin ? `（${formatChartLabel(p.naYin)}）` : '';
     lines.push(
       `年柱：${chart.year.stem}${chart.year.branch}${p2n(chart.year)}` +
       `  月柱：${chart.month.stem}${chart.month.branch}${p2n(chart.month)}` +
@@ -197,7 +198,7 @@ export function renderBaziText(
     const stemTG = tenGods.filter((t: any) => !String(t.name).includes('hidden'));
     if (stemTG.length === 3) {
       const shortPos = (p: string) => p.replace('柱', '');
-      lines.push(`天干十神：${stemTG.map((t: any) => `${shortPos(t.position)}干${t.element || ''}=${t.name}`).join('　')}`);
+      lines.push(`天干十神：${stemTG.map((t: any) => `${formatChartLabel(shortPos(t.position))}干${t.element || ''}=${formatChartLabel(t.name)}`).join('　')}`);
     }
 
     // 藏干十神（合併標注：每支藏干逐個標十神，※為本氣；均為確定性查表）
@@ -225,7 +226,7 @@ export function renderBaziText(
 
     // 十二長生（自坐：各柱天干對自身地支的長生階段，確定性查表）
     const growthLine = pillars
-      .map((p: any, i: number) => (p?.selfSitting ? `${POS[i]}${p.selfSitting}` : ''))
+      .map((p: any, i: number) => (p?.selfSitting ? `${POS[i]}${formatChartLabel(p.selfSitting)}` : ''))
       .filter(Boolean)
       .join('　');
     if (growthLine) lines.push(`十二長生（自坐）：${growthLine}`);
@@ -296,7 +297,7 @@ export function renderZiweiText(
   }
   lines.push('');
 
-  lines.push('=== 紫微命盘 ===');
+  lines.push('=== 紫微命盤 ===');
   if (ming) {
     // 僅對主星標註亮度；輔星不標註
     const majors = (ming.majorStars || []) as any[];

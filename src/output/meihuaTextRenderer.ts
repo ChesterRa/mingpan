@@ -5,6 +5,7 @@
  * 語言：繁體中文
  */
 
+import { formatChartLabel } from './chartLabels';
 import { MeihuaResult } from '../services/meihua/types';
 
 /**
@@ -18,7 +19,7 @@ export function renderMeihuaText(result: MeihuaResult): string {
   lines.push('');
 
   // 時間信息
-  lines.push(`**起卦時間**：${result.timeInfo.lunarDate}`);
+  lines.push(`**起卦時間**：${formatChartLabel(result.timeInfo.lunarDate)}`);
   
   // 起卦方式和數據
   if (result.method === 'time' && result.timeDetail) {

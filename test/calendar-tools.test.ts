@@ -33,6 +33,8 @@ describe('历法原语工具', () => {
       const text = (res.content as { type: string; text: string }[])[0].text;
       const rows = text.split('\n').filter((l: string) => l.startsWith('|') && !l.includes(':--') && !l.includes('節氣'));
       expect(rows.length).toBe(24);
+      expect(text).toContain('| 驚蟄 |');
+      expect(text).toContain('| 穀雨 |');
       expect(rows[0]).toContain('小寒'); // 公历年序：1 月小寒最先
 
       expect(rows[23]).toContain('冬至'); // 公历年末冬至
@@ -85,7 +87,7 @@ describe('历法原语工具', () => {
       });
       expect(res.isError).toBeFalsy();
       const text = (res.content as { type: string; text: string }[])[0].text;
-      expect(text).toContain('闰六');
+      expect(text).toContain('閏六');
       expect(text).toContain('7');
     });
 

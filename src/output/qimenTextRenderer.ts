@@ -4,9 +4,11 @@
  * 输出格式设计原则：
  * - 第一屏就让人/agent 看懂
  * - ASCII 艺术保持九宫格的直观性
- * - 统一使用简体中文
+ * - 統一使用繁體中文
  */
 
+import { formatChartLabel } from './chartLabels';
+import { normalizeJieQiName } from '../services/daliuren/data/constants';
 import type { QimenResult, GongWei, GongInfo } from '../services/qimen/types';
 import {
   BA_MEN_FULL,
@@ -21,18 +23,18 @@ export function renderQimenText(result: QimenResult): string {
   const lines: string[] = [];
 
   // 标题
-  lines.push('## 奇门遁甲排盘');
+  lines.push('## 奇門遁甲排盤');
   lines.push('');
 
   // 基本信息
-  const panStyleText = result.panStyle === '飞盘' ? '飞盘式' : '转盘式';
-  lines.push(`**${result.yinYangDun}${result.juShu}局** | ${result.panType} | ${panStyleText} | ${result.yuan} | ${result.zhiRunMethod === 'chaibu' ? '拆补法' : '茅山法'}`);
+  const panStyleText = result.panStyle === '飞盘' ? '飛盤式' : '轉盤式';
+  lines.push(`**${result.yinYangDun}${result.juShu}局** | ${result.panType} | ${panStyleText} | ${result.yuan} | ${result.zhiRunMethod === 'chaibu' ? '拆補法' : '茅山法'}`);
   lines.push('');
 
   // 时间信息
-  lines.push(`**公历**：${result.timeInfo.solarDate} | **农历**：${result.timeInfo.lunarDate}`);
-  lines.push(`**节气**：${result.timeInfo.jieQi}`);
-  lines.push(`**四柱**：${result.timeInfo.siZhu.yearGanZhi}年 ${result.timeInfo.siZhu.monthGanZhi}月 ${result.timeInfo.siZhu.dayGanZhi}日 ${result.timeInfo.siZhu.hourGanZhi}时`);
+  lines.push(`**公曆**：${result.timeInfo.solarDate} | **農曆**：${result.timeInfo.lunarDate}`);
+  lines.push(`**節氣**：${normalizeJieQiName(result.timeInfo.jieQi)}`);
+  lines.push(`**四柱**：${result.timeInfo.siZhu.yearGanZhi}年 ${result.timeInfo.siZhu.monthGanZhi}月 ${result.timeInfo.siZhu.dayGanZhi}日 ${result.timeInfo.siZhu.hourGanZhi}時`);
   lines.push('');
 
   // 旬首信息
@@ -42,11 +44,11 @@ export function renderQimenText(result: QimenResult): string {
   lines.push('');
 
   // 日时落宫
-  lines.push(`**日干${result.timeInfo.siZhu.dayGan}落宫**：${getGongName(result.dayGanGong)} | **时干${result.timeInfo.siZhu.hourGan}落宫**：${getGongName(result.hourGanGong)}`);
+  lines.push(`**日干${result.timeInfo.siZhu.dayGan}落宮**：${getGongName(result.dayGanGong)} | **時干${result.timeInfo.siZhu.hourGan}落宮**：${getGongName(result.hourGanGong)}`);
   lines.push('');
 
   // 九宫盘
-  lines.push('### 九宫盘');
+  lines.push('### 九宮盤');
   lines.push('');
   lines.push(renderJiuGongGrid(result.gongs));
   lines.push('');
@@ -60,9 +62,9 @@ export function renderQimenText(result: QimenResult): string {
   }
 
   // 九宫详表
-  lines.push('### 九宫详表');
+  lines.push('### 九宮詳表');
   lines.push('');
-  lines.push('| 宫位 | 地盘 | 天盘 | 八门 | 九星 | 八神 | 空亡 | 马星 |');
+  lines.push('| 宮位 | 地盤 | 天盤 | 八門 | 九星 | 八神 | 空亡 | 馬星 |');
   lines.push('|:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|');
 
   // 按洛书顺序排列：巽4 离9 坤2 / 震3 中5 兑7 / 艮8 坎1 乾6
@@ -75,7 +77,7 @@ export function renderQimenText(result: QimenResult): string {
   }
   lines.push('');
 
-  return lines.join('\n');
+  return formatChartLabel(lines.join('\n'));
 }
 
 /**
@@ -87,7 +89,7 @@ function renderJiuGongGrid(gongs: Record<GongWei, GongInfo>): string {
   // 获取每个宫位的显示信息
   const getGongDisplay = (gongWei: GongWei): string[] => {
     const gong = gongs[gongWei];
-    const line1 = `${gong.gongName}${gong.gong}宫`;
+    const line1 = `${gong.gongName}${gong.gong}宮`;
     const line2 = `${gong.diPanGan}+${gong.tianPanGan}`;
     const line3 = `${JIU_XING_FULL[gong.xing]} ${BA_MEN_FULL[gong.men]}`;
     const line4 = BA_SHEN_FULL[gong.shen];
@@ -132,7 +134,7 @@ function renderJiuGongGrid(gongs: Record<GongWei, GongInfo>): string {
 
   lines.push('```');
 
-  return lines.join('\n');
+  return formatChartLabel(lines.join('\n'));
 }
 
 /**
@@ -146,9 +148,9 @@ function getGongName(gong: GongWei): string {
     4: '巽四',
     5: '中五',
     6: '乾六',
-    7: '兑七',
+    7: '兌七',
     8: '艮八',
-    9: '离九',
+    9: '離九',
   };
   return names[gong];
 }
@@ -206,7 +208,7 @@ export function renderYongShenText(yongShen: YongShenInfo): string {
 
   lines.push('### 用神分析');
   lines.push('');
-  lines.push(`**事类**：${yongShen.shiLei}`);
+  lines.push(`**事類**：${yongShen.shiLei}`);
   lines.push('');
 
   // 主用神
@@ -220,7 +222,7 @@ export function renderYongShenText(yongShen: YongShenInfo): string {
 
   // 辅用神
   if (yongShen.fuyong.length > 0) {
-    lines.push('**辅用神**：');
+    lines.push('**輔用神**：');
     for (const item of yongShen.fuyong) {
       lines.push(`- ${item.name}：落${getGongName(item.gong)}（${item.state}）`);
     }
@@ -250,8 +252,8 @@ export function renderYongShenText(yongShen: YongShenInfo): string {
   if (yongShen.zhuKe) {
     lines.push('**主客分析**：');
     lines.push(`- 我方（日干）：落${getGongName(yongShen.zhuKe.zhu.gong)}（${yongShen.zhuKe.zhu.state}）`);
-    lines.push(`- 对方（时干）：落${getGongName(yongShen.zhuKe.ke.gong)}（${yongShen.zhuKe.ke.state}）`);
-    lines.push(`- 主客关系：${yongShen.zhuKe.relation}`);
+    lines.push(`- 對方（時干）：落${getGongName(yongShen.zhuKe.ke.gong)}（${yongShen.zhuKe.ke.state}）`);
+    lines.push(`- 主客關係：${yongShen.zhuKe.relation}`);
     lines.push('');
   }
 
@@ -262,7 +264,7 @@ export function renderYongShenText(yongShen: YongShenInfo): string {
     lines.push('');
   }
 
-  return lines.join('\n');
+  return formatChartLabel(lines.join('\n'));
 }
 
 /**
@@ -271,10 +273,10 @@ export function renderYongShenText(yongShen: YongShenInfo): string {
 export function renderShenShaText(shenShaList: ShenShaInfo[]): string {
   const lines: string[] = [];
 
-  lines.push('### 神煞信息');
+  lines.push('### 神煞資訊');
   lines.push('');
   lines.push(shenShaList.map(s => `${s.name}@${getGongName(s.gong)}`).join('、'));
   lines.push('');
 
-  return lines.join('\n');
+  return formatChartLabel(lines.join('\n'));
 }

@@ -10,6 +10,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 import { QimenService } from '../services/qimen/QimenService';
 import { renderQimenText, renderQimenYongShenText } from '../output/qimenTextRenderer';
+import { formatChartLabel } from '../output/chartLabels';
 import {
   birthTimeFields,
   normalizeBirthInfo,
@@ -23,13 +24,25 @@ const SHI_LEI_VALUES = [
   '失物', '置业', '求官', '孕产', '寻人', '合作', '其他',
 ] as const;
 
-const panTypeField = z.enum(['时盘', '日盘', '月盘', '年盘']).optional().default('时盘')
-  .describe('盤類型：时盘（默認）、日盘、月盘、年盘');
-const panStyleField = z.enum(['转盘', '飞盘']).optional().default('转盘')
-  .describe('盤式：转盘（默認，遵循《神奇之門》）或飞盘');
+// Match the labels from tools/list before passing the existing keys to QimenService.
+function inputLabels<T extends string>(keys: readonly T[]): Record<string, T> {
+  return Object.fromEntries(keys.flatMap(key => [
+    [key, key] as const,
+    [formatChartLabel(key), key] as const,
+  ]));
+}
+
+const panTypeKeys = inputLabels(['时盘', '日盘', '月盘', '年盘'] as const);
+const panStyleKeys = inputLabels(['转盘', '飞盘'] as const);
+const shiLeiKeys = inputLabels(SHI_LEI_VALUES);
+
+const panTypeField = z.enum(Object.keys(panTypeKeys)).optional().default('时盘')
+  .describe('盤類型：時盤（默認）、日盤、月盤、年盤，簡繁均可');
+const panStyleField = z.enum(Object.keys(panStyleKeys)).optional().default('转盘')
+  .describe('盤式：轉盤（默認，遵循《神奇之門》）或飛盤，簡繁均可');
 const zhiRunMethodField = z.enum(['chaibu', 'maoshan']).optional().default('chaibu')
   .describe('置閏方法：chaibu=拆補法（默認），maoshan=茅山法');
-const shiLeiField = z.enum(SHI_LEI_VALUES).describe('事類（用於確定用神）');
+const shiLeiField = z.enum(Object.keys(shiLeiKeys)).describe('事類（用於確定用神，簡繁均可）');
 
 export function registerQimenTools(server: McpServer): void {
   server.registerTool('qimen_basic', {
@@ -48,20 +61,20 @@ export function registerQimenTools(server: McpServer): void {
 - 日干/時干落宮
 - 格局判斷（吉格/凶格約20-30種）
 
-支持選項（參數取值）：
-- panType：时盘（默認）、日盘、月盘、年盘
-- panStyle：转盘（默認，遵循《神奇之門》）或飞盘
+支援選項（盤類型與盤式的取值簡繁均可）：
+- panType：時盤（默認）、日盤、月盤、年盤
+- panStyle：轉盤（默認，遵循《神奇之門》）或飛盤
 - zhiRunMethod：chaibu（拆補法，默認）或 maoshan（茅山法）
 
 盤類型說明：
-- 时盘：以時辰為主導，適用於即時預測
-- 日盘：以日干支為主導，適用於當日吉凶
-- 月盘：以月干支為主導，適用於月度運勢
-- 年盘：以年干支為主導，適用於年度規劃
+- 時盤：以時辰為主導，適用於即時預測
+- 日盤：以日干支為主導，適用於當日吉凶
+- 月盤：以月干支為主導，適用於月度運勢
+- 年盤：以年干支為主導，適用於年度規劃
 
 盤式說明：
-- 转盘：天盤、八門、九星按物理方向旋轉（《神奇之門》派）
-- 飞盘：天盤、八門、九星按宮位數字飛布（傳統飛宮法）
+- 轉盤：天盤、八門、九星按物理方向旋轉（《神奇之門》派）
+- 飛盤：天盤、八門、九星按宮位數字飛布（傳統飛宮法）
 
 輸出為 Markdown 格式，含 ASCII 九宮格，便於 AI 分析解讀。`,
     inputSchema: {
@@ -81,8 +94,8 @@ export function registerQimenTools(server: McpServer): void {
       hour: normalized.hour,
       minute: normalized.minute,
       isLunar: false,
-      panType: args.panType,
-      panStyle: args.panStyle,
+      panType: panTypeKeys[args.panType],
+      panStyle: panStyleKeys[args.panStyle],
       zhiRunMethod: args.zhiRunMethod,
     });
 
@@ -95,8 +108,8 @@ export function registerQimenTools(server: McpServer): void {
 
 在基礎排盤基礎上，根據事類選取用神並分析：
 
-**支持 14 種事類**（shiLei 參數取值）：
-求财、婚姻、疾病、出行、诉讼、考试、工作、失物、置业、求官、孕产、寻人、合作、其他
+**支援 14 種事類**（shiLei 參數取值，簡繁均可）：
+求財、婚姻、疾病、出行、訴訟、考試、工作、失物、置業、求官、孕產、尋人、合作、其他
 
 **分析內容**（僅確定性事實）：
 - 主用神/輔用神識別及落宮（依《神奇之門》通行用神表）
@@ -132,11 +145,11 @@ export function registerQimenTools(server: McpServer): void {
         hour: normalized.hour,
         minute: normalized.minute,
         isLunar: false,
-        panType: args.panType,
-        panStyle: args.panStyle,
+        panType: panTypeKeys[args.panType],
+        panStyle: panStyleKeys[args.panStyle],
         zhiRunMethod: args.zhiRunMethod,
       },
-      args.shiLei,
+      shiLeiKeys[args.shiLei],
       {
         nianGan: args.nianGan,
         includeShenSha: args.includeShenSha,

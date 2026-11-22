@@ -9,6 +9,7 @@
  * 測試數據來源：經典盤例 + 手算驗證
  */
 
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, beforeAll } from 'vitest';
 import { BaziService } from '../src/services/bazi/BaziService';
 import { BEIJING_TZ } from '../src/utils/timeNormalization';
@@ -195,14 +196,24 @@ describe('八字排盤文本輸出（最小確定性契約）', () => {
   const birth = { year: 1992, month: 4, day: 12, hour: 7, minute: 30, gender: 'male' as const };
   const birthDate = new Date(Date.UTC(1992, 3, 12, 7, 30));
 
+  // 三份 README 的輸出示例隨 npm 套件發布，必須與實際渲染逐行一致
+  it.each(['README.md', 'README.en.md', 'README.ja.md'])('%s 的輸出示例與實際渲染一致', async file => {
+    const readme = readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
+    const sample = readme.slice(readme.indexOf('=== 命主資料 ==='), readme.indexOf('\n```', readme.indexOf('=== 命主資料 ===')));
+    expect(sample.split('\n').length).toBeGreaterThan(10);
+    const r = await service.calculate(birth);
+    const text = renderBaziText({ bazi: r, gender: 'male', birthDate }, { includePersonal: false });
+    expect(text.startsWith(sample)).toBe(true);
+  });
+
   it('應包含：命主資料（公農曆）、四柱、藏干、十神、旬空', async () => {
     const r = await service.calculate(birth);
     const text = renderBaziText({ bazi: r, gender: 'male', birthDate }, { includePersonal: false });
 
     expect(text).toContain('公曆：1992-04-12 07:30:00');
     expect(text).toContain('農曆：壬申年三月初十辰時');
-    expect(text).toContain('年柱：壬申（剑锋金）');
-    expect(text).toContain('月柱：甲辰（覆灯火）');
+    expect(text).toContain('年柱：壬申（劍鋒金）');
+    expect(text).toContain('月柱：甲辰（覆燈火）');
     expect(text).toContain('日柱：戊午（天上火）');
     expect(text).toContain('時柱：丙辰（沙中土）');
     expect(text).toContain('日柱：戊午');
@@ -218,7 +229,7 @@ describe('八字排盤文本輸出（最小確定性契約）', () => {
     expect(text).toContain('日午[丁正印※ 己劫財]');
     expect(text).toContain('時辰[戊比肩※ 乙正官 癸正財]');
     // 十二長生（自坐）：壬長生在申、甲衰在辰、戊帝旺在午、丙冠帶在辰
-    expect(text).toContain('十二長生（自坐）：年长生　月衰　日帝旺　時冠带');
+    expect(text).toContain('十二長生（自坐）：年長生　月衰　日帝旺　時冠帶');
     // 天干十神（日主戊：壬=偏財 甲=七殺 丙=偏印）
     expect(text).toContain('天干十神：年干水=偏財');
     expect(text).toContain('月干木=七殺');

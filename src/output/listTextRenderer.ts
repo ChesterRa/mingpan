@@ -13,6 +13,8 @@
  * - 保持與 fortuneTextRenderer.ts 的格式一致性
  */
 
+import { formatChartLabel } from './chartLabels';
+import { normalizeJieQiName } from '../services/daliuren/data/constants';
 import { DaYun, LiuNian, LiuYueInfo, LiuRiInfo } from '../services/bazi/types';
 import { DecadeInfo, YearlyInfo, MinorLimitInfo, PALACE_NAMES, MutagenInfo } from '../services/ziwei/types';
 import { MonthlyInfo } from '../services/ziwei/calculators/MonthlyCalculator';
@@ -232,7 +234,7 @@ function renderBaziBaseHeader(options: BaziBaseHeaderOptions): string[] {
 
 /**
  * 渲染紫微統一頭部
- * 格式：=== 命主資料 === + === 紫微命盘 ===
+ * 格式：=== 命主資料 === + === 紫微命盤 ===
  */
 function renderZiweiBaseHeader(options: ZiweiBaseHeaderOptions): string[] {
   const lines: string[] = [];
@@ -251,7 +253,7 @@ function renderZiweiBaseHeader(options: ZiweiBaseHeaderOptions): string[] {
   }
   lines.push('');
 
-  lines.push('=== 紫微命盘 ===');
+  lines.push('=== 紫微命盤 ===');
 
   const hb = (options.mingGongHeavenlyStem && options.mingGongEarthlyBranch)
     ? ` ${options.mingGongHeavenlyStem}${options.mingGongEarthlyBranch}`
@@ -317,7 +319,7 @@ export function renderBaziDaYunList(
   lines.push(...renderBaziBaseHeader(options));
 
   lines.push('=== 大運資訊 ===');
-  lines.push(`大運方向：${options.direction}`);
+  lines.push(`大運方向：${formatChartLabel(options.direction)}`);
   lines.push(`起運年齡：${options.startAge}虛歲（${options.startYear}年起運）`);
   lines.push('');
 
@@ -422,7 +424,7 @@ export function renderBaziLiuYueList(
     const ganzhi = `${liuYue.stem}${liuYue.branch}月`;
 
     const solarTermInfo = SOLAR_TERM_MONTHS[liuYue.month] || { term: '-', nextTerm: '-' };
-    const solarTermRange = `${solarTermInfo.term}-${solarTermInfo.nextTerm}`;
+    const solarTermRange = `${normalizeJieQiName(solarTermInfo.term)}-${normalizeJieQiName(solarTermInfo.nextTerm)}`;
 
     const dateRange = `${formatDate(liuYue.startDate)} ~ ${formatDate(liuYue.endDate)}`;
 
@@ -594,7 +596,7 @@ export function renderZiweiDaXianList(
   }));
 
   lines.push('=== 大限資訊 ===');
-  lines.push(`大限方向：${options.direction}`);
+  lines.push(`大限方向：${formatChartLabel(options.direction)}`);
   lines.push('');
 
   lines.push('序號 | 虛歲範圍 | 公曆年範圍 | 大限宮位 | 宮內主星 | 大限四化');
@@ -1009,7 +1011,7 @@ export function renderZiweiLiuYueList(
   lines.push('注：');
   lines.push('1. 紫微流月以農曆月為準，非節氣月。');
   if (options.leapMonth) {
-    lines.push(`2. 闰月歸入前一月計算，闰${LUNAR_MONTH_NAMES[options.leapMonth]}按${LUNAR_MONTH_NAMES[options.leapMonth]}論。`);
+    lines.push(`2. 閏月歸入前一月計算，閏${LUNAR_MONTH_NAMES[options.leapMonth]}按${LUNAR_MONTH_NAMES[options.leapMonth]}論。`);
   }
   lines.push('3. 公曆日期僅供參考，精確邊界以農曆初一為準。');
 
